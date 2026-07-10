@@ -1,0 +1,26 @@
+{
+  "name": "snag-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Snag — a self-hosted, privacy-first session watcher and issue detector for modern web apps.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/shared",
+    "packages/detectors",
+    "packages/sdk",
+    "packages/ingest",
+    "packages/dashboard"
+  ],
+  "scripts": {
+    "build": "npm run build -w @snag/shared -w @snag/detectors -w @snag/sdk -w @snag/ingest && npm run build -w @snag/dashboard",
+    "build:libs": "npm run build -w @snag/shared -w @snag/detectors -w @snag/sdk -w @snag/ingest",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:ingest": "npm run dev -w @snag/ingest",
+    "dev:dashboard": "npm run dev -w @snag/dashboard",
+    "demo": "node examples/demo-app/serve.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

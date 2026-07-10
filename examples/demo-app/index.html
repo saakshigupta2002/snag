@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snag demo shop — intentionally broken</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font: 15px/1.6 -apple-system, system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1c2333; }
+    header { background: #fff; border-bottom: 1px solid #e3e6ea; padding: 14px 28px; display: flex; gap: 18px; align-items: center; }
+    header b { font-size: 17px; }
+    nav a { margin-right: 14px; color: #3b5bdb; text-decoration: none; cursor: pointer; }
+    main { max-width: 760px; margin: 30px auto; padding: 0 20px; }
+    .card { background: #fff; border: 1px solid #e3e6ea; border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+    button { font: inherit; padding: 9px 18px; border-radius: 7px; border: 1px solid #ced4da; background: #fff; cursor: pointer; }
+    button.primary { background: #3b5bdb; border-color: #3b5bdb; color: #fff; }
+    input { font: inherit; padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; width: 100%; margin-bottom: 10px; }
+    .muted { color: #7a8394; font-size: 13px; }
+    #status { min-height: 22px; font-size: 13px; color: #7a8394; }
+    .setup { background: #fff8e1; border: 1px solid #f1d67a; border-radius: 10px; padding: 14px 18px; font-size: 13.5px; }
+    code { background: #eef1f5; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <b>Demo Shop</b>
+    <nav>
+      <a data-nav="/">Home</a>
+      <a data-nav="/pricing">Pricing</a>
+      <a data-nav="/about">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="setup" id="setup-warning">
+      <strong>Not recording.</strong> Pass your project key in the URL:
+      <code>?key=pk_live_…&amp;endpoint=http://localhost:8787</code> (create a project in the
+      dashboard first).
+    </div>
+
+    <div class="card">
+      <h2>Every button here is broken on purpose</h2>
+      <p class="muted">Click around like a confused user, then check the Snag dashboard.
+        Sessions seal ~30s after you close the tab, or immediately on the final flush.</p>
+      <div id="status"></div>
+    </div>
+
+    <div class="card">
+      <h3>1 · Dead button</h3>
+      <p class="muted">Looks clickable. Wired to nothing.</p>
+      <button id="dead-button" class="primary">Add to cart</button>
+    </div>
+
+    <div class="card">
+      <h3>2 · Rage-click bait</h3>
+      <p class="muted">Does nothing no matter how many times you hammer it. Hammer it.</p>
+      <button id="rage-button" class="primary">Checkout now</button>
+    </div>
+
+    <div class="card">
+      <h3>3 · Silent crash</h3>
+      <p class="muted">Throws an uncaught exception. The UI shrugs.</p>
+      <button id="crash-button">Apply discount</button>
+    </div>
+
+    <div class="card">
+      <h3>4 · Failing API call</h3>
+      <p class="muted">POSTs to an endpoint that 500s. No error shown to the user.</p>
+      <button id="api-button">Place order</button>
+    </div>
+
+    <div class="card">
+      <h3>5 · Abandonable form <span class="muted">(masked by default)</span></h3>
+      <form id="signup-form">
+        <input name="email" type="email" placeholder="Email (recorded as dots)" />
+        <input name="password" type="password" placeholder="Password (always masked)" />
+        <input name="card" placeholder="Card number (pattern safety net)" />
+        <button class="primary" type="submit">Sign up</button>
+      </form>
+      <p class="muted">Start typing, then navigate away without submitting.</p>
+    </div>
+  </main>
+
+  <script src="./snag.iife.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

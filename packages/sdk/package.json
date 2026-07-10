@@ -1,0 +1,32 @@
+{
+  "name": "@snag/sdk",
+  "version": "0.1.0",
+  "description": "Snag recorder SDK: a thin, privacy-first wrapper around rrweb that masks and redacts at source.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/snag.iife.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./iife": "./dist/snag.iife.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/bundle.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@snag/shared": "*",
+    "rrweb": "^2.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

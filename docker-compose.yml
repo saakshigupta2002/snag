@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: snag
+      POSTGRES_PASSWORD: snag
+      POSTGRES_DB: snag
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snag"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  ingest:
+    build:
+      context: .
+      dockerfile: packages/ingest/Dockerfile
+    environment:
+      DATABASE_URL: postgres://snag:snag@db:5432/snag
+      PORT: "8787"
+      SNAG_API_TOKEN: ${SNAG_API_TOKEN:-dev-token-change-me}
+      RETENTION_DAYS: ${RETENTION_DAYS:-30}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_DAILY_CAP: ${AI_DAILY_CAP:-50}
+    ports:
+      - "8787:8787"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: packages/dashboard/Dockerfile
+    environment:
+      INGEST_URL: http://ingest:8787
+      SNAG_API_TOKEN: ${SNAG_API_TOKEN:-dev-token-change-me}
+      SNAG_SECRET: ${SNAG_SECRET:-dev-secret-change-me}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-snag}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ingest
+
+volumes:
+  pgdata:
