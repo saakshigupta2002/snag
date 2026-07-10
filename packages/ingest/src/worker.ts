@@ -1,4 +1,5 @@
 import { runEngine, type EngineRule } from '@snag/detectors';
+import type { Session } from '@snag/shared';
 import type { Config } from './config.js';
 import type { NewIssue, Store } from './db/store.js';
 import { runAiPass } from './ai/runner.js';
@@ -12,6 +13,39 @@ export interface WorkerPassResult {
 }
 
 /**
+ * Run the engine over one completed session and persist its issues. Shared
+ * by the interval worker and the serverless inline path (process-on-final).
+ * Returns the number of issues written.
+ */
+export async function processSession(store: Store, session: Session): Promise<number> {
+  try {
+    const [events, rules] = await Promise.all([
+      store.getSessionEvents(session.id),
+      store.listFlagRules(session.projectId),
+    ]);
+    const engineRules: EngineRule[] = rules
+      .filter((r) => r.kind === 'builtin' || r.kind === 'custom_mechanical')
+      .map((r) => ({ detector: r.detector, kind: r.kind, enabled: r.enabled, params: r.params }));
+    const candidates = runEngine(events, engineRules);
+    if (!candidates.length) return 0;
+    const issues: NewIssue[] = candidates.map((c) => ({
+      ...c,
+      sessionId: session.id,
+      projectId: session.projectId,
+      status: 'open',
+    }));
+    await store.insertIssues(issues);
+    return issues.length;
+  } catch (err) {
+    // A bad session must not wedge the queue; log and move on.
+    console.error(`[snag] detection failed for session ${session.id}`, err);
+    return 0;
+  } finally {
+    await store.markSessionProcessed(session.id);
+  }
+}
+
+/**
  * One detection pass: seal idle sessions, run the engine over each completed
  * session, write issues, mark the session processed, then (optionally) let
  * the AI layer glance at the already-flagged slice.
@@ -20,33 +54,8 @@ export async function runWorkerPass(store: Store, config: Config): Promise<Worke
   const sealed = await store.sealIdleSessions(config.sessionIdleMs);
   const sessions = await store.takeCompletedSessions(20);
   let issueCount = 0;
-
   for (const session of sessions) {
-    try {
-      const [events, rules] = await Promise.all([
-        store.getSessionEvents(session.id),
-        store.listFlagRules(session.projectId),
-      ]);
-      const engineRules: EngineRule[] = rules
-        .filter((r) => r.kind === 'builtin' || r.kind === 'custom_mechanical')
-        .map((r) => ({ detector: r.detector, kind: r.kind, enabled: r.enabled, params: r.params }));
-      const candidates = runEngine(events, engineRules);
-      if (candidates.length) {
-        const issues: NewIssue[] = candidates.map((c) => ({
-          ...c,
-          sessionId: session.id,
-          projectId: session.projectId,
-          status: 'open',
-        }));
-        await store.insertIssues(issues);
-        issueCount += issues.length;
-      }
-    } catch (err) {
-      // A bad session must not wedge the queue; log and move on.
-      console.error(`[snag] detection failed for session ${session.id}`, err);
-    } finally {
-      await store.markSessionProcessed(session.id);
-    }
+    issueCount += await processSession(store, session);
   }
 
   const pruned = await maybePrune(store, config);

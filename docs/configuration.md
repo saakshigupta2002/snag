@@ -15,6 +15,8 @@ Every secret ships blank in `.env.example`. Generate tokens with `openssl rand -
 | `RETENTION_DAYS` | ingest | `30` | Default session retention; per-project override in Settings. |
 | `SESSION_IDLE_MS` | ingest | `1800000` | Idle time before a session is sealed for detection (30 min). |
 | `WORKER_INTERVAL_MS` | ingest | `10000` | Detection worker tick. |
+| `PROCESS_ON_FINAL` | ingest | `false`* | Run detection inline on a session's final flush. *Forced on by the serverless entry (Vercel). |
+| `PG_POOL_MAX` | ingest | `10` | pg pool size. The serverless entry defaults it to `2`. |
 | `AI_PROVIDER` | ingest | *(off)* | `anthropic` or `openai`. AI layer stays off without it. |
 | `AI_API_KEY` | ingest | *(off)* | Your own key. You see and cap your own spend. |
 | `AI_MODEL` | ingest | cheap default | Override the model (defaults: `claude-haiku-4-5` / `gpt-4o-mini`). |

@@ -41,7 +41,13 @@ npm run start -w @snag/dashboard       # or deploy packages/dashboard to Vercel
 ```
 
 The schema is applied automatically on ingest boot (idempotent `CREATE TABLE IF NOT EXISTS`,
-see [`packages/ingest/src/db/schema.sql`](../packages/ingest/src/db/schema.sql)).
+see [`packages/ingest/src/db/schema.ts`](../packages/ingest/src/db/schema.ts)).
+
+## Option 3 — Vercel + Supabase only (no always-on server)
+
+For personal / low-volume use, both services run on Vercel functions with Supabase as the
+database — detection happens inline on each session's final flush and a daily cron sweeps up
+the rest. See [docs/deploy-vercel-supabase.md](deploy-vercel-supabase.md).
 
 ## The two-version rule
 

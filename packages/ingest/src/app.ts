@@ -3,8 +3,8 @@ import cors from '@fastify/cors';
 import type { IngestPayload, IssueStatus, ProjectSettings, Severity } from '@snag/shared';
 import { registry } from '@snag/detectors';
 import type { Config } from './config.js';
-import { groupIssues, type Store } from './db/store.js';
-import { runWorkerPass } from './worker.js';
+import { groupIssues, sessionDbId, type Store } from './db/store.js';
+import { processSession, runWorkerPass } from './worker.js';
 
 const MAX_EVENTS_PER_BATCH = 5000;
 const RATE_LIMIT_PER_MIN = 240;
@@ -85,6 +85,13 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
       seqTo: body.seqTo,
       meta: body.meta,
     });
+
+    // Serverless path: no interval worker exists, so the final flush is the
+    // moment to run detection for this session.
+    if (body.meta.final && config.processOnFinal) {
+      const session = await store.getSession(sessionDbId(project.id, body.sessionId));
+      if (session?.status === 'completed') await processSession(store, session);
+    }
     return reply.code(202).send({ ok: true });
   });
 
@@ -249,8 +256,14 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     return { ok: true };
   });
 
-  // ── Ops: force a worker pass (handy for demos, tests, admin) ──────────────
-  app.post('/api/admin/tick', async () => runWorkerPass(store, config));
+  // ── Ops: force a worker pass (demos, tests, admin, serverless cron) ──────
+  // GET is allowed so schedulers like Vercel Cron (which only GET) can call
+  // it; the bearer-token hook above still applies.
+  app.route({
+    method: ['GET', 'POST'],
+    url: '/api/admin/tick',
+    handler: async () => runWorkerPass(store, config),
+  });
 
   return app;
 }

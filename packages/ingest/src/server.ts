@@ -8,7 +8,7 @@ import { startWorker } from './worker.js';
 async function main(): Promise<void> {
   const config = loadConfig();
   const store: Store = config.databaseUrl
-    ? new PostgresStore(config.databaseUrl)
+    ? new PostgresStore(config.databaseUrl, config.pgPoolMax)
     : new MemoryStore();
   if (!config.databaseUrl) {
     console.warn('[snag] DATABASE_URL not set — using in-memory storage (data is lost on restart)');

@@ -217,6 +217,36 @@ describe('detection pipeline end to end', () => {
   });
 });
 
+describe('serverless mode (process on final flush)', () => {
+  it('produces issues immediately on the final flush, no worker tick needed', async () => {
+    const serverlessApp = buildApp(
+      store,
+      loadConfig({ PROCESS_ON_FINAL: '1' } as unknown as NodeJS.ProcessEnv),
+    );
+    await serverlessApp.inject({
+      method: 'POST',
+      url: '/ingest',
+      payload: payload(project.projectKey, 'sess-sls', roughSessionEvents(), { final: true }),
+    });
+    const groups = JSON.parse(
+      (
+        await serverlessApp.inject({
+          method: 'GET',
+          url: `/api/projects/${project.id}/issues`,
+        })
+      ).body,
+    ) as IssueGroup[];
+    expect(groups.map((g) => g.detector)).toContain('network_failure');
+    const sessions = await store.listSessions(project.id);
+    expect(sessions[0]!.status).toBe('processed');
+  });
+
+  it('accepts GET on the tick endpoint (Vercel Cron)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/admin/tick' });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
 describe('replay data', () => {
   it('serves the stored event stream for a session', async () => {
     await app.inject({

@@ -14,6 +14,14 @@ export interface Config {
   workerIntervalMs: number;
   /** A session with no events for this long is sealed and queued for detection. */
   sessionIdleMs: number;
+  /**
+   * Run detection inline when a session's final flush arrives, instead of
+   * waiting for the interval worker. Required on serverless hosts (Vercel),
+   * where no interval worker exists; harmless elsewhere.
+   */
+  processOnFinal: boolean;
+  /** pg Pool size. Keep small (1–2) on serverless hosts. */
+  pgPoolMax: number;
   ai: AiConfig;
 }
 
@@ -31,6 +39,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     retentionDays: int(env.RETENTION_DAYS, 30),
     workerIntervalMs: int(env.WORKER_INTERVAL_MS, 10_000),
     sessionIdleMs: int(env.SESSION_IDLE_MS, 30 * 60_000),
+    processOnFinal: env.PROCESS_ON_FINAL === '1' || env.PROCESS_ON_FINAL === 'true',
+    pgPoolMax: int(env.PG_POOL_MAX, 10),
     ai: {
       provider,
       apiKey: env.AI_API_KEY || undefined,

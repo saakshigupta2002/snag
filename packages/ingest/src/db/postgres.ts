@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
 import pg from 'pg';
+import { SCHEMA } from './schema.js';
 import type {
   FlagRule,
   Issue,
@@ -83,13 +83,18 @@ function ruleFromRow(r: Row): FlagRule {
 export class PostgresStore implements Store {
   private pool: pg.Pool;
 
-  constructor(databaseUrl: string) {
-    this.pool = new pg.Pool({ connectionString: databaseUrl, max: 10 });
+  constructor(databaseUrl: string, poolMax = 10) {
+    // Managed hosts (Supabase, Neon, Heroku) hand out sslmode=require URIs
+    // whose chains node-postgres can't always verify; require TLS without
+    // chain verification in that case, matching their documented setup.
+    const ssl = /\bsslmode=(require|prefer)\b/.test(databaseUrl)
+      ? { rejectUnauthorized: false }
+      : undefined;
+    this.pool = new pg.Pool({ connectionString: databaseUrl, max: poolMax, ssl });
   }
 
   async init(): Promise<void> {
-    const schema = readFileSync(new URL('./schema.sql', import.meta.url), 'utf8');
-    await this.pool.query(schema);
+    await this.pool.query(SCHEMA);
   }
 
   async close(): Promise<void> {

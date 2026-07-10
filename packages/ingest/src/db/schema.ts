@@ -1,5 +1,8 @@
--- Snag schema. Idempotent: safe to run on every boot.
-
+/**
+ * Snag schema. Idempotent: applied on every boot (CREATE TABLE IF NOT EXISTS).
+ * Kept as a TS module (not a .sql file) so serverless bundlers can inline it.
+ */
+export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -77,3 +80,4 @@ CREATE TABLE IF NOT EXISTS ai_analyses (
   UNIQUE (project_id, group_key)
 );
 CREATE INDEX IF NOT EXISTS ai_analyses_created_idx ON ai_analyses (created_at);
+`;
