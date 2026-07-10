@@ -1,0 +1,10 @@
+# Gitleaks config: default rules, plus an allowlist for the redaction test
+# suite — it deliberately contains secret-SHAPED fixtures (a fake JWT, fake
+# tokens, test card numbers) to prove they never survive redaction. Nothing
+# in that file is a real credential.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic secret-shaped fixtures used to test the redaction layer"
+paths = ['''packages/sdk/test/redact\.test\.ts''']
