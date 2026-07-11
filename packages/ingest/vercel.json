@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
   "buildCommand": "cd ../.. && npm run build -w @snag/shared -w @snag/detectors -w @snag/ingest",
+  "outputDirectory": "public",
   "framework": null,
-  "routes": [{ "src": "/(.*)", "dest": "/api/index.ts" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
   "functions": {
     "api/index.ts": { "maxDuration": 60 }
   },

@@ -1,0 +1,4 @@
+# Placeholder so Vercel's static-output check passes.
+# The ingest project is an API (serverless functions in ../api), not a
+# static site — every route is rewritten to the function in vercel.json.
+# This is a dotfile so it is never served; nothing here is public.
