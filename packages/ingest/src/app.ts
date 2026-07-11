@@ -5,6 +5,10 @@ import { registry } from '@snag/detectors';
 import type { Config } from './config.js';
 import { groupIssues, sessionDbId, type Store } from './db/store.js';
 import { processSession, runWorkerPass } from './worker.js';
+import { SDK_BUNDLE_BASE64 } from './sdk-bundle.js';
+
+// Decoded once at module load; served to browsers as a drop-in <script>.
+const SDK_JS = Buffer.from(SDK_BUNDLE_BASE64, 'base64').toString('utf8');
 
 const MAX_EVENTS_PER_BATCH = 5000;
 const RATE_LIMIT_PER_MIN = 240;
@@ -53,6 +57,19 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   });
 
   app.get('/api/health', async () => ({ ok: true }));
+
+  // ── Browser SDK, self-hosted ──────────────────────────────────────────────
+  // Lets any site install Snag with a <script> tag pointing at this service,
+  // no npm publish required. Public (not under /api/), so no token needed.
+  const serveSdk = async (_req: FastifyRequest, reply: FastifyReply) => {
+    if (!SDK_JS) return reply.code(404).send({ error: 'sdk bundle not embedded' });
+    return reply
+      .header('content-type', 'application/javascript; charset=utf-8')
+      .header('cache-control', 'public, max-age=3600')
+      .send(SDK_JS);
+  };
+  app.get('/snag.js', serveSdk);
+  app.get('/snag.iife.js', serveSdk);
 
   // ── Ingestion ─────────────────────────────────────────────────────────────
   app.post('/ingest', async (req, reply) => {
