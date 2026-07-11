@@ -15,7 +15,14 @@ let appPromise: Promise<FastifyInstance> | undefined;
  * The app + pool are cached per function instance across invocations.
  */
 export function getApp(): Promise<FastifyInstance> {
-  if (!appPromise) appPromise = build();
+  if (!appPromise) {
+    appPromise = build().catch((err) => {
+      // Don't cache a rejected promise — let the next invocation retry
+      // (e.g. after a transient DB hiccup) instead of failing forever.
+      appPromise = undefined;
+      throw err;
+    });
+  }
   return appPromise;
 }
 
