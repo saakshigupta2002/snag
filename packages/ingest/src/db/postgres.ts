@@ -24,6 +24,21 @@ import {
 
 type Row = Record<string, unknown>;
 
+/**
+ * Pull `sslmode` out of a connection string, touching only the query part so
+ * credentials with special characters are never re-parsed. Returns the URL
+ * without `sslmode` plus the value that was there (if any).
+ */
+function splitSslMode(databaseUrl: string): { url: string; sslmode?: string } {
+  const q = databaseUrl.indexOf('?');
+  if (q === -1) return { url: databaseUrl };
+  const params = new URLSearchParams(databaseUrl.slice(q + 1));
+  const sslmode = params.get('sslmode') ?? undefined;
+  params.delete('sslmode');
+  const rest = params.toString();
+  return { url: rest ? `${databaseUrl.slice(0, q)}?${rest}` : databaseUrl.slice(0, q), sslmode };
+}
+
 function projectFromRow(r: Row): Project {
   return {
     id: String(r.id),
@@ -84,13 +99,23 @@ export class PostgresStore implements Store {
   private pool: pg.Pool;
 
   constructor(databaseUrl: string, poolMax = 10) {
-    // Managed hosts (Supabase, Neon, Heroku) hand out sslmode=require URIs
-    // whose chains node-postgres can't always verify; require TLS without
-    // chain verification in that case, matching their documented setup.
-    const ssl = /\bsslmode=(require|prefer)\b/.test(databaseUrl)
-      ? { rejectUnauthorized: false }
-      : undefined;
-    this.pool = new pg.Pool({ connectionString: databaseUrl, max: poolMax, ssl });
+    // Managed Postgres hosts (Supabase, Neon, Heroku, RDS) present certs that
+    // aren't in Node's default trust store, so full verification fails with
+    // "self-signed certificate in certificate chain". Connect over TLS but
+    // without chain verification — the documented setup for these hosts.
+    //
+    // We also strip `sslmode` from the connection string first: leaving it in
+    // lets node-postgres apply its own stricter TLS policy that overrides the
+    // ssl object below and re-triggers the verification error.
+    const { url, sslmode } = splitSslMode(databaseUrl);
+    const useSsl = sslmode
+      ? sslmode !== 'disable'
+      : !/@(localhost|127\.0\.0\.1)[:/]/.test(url);
+    this.pool = new pg.Pool({
+      connectionString: url,
+      max: poolMax,
+      ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+    });
   }
 
   async init(): Promise<void> {
