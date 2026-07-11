@@ -348,12 +348,43 @@ pre.snippet {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  min-height: 200px;
+  min-height: 120px;
 }
-.replay .rr-player {
-  background: transparent;
-  float: none;
-  width: 100% !important;
+/* rrweb renders the recorded page inside .replay-stage at the captured
+   viewport size; the component scales it down to fit. White so the replayed
+   page (usually light) reads correctly. */
+.replay-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+.replay-stage .replayer-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+.replay-controls button {
+  min-width: 42px;
+  padding: 6px 10px;
+}
+.replay-controls input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+  padding: 0;
+}
+.replay-time {
+  color: var(--text-dim);
+  font-size: 12.5px;
+  min-width: 84px;
+  text-align: right;
 }
 
 .ai-summary {
