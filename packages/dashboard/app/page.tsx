@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import type { Project } from '@snag/shared';
 import { api } from '@/lib/api';
 import { CreateProjectForm } from '@/components/CreateProjectForm';
-import { IconLogo } from '@/components/icons';
+import { Wordmark } from '@/components/Wordmark';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +20,7 @@ export default async function Home() {
   return (
     <div className="login-wrap">
       <div className="login-card" style={{ width: 460 }}>
-        <div className="logo" style={{ padding: 0, marginBottom: 14 }}>
-          <span className="logo-mark">
-            <IconLogo />
-          </span>
-          Snag
-        </div>
+        <Wordmark style={{ padding: 0, marginBottom: 14, fontSize: 22 }} />
         {ingestDown ? (
           <>
             <p className="muted">

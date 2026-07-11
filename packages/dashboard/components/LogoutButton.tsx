@@ -1,19 +1,16 @@
 'use client';
 
-import { IconSignOut } from './icons';
-
 export function LogoutButton() {
   return (
     <button
-      className="dismiss"
-      style={{ width: '100%', justifyContent: 'center' }}
+      className="dismiss mono"
+      style={{ width: '100%', justifyContent: 'center', fontSize: 12.5 }}
       onClick={async () => {
         await fetch('/api/logout', { method: 'POST' });
         window.location.href = '/login';
       }}
     >
-      <IconSignOut />
-      Sign out
+      sign out
     </button>
   );
 }

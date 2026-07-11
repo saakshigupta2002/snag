@@ -4,7 +4,7 @@ import type { Project } from '@snag/shared';
 import { ProjectSwitcher, type SwitcherProject } from '@/components/ProjectSwitcher';
 import { SideNav } from '@/components/SideNav';
 import { LogoutButton } from '@/components/LogoutButton';
-import { IconLogo } from '@/components/icons';
+import { Wordmark } from '@/components/Wordmark';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,12 +29,7 @@ export default async function ProjectLayout({
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="logo">
-          <span className="logo-mark">
-            <IconLogo />
-          </span>
-          Snag
-        </div>
+        <Wordmark />
         <div style={{ padding: '14px 4px 0' }}>
           <ProjectSwitcher projects={switcherProjects} currentId={projectId} />
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { IconLogo } from '@/components/icons';
+import { Wordmark } from '@/components/Wordmark';
 
 export default function LoginPage() {
   const [password, setPassword] = useState('');
@@ -28,12 +28,8 @@ export default function LoginPage() {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <div className="logo" style={{ padding: 0, marginBottom: 22 }}>
-          <span className="logo-mark">
-            <IconLogo />
-          </span>
-          Snag
-        </div>
+        <Wordmark style={{ padding: 0, marginBottom: 22, fontSize: 22 }} />
+        <p className="eyebrow" style={{ marginBottom: 20 }}>session watcher</p>
         <div className="field">
           <label htmlFor="password">Dashboard password</label>
           <input
