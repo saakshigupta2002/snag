@@ -1,9 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { api } from '@/lib/api';
 import type { Project } from '@snag/shared';
 import { ProjectSwitcher, type SwitcherProject } from '@/components/ProjectSwitcher';
+import { SideNav } from '@/components/SideNav';
 import { LogoutButton } from '@/components/LogoutButton';
+import { IconLogo } from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,16 +30,19 @@ export default async function ProjectLayout({
     <div className="shell">
       <aside className="sidebar">
         <div className="logo">
-          Snag<span>.</span>
+          <span className="logo-mark">
+            <IconLogo />
+          </span>
+          Snag
         </div>
-        <ProjectSwitcher projects={switcherProjects} currentId={projectId} />
-        <nav>
-          <Link href={`/p/${projectId}/issues`}>Issues</Link>
-          <Link href={`/p/${projectId}/sessions`}>Sessions</Link>
-          <Link href={`/p/${projectId}/settings`}>Settings</Link>
-        </nav>
+        <div style={{ padding: '14px 4px 0' }}>
+          <ProjectSwitcher projects={switcherProjects} currentId={projectId} />
+        </div>
+        <SideNav projectId={projectId} />
         <div className="spacer" />
-        <LogoutButton />
+        <div className="side-foot">
+          <LogoutButton />
+        </div>
       </aside>
       <main className="main">{children}</main>
     </div>

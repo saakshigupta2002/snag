@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { IssueGroup } from '@snag/shared';
+import type { IssueGroup, Severity } from '@snag/shared';
 import { api } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
 
@@ -20,12 +20,20 @@ export default async function IssuesPage({
   const status = q.status ?? 'open';
   const severity = q.severity ?? 'all';
 
-  const query = new URLSearchParams();
-  if (status !== 'all') query.set('status', status);
-  if (severity !== 'all') query.set('severity', severity);
-  const groups = await api<IssueGroup[]>(
-    `/api/projects/${projectId}/issues${query.size ? `?${query}` : ''}`,
-  );
+  // Fetch the full set once: stat tiles reflect all open issues regardless of
+  // the current filter; the table below is filtered in-page.
+  const all = await api<IssueGroup[]>(`/api/projects/${projectId}/issues`);
+  const open = all.filter((g) => g.status === 'open');
+  const count = (s: Severity) => open.filter((g) => g.severity === s).length;
+
+  let groups = all;
+  if (status !== 'all') groups = groups.filter((g) => g.status === status);
+  if (severity !== 'all') groups = groups.filter((g) => g.severity === severity);
+  groups = groups.sort((a, b) => {
+    const rank = { high: 2, medium: 1, low: 0 };
+    const s = rank[b.severity] - rank[a.severity];
+    return s !== 0 ? s : (a.lastSeen < b.lastSeen ? 1 : -1);
+  });
 
   const link = (s: string, sev: string) => {
     const p = new URLSearchParams();
@@ -37,9 +45,42 @@ export default async function IssuesPage({
   return (
     <>
       <h1>Issues</h1>
-      <p className="subtitle">
-        What looks wrong, ranked. Open one, watch the clip, and make the call.
-      </p>
+      <p className="subtitle">What looks wrong, ranked. Open one, watch the clip, make the call.</p>
+
+      <div className="stat-row">
+        <div className="stat">
+          <div className="stat-label">
+            <span className="dot accent" />
+            Open issues
+          </div>
+          <div className="stat-value">{open.length}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">
+            <span className="dot high" />
+            High
+          </div>
+          <div className="stat-value" style={{ color: 'var(--high)' }}>
+            {count('high')}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">
+            <span className="dot medium" />
+            Medium
+          </div>
+          <div className="stat-value" style={{ color: 'var(--medium)' }}>
+            {count('medium')}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">
+            <span className="dot low" />
+            Low
+          </div>
+          <div className="stat-value">{count('low')}</div>
+        </div>
+      </div>
 
       <div className="filters">
         {STATUS_FILTERS.map((s) => (
@@ -47,7 +88,7 @@ export default async function IssuesPage({
             {s}
           </Link>
         ))}
-        <span style={{ width: 12 }} />
+        <span className="sep" />
         {SEVERITY_FILTERS.map((sev) => (
           <Link key={sev} href={link(status, sev)} className={sev === severity ? 'active' : ''}>
             {sev === 'all' ? 'any severity' : sev}
@@ -66,47 +107,49 @@ export default async function IssuesPage({
           </p>
         </div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th style={{ width: 90 }}>Severity</th>
-              <th>Issue</th>
-              <th style={{ width: 140 }}>Detector</th>
-              <th style={{ width: 110 }}>Occurrences</th>
-              <th style={{ width: 90 }}>Sessions</th>
-              <th style={{ width: 110 }}>Last seen</th>
-              <th style={{ width: 100 }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {groups.map((g) => (
-              <tr key={g.groupKey}>
-                <td>
-                  <span className={`badge ${g.severity}`}>{g.severity}</span>
-                </td>
-                <td>
-                  <Link href={`/p/${projectId}/issues/${encodeURIComponent(g.groupKey)}`}>
-                    {g.title}
-                  </Link>
-                  {g.aiSummary && (
-                    <div className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>
-                      {g.aiSummary}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <span className="chip">{g.detector}</span>
-                </td>
-                <td>{g.occurrences}</td>
-                <td>{g.sessionCount}</td>
-                <td className="muted">{timeAgo(g.lastSeen)}</td>
-                <td>
-                  <span className={`badge ${g.status}`}>{g.status}</span>
-                </td>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 104 }}>Severity</th>
+                <th>Issue</th>
+                <th style={{ width: 150 }}>Detector</th>
+                <th style={{ width: 100 }}>Count</th>
+                <th style={{ width: 110 }}>Last seen</th>
+                <th style={{ width: 104 }}>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {groups.map((g) => (
+                <tr key={g.groupKey}>
+                  <td>
+                    <span className={`badge ${g.severity}`}>{g.severity}</span>
+                  </td>
+                  <td>
+                    <Link
+                      href={`/p/${projectId}/issues/${encodeURIComponent(g.groupKey)}`}
+                      className="cell-title"
+                    >
+                      {g.title}
+                    </Link>
+                    {g.aiSummary && <div className="cell-sub">{g.aiSummary}</div>}
+                  </td>
+                  <td>
+                    <span className="chip">{g.detector}</span>
+                  </td>
+                  <td className="muted">
+                    {g.occurrences}
+                    {g.sessionCount > 1 ? ` · ${g.sessionCount} sessions` : ''}
+                  </td>
+                  <td className="muted">{timeAgo(g.lastSeen)}</td>
+                  <td>
+                    <span className={`badge ${g.status}`}>{g.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   );

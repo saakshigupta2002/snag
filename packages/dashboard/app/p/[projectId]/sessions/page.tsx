@@ -25,36 +25,38 @@ export default async function SessionsPage({
           up here within seconds.
         </div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Started</th>
-              <th>Entry page</th>
-              <th>Duration</th>
-              <th>Events</th>
-              <th>Device</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessions.map((s) => (
-              <tr key={s.id}>
-                <td>{timeAgo(s.startedAt)}</td>
-                <td className="mono">{pathOfUrl(s.urlFirst)}</td>
-                <td>{duration(s.startedAt, s.endedAt)}</td>
-                <td>{s.eventCount}</td>
-                <td className="muted">{s.device ?? '—'}</td>
-                <td>
-                  <span className="chip">{s.status}</span>
-                </td>
-                <td>
-                  <Link href={`/p/${projectId}/sessions/${encodeURIComponent(s.id)}`}>watch</Link>
-                </td>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Started</th>
+                <th>Entry page</th>
+                <th>Duration</th>
+                <th>Events</th>
+                <th>Device</th>
+                <th>Status</th>
+                <th style={{ width: 70 }}></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sessions.map((s) => (
+                <tr key={s.id}>
+                  <td>{timeAgo(s.startedAt)}</td>
+                  <td className="mono">{pathOfUrl(s.urlFirst)}</td>
+                  <td className="muted">{duration(s.startedAt, s.endedAt)}</td>
+                  <td>{s.eventCount}</td>
+                  <td className="muted">{s.device ?? '—'}</td>
+                  <td>
+                    <span className="chip">{s.status}</span>
+                  </td>
+                  <td>
+                    <Link href={`/p/${projectId}/sessions/${encodeURIComponent(s.id)}`}>watch</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   );
