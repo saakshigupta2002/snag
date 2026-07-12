@@ -272,12 +272,22 @@ export function SessionReplay({
       <div className="replay-stage-wrap">
         <div ref={stageRef} className="replay-stage" style={{ display: showControls ? 'block' : 'none' }} />
         {state === 'ready' && (
-          <div className="replay-overlay" onClick={toggle} title={playing ? 'Pause' : 'Play'}>
-            {!playing && (
-              <span className="replay-bigplay">
-                <svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
-              </span>
-            )}
+          <div className={`replay-overlay ${playing ? '' : 'paused'}`} onClick={toggle}>
+            <div className="replay-center" onClick={(e) => e.stopPropagation()}>
+              <button className="replay-cbtn" onClick={() => skip(-10000)} aria-label="Back 10 seconds" title="Back 10s (←)">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M11 6a7 7 0 1 1-6.3 4" /><path d="M4 4v4h4" /><text x="12.5" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
+              </button>
+              <button className="replay-cbtn big" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>
+                {playing ? (
+                  <svg viewBox="0 0 24 24" width="26" height="26"><rect x="6" y="5" width="4.5" height="14" rx="1" fill="currentColor" /><rect x="13.5" y="5" width="4.5" height="14" rx="1" fill="currentColor" /></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="26" height="26" style={{ marginLeft: 3 }}><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
+                )}
+              </button>
+              <button className="replay-cbtn" onClick={() => skip(10000)} aria-label="Forward 10 seconds" title="Forward 10s (→)">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13 6a7 7 0 1 0 6.3 4" /><path d="M20 4v4h-4" /><text x="11.5" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
+              </button>
+            </div>
           </div>
         )}
         {state === 'blank' && (
@@ -320,12 +330,6 @@ export function SessionReplay({
               ) : (
                 <svg viewBox="0 0 24 24" width="17" height="17"><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
               )}
-            </button>
-            <button className="rc-btn" onClick={() => skip(-10000)} aria-label="Back 10 seconds" title="Back 10s (←)">
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M11 6a7 7 0 1 1-6.3 4" /><path d="M4 4v4h4" /><text x="12" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
-            </button>
-            <button className="rc-btn" onClick={() => skip(10000)} aria-label="Forward 10 seconds" title="Forward 10s (→)">
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13 6a7 7 0 1 0 6.3 4" /><path d="M20 4v4h-4" /><text x="12" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
             </button>
             <span className="rc-time mono">
               {fmt(posMs)} <span className="rc-time-total">/ {fmt(totalMs)}</span>

@@ -661,7 +661,9 @@ pre.snippet {
   font-size: 13.5px;
   min-height: 220px;
 }
-/* Click-anywhere-to-pause overlay (rrweb replay is a viewer, not interactive) */
+/* Click-anywhere-to-pause overlay (rrweb replay is a viewer, not interactive).
+   Center cluster (rewind 10 · play/pause · forward 10) shows on hover, and
+   stays visible whenever paused — YouTube-style. */
 .replay-overlay {
   position: absolute;
   inset: 0;
@@ -670,21 +672,39 @@ pre.snippet {
   align-items: center;
   justify-content: center;
 }
-.replay-bigplay {
+.replay-center {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.replay-overlay:hover .replay-center,
+.replay-overlay.paused .replay-center {
+  opacity: 1;
+}
+.replay-cbtn {
   display: grid;
   place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(6, 7, 10, 0.5);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.replay-cbtn.big {
   width: 62px;
   height: 62px;
-  border-radius: 50%;
-  background: rgba(6, 7, 10, 0.55);
-  color: #fff;
-  padding-left: 4px;
-  backdrop-filter: blur(2px);
-  box-shadow: 0 6px 24px -6px rgba(0, 0, 0, 0.6);
-  transition: transform 0.12s ease;
+  background: rgba(6, 7, 10, 0.58);
 }
-.replay-overlay:hover .replay-bigplay {
-  transform: scale(1.06);
+.replay-cbtn:hover {
+  background: rgba(6, 7, 10, 0.74);
+  transform: scale(1.07);
 }
 
 /* YouTube-style control bar */
