@@ -5,6 +5,8 @@ import { ProjectSwitcher, type SwitcherProject } from '@/components/ProjectSwitc
 import { SideNav } from '@/components/SideNav';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Wordmark } from '@/components/Wordmark';
+import { CommandPalette } from '@/components/CommandPalette';
+import { CommandHint } from '@/components/CommandHint';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +36,17 @@ export default async function ProjectLayout({
           <ProjectSwitcher projects={switcherProjects} currentId={projectId} />
         </div>
         <SideNav projectId={projectId} />
+        <CommandHint />
         <div className="spacer" />
         <div className="side-foot">
           <LogoutButton />
         </div>
       </aside>
       <main className="main">{children}</main>
+      <CommandPalette
+        projectId={projectId}
+        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+      />
     </div>
   );
 }

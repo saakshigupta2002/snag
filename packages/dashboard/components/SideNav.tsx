@@ -5,19 +5,17 @@ import { usePathname } from 'next/navigation';
 
 export function SideNav({ projectId }: { projectId: string }) {
   const pathname = usePathname();
+  const base = `/p/${projectId}`;
   const items = [
-    { seg: 'issues', label: 'issues' },
-    { seg: 'sessions', label: 'sessions' },
-    { seg: 'settings', label: 'settings' },
+    { href: base, label: 'overview', active: pathname === base },
+    { href: `${base}/issues`, label: 'issues', active: !!pathname?.includes('/issues') },
+    { href: `${base}/sessions`, label: 'sessions', active: !!pathname?.includes('/sessions') },
+    { href: `${base}/settings`, label: 'settings', active: !!pathname?.includes('/settings') },
   ];
   return (
     <nav className="side-nav">
-      {items.map(({ seg, label }) => (
-        <Link
-          key={seg}
-          href={`/p/${projectId}/${seg}`}
-          className={pathname?.includes(`/${seg}`) ? 'active' : ''}
-        >
+      {items.map(({ href, label, active }) => (
+        <Link key={label} href={href} className={active ? 'active' : ''}>
           {label}
         </Link>
       ))}

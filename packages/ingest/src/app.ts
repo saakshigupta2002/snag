@@ -3,7 +3,14 @@ import cors from '@fastify/cors';
 import type { IngestPayload, IssueStatus, ProjectSettings, Severity } from '@snag/shared';
 import { registry } from '@snag/detectors';
 import type { Config } from './config.js';
-import { groupIssues, sessionDbId, type Store } from './db/store.js';
+import {
+  computeDetectorStats,
+  computeOverview,
+  computeTrend,
+  groupIssues,
+  sessionDbId,
+  type Store,
+} from './db/store.js';
 import { processSession, runWorkerPass } from './worker.js';
 import { SDK_BUNDLE_BASE64 } from './sdk-bundle.js';
 
@@ -151,6 +158,21 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     return { session, events };
   });
 
+  // ── Overview / analytics ──────────────────────────────────────────────────
+  app.get('/api/projects/:id/overview', async (req) => {
+    const { id } = req.params as { id: string };
+    const [issues, sessions] = await Promise.all([
+      store.listIssues(id),
+      store.listSessions(id, 2000),
+    ]);
+    return computeOverview(issues, sessions);
+  });
+
+  app.get('/api/projects/:id/detector-stats', async (req) => {
+    const { id } = req.params as { id: string };
+    return computeDetectorStats(await store.listIssues(id));
+  });
+
   // ── Issues ────────────────────────────────────────────────────────────────
   app.get('/api/projects/:id/issues', async (req) => {
     const { id } = req.params as { id: string };
@@ -169,11 +191,16 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   app.get('/api/projects/:id/issues/:groupKey', async (req, reply) => {
     const { id, groupKey } = req.params as { id: string; groupKey: string };
     const key = decodeURIComponent(groupKey);
-    const issues = await store.issuesByGroup(id, key);
+    const [issues, allIssues, notes] = await Promise.all([
+      store.issuesByGroup(id, key),
+      store.listIssues(id),
+      store.getIssueNotes(id, key),
+    ]);
     if (!issues.length) return reply.code(404).send({ error: 'not found' });
     const summaries = await store.getAiSummaries(id);
     const [group] = groupIssues(issues, summaries);
-    return { group, issues };
+    const trend = computeTrend(allIssues, key);
+    return { group, issues, notes, trend };
   });
 
   app.post('/api/projects/:id/issues/:groupKey/status', async (req, reply) => {
@@ -182,8 +209,11 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     if (status !== 'open' && status !== 'confirmed' && status !== 'dismissed') {
       return reply.code(400).send({ error: 'status must be open | confirmed | dismissed' });
     }
-    const updated = await store.setGroupStatus(id, decodeURIComponent(groupKey), status, note);
+    const key = decodeURIComponent(groupKey);
+    const updated = await store.setGroupStatus(id, key, status, note);
     if (!updated) return reply.code(404).send({ error: 'not found' });
+    const action = status === 'open' ? 'reopened' : status;
+    await store.addIssueNote(id, key, action, note ?? null);
     return { ok: true, updated };
   });
 

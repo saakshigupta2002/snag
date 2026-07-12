@@ -3,6 +3,7 @@ import type { Session } from '@snag/shared';
 import type { Config } from './config.js';
 import type { NewIssue, Store } from './db/store.js';
 import { runAiPass } from './ai/runner.js';
+import { fireAlerts } from './alerts.js';
 
 export interface WorkerPassResult {
   sealed: number;
@@ -19,9 +20,11 @@ export interface WorkerPassResult {
  */
 export async function processSession(store: Store, session: Session): Promise<number> {
   try {
-    const [events, rules] = await Promise.all([
+    const [events, rules, existing, project] = await Promise.all([
       store.getSessionEvents(session.id),
       store.listFlagRules(session.projectId),
+      store.existingGroupKeys(session.projectId),
+      store.getProject(session.projectId),
     ]);
     const engineRules: EngineRule[] = rules
       .filter((r) => r.kind === 'builtin' || r.kind === 'custom_mechanical')
@@ -35,6 +38,12 @@ export async function processSession(store: Store, session: Session): Promise<nu
       status: 'open',
     }));
     await store.insertIssues(issues);
+
+    // Alert only on genuinely-new issue groups (first time this bug is seen).
+    const newGroups = candidates.filter((c) => !existing.has(c.groupKey));
+    if (newGroups.length && project) {
+      await fireAlerts(project, session, newGroups).catch(() => undefined);
+    }
     return issues.length;
   } catch (err) {
     // A bad session must not wedge the queue; log and move on.

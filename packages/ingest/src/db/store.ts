@@ -1,14 +1,19 @@
 import type {
+  DetectorStat,
   FlagRule,
+  IngestHealth,
   IngestPayload,
   Issue,
   IssueGroup,
+  IssueNote,
   IssueStatus,
+  Overview,
   Project,
   ProjectSettings,
   RawEvent,
   Session,
   Severity,
+  TrendPoint,
 } from '@snag/shared';
 
 export interface NewIssue {
@@ -106,6 +111,170 @@ export interface Store {
   /** groupKey → summary for a project (latest per group). */
   getAiSummaries(projectId: string): Promise<Record<string, string>>;
   hasAiAnalysis(projectId: string, groupKey: string): Promise<boolean>;
+
+  /** Distinct group keys already seen for a project (to detect new issues). */
+  existingGroupKeys(projectId: string): Promise<Set<string>>;
+  /** Append a triage note / status-change event to an issue group. */
+  addIssueNote(
+    projectId: string,
+    groupKey: string,
+    action: IssueNote['action'],
+    note: string | null,
+  ): Promise<IssueNote>;
+  getIssueNotes(projectId: string, groupKey: string): Promise<IssueNote[]>;
+}
+
+const DAY_MS = 86_400_000;
+const SEVERITY_RANK_MAP: Record<Severity, number> = { low: 0, medium: 1, high: 2 };
+
+function dayKey(iso: string, now = Date.now()): string {
+  void now;
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+/** Build the last `days` day-buckets (oldest→newest), zero-filled. */
+function emptyDays(days: number, now = Date.now()): TrendPoint[] {
+  const out: TrendPoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    out.push({ day: new Date(now - i * DAY_MS).toISOString().slice(0, 10), count: 0 });
+  }
+  return out;
+}
+
+/**
+ * Compute the whole overview payload from raw issues + sessions in JS, so both
+ * the in-memory and Postgres stores share one implementation. Grouping matches
+ * the dashboard: one row per (groupKey), first-seen anchors the day bucket.
+ */
+export function computeOverview(
+  issues: Issue[],
+  sessions: Session[],
+  days = 14,
+  now = Date.now(),
+): Overview {
+  const groups = new Map<string, { first: string; severity: Severity; detector: string; status: IssueStatus; page: string }>();
+  for (const i of issues) {
+    const g = groups.get(i.groupKey);
+    const page = pageOf(i);
+    if (!g) {
+      groups.set(i.groupKey, {
+        first: i.createdAt,
+        severity: i.severity,
+        detector: i.detector,
+        status: i.status,
+        page,
+      });
+    } else {
+      if (i.createdAt < g.first) g.first = i.createdAt;
+      if (SEVERITY_RANK_MAP[i.severity] > SEVERITY_RANK_MAP[g.severity]) g.severity = i.severity;
+      if (i.status === 'confirmed') g.status = 'confirmed';
+      else if (i.status === 'open' && g.status !== 'confirmed') g.status = 'open';
+    }
+  }
+
+  const bySeverity: Record<Severity, number> = { low: 0, medium: 0, high: 0 };
+  const detectorCounts = new Map<string, number>();
+  const pageCounts = new Map<string, number>();
+  const buckets = emptyDays(days, now);
+  const bucketIndex = new Map(buckets.map((b, i) => [b.day, i]));
+  const cutoff = now - days * DAY_MS;
+
+  let openIssues = 0;
+  let confirmedIssues = 0;
+  for (const g of groups.values()) {
+    if (g.status === 'open') {
+      openIssues++;
+      bySeverity[g.severity]++;
+      detectorCounts.set(g.detector, (detectorCounts.get(g.detector) ?? 0) + 1);
+      if (g.page) pageCounts.set(g.page, (pageCounts.get(g.page) ?? 0) + 1);
+    }
+    if (g.status === 'confirmed') confirmedIssues++;
+    if (Date.parse(g.first) >= cutoff) {
+      const idx = bucketIndex.get(dayKey(g.first));
+      if (idx !== undefined) buckets[idx]!.count++;
+    }
+  }
+
+  const topN = (m: Map<string, number>): { key: string; count: number }[] =>
+    [...m.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([key, count]) => ({ key, count }));
+
+  return {
+    totals: { openIssues, confirmedIssues, sessions: sessions.length, issueGroups: groups.size },
+    bySeverity,
+    issuesOverTime: buckets,
+    topDetectors: topN(detectorCounts),
+    topPages: topN(pageCounts),
+    ingest: computeIngestHealth(sessions, now),
+  };
+}
+
+export function computeIngestHealth(sessions: Session[], now = Date.now()): IngestHealth {
+  let lastMs = 0;
+  let eventsTotal = 0;
+  let sessionsToday = 0;
+  const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+  for (const s of sessions) {
+    eventsTotal += s.eventCount;
+    const ts = Date.parse(s.startedAt);
+    if (ts > lastMs) lastMs = ts;
+    if (ts >= startOfDay) sessionsToday++;
+  }
+  return {
+    lastSessionAt: lastMs ? new Date(lastMs).toISOString() : null,
+    sessionsToday,
+    eventsTotal,
+    minutesSinceLast: lastMs ? Math.floor((now - lastMs) / 60_000) : null,
+  };
+}
+
+/** Per-day occurrence trend for one issue group (its own created_at buckets). */
+export function computeTrend(issues: Issue[], groupKey: string, days = 14, now = Date.now()): TrendPoint[] {
+  const buckets = emptyDays(days, now);
+  const idx = new Map(buckets.map((b, i) => [b.day, i]));
+  const cutoff = now - days * DAY_MS;
+  for (const i of issues) {
+    if (i.groupKey !== groupKey) continue;
+    if (Date.parse(i.createdAt) < cutoff) continue;
+    const at = idx.get(dayKey(i.createdAt));
+    if (at !== undefined) buckets[at]!.count += i.occurrences || 1;
+  }
+  return buckets;
+}
+
+export function computeDetectorStats(issues: Issue[]): DetectorStat[] {
+  const byDetector = new Map<string, { groups: Map<string, IssueStatus> }>();
+  for (const i of issues) {
+    const d = byDetector.get(i.detector) ?? { groups: new Map() };
+    // Latest status wins per group (issues arrive oldest→newest).
+    const prev = d.groups.get(i.groupKey);
+    d.groups.set(i.groupKey, i.status === 'confirmed' ? 'confirmed' : (prev ?? i.status));
+    byDetector.set(i.detector, d);
+  }
+  return [...byDetector.entries()]
+    .map(([detector, { groups }]) => {
+      let confirmed = 0;
+      let dismissed = 0;
+      for (const st of groups.values()) {
+        if (st === 'confirmed') confirmed++;
+        else if (st === 'dismissed') dismissed++;
+      }
+      return { detector, fired: groups.size, confirmed, dismissed };
+    })
+    .sort((a, b) => b.fired - a.fired);
+}
+
+function pageOf(issue: Issue): string {
+  const meta = issue.meta as { url?: string; page?: string };
+  const raw = meta.page || meta.url || '';
+  if (!raw) return '';
+  try {
+    return new URL(raw, 'http://snag.local').pathname || '/';
+  } catch {
+    return raw.split('?')[0] || '';
+  }
 }
 
 const SEVERITY_RANK: Record<Severity, number> = { low: 0, medium: 1, high: 2 };

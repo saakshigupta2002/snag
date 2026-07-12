@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   FlagRule,
   Issue,
+  IssueNote,
   IssueStatus,
   Project,
   ProjectSettings,
@@ -34,6 +35,7 @@ export class MemoryStore implements Store {
   private issues = new Map<string, Issue>();
   private flagRules = new Map<string, FlagRule>();
   private aiAnalyses = new Map<string, AiAnalysisRecord & { createdAt: string }>();
+  private notes = new Map<string, IssueNote[]>(); // key = `${projectId}|${groupKey}`
 
   async init(): Promise<void> {}
   async close(): Promise<void> {}
@@ -260,5 +262,36 @@ export class MemoryStore implements Store {
 
   async hasAiAnalysis(projectId: string, groupKey: string): Promise<boolean> {
     return this.aiAnalyses.has(`${projectId}|${groupKey}`);
+  }
+
+  async existingGroupKeys(projectId: string): Promise<Set<string>> {
+    const set = new Set<string>();
+    for (const i of this.issues.values()) if (i.projectId === projectId) set.add(i.groupKey);
+    return set;
+  }
+
+  async addIssueNote(
+    projectId: string,
+    groupKey: string,
+    action: IssueNote['action'],
+    note: string | null,
+  ): Promise<IssueNote> {
+    const key = `${projectId}|${groupKey}`;
+    const entry: IssueNote = {
+      id: randomUUID(),
+      action,
+      note: note && note.trim() ? note.trim() : null,
+      createdAt: new Date().toISOString(),
+    };
+    const list = this.notes.get(key) ?? [];
+    list.push(entry);
+    this.notes.set(key, list);
+    return entry;
+  }
+
+  async getIssueNotes(projectId: string, groupKey: string): Promise<IssueNote[]> {
+    return [...(this.notes.get(`${projectId}|${groupKey}`) ?? [])].sort((a, b) =>
+      a.createdAt < b.createdAt ? 1 : -1,
+    );
   }
 }

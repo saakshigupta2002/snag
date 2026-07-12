@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ReplayPlayer } from '@/components/ReplayPlayer';
+import { SessionReplay } from '@/components/SessionReplay';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,7 @@ export default async function SessionReplayPage({
   const { projectId, sid } = await params;
   const { ts } = await searchParams;
   const sessionId = decodeURIComponent(sid);
-  const seekToTs = ts ? Number(ts) : undefined;
+  const flagTsStart = ts ? Number(ts) : undefined;
 
   return (
     <>
@@ -22,7 +22,7 @@ export default async function SessionReplayPage({
       </p>
       <h1>Session replay</h1>
       <p className="subtitle mono">{sessionId.split(':').pop()}</p>
-      <ReplayPlayer sessionId={sessionId} seekToTs={seekToTs} />
+      <SessionReplay sessionId={sessionId} flagTsStart={flagTsStart} />
     </>
   );
 }

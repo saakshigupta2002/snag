@@ -3,6 +3,7 @@ import { SCHEMA } from './schema.js';
 import type {
   FlagRule,
   Issue,
+  IssueNote,
   IssueStatus,
   Project,
   ProjectSettings,
@@ -393,5 +394,47 @@ export class PostgresStore implements Store {
       [projectId, groupKey],
     );
     return !!row;
+  }
+
+  async existingGroupKeys(projectId: string): Promise<Set<string>> {
+    const res = await this.pool.query(
+      `SELECT DISTINCT group_key FROM issues WHERE project_id = $1`,
+      [projectId],
+    );
+    return new Set(res.rows.map((r: Row) => String(r.group_key)));
+  }
+
+  async addIssueNote(
+    projectId: string,
+    groupKey: string,
+    action: IssueNote['action'],
+    note: string | null,
+  ): Promise<IssueNote> {
+    const clean = note && note.trim() ? note.trim() : null;
+    const row = await this.one(
+      `INSERT INTO issue_notes (project_id, group_key, action, note)
+       VALUES ($1, $2, $3, $4) RETURNING id, action, note, created_at`,
+      [projectId, groupKey, action, clean],
+    );
+    return {
+      id: String(row!.id),
+      action: row!.action as IssueNote['action'],
+      note: (row!.note as string | null) ?? null,
+      createdAt: new Date(row!.created_at as string | Date).toISOString(),
+    };
+  }
+
+  async getIssueNotes(projectId: string, groupKey: string): Promise<IssueNote[]> {
+    const res = await this.pool.query(
+      `SELECT id, action, note, created_at FROM issue_notes
+       WHERE project_id = $1 AND group_key = $2 ORDER BY created_at DESC`,
+      [projectId, groupKey],
+    );
+    return res.rows.map((r: Row) => ({
+      id: String(r.id),
+      action: r.action as IssueNote['action'],
+      note: (r.note as string | null) ?? null,
+      createdAt: new Date(r.created_at as string | Date).toISOString(),
+    }));
   }
 }

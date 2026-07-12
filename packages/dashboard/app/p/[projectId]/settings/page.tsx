@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
-import type { FlagRule, Project } from '@snag/shared';
+import type { DetectorStat, FlagRule, Project } from '@snag/shared';
 import { api, ApiError } from '@/lib/api';
 import { CopyButton } from '@/components/CopyButton';
 import { ProjectSettingsForm } from '@/components/ProjectSettingsForm';
-import { FlagTable, type BuiltinFlag } from '@/components/FlagTable';
+import { DetectorTuner, type BuiltinFlag } from '@/components/DetectorTuner';
+import { AlertsForm } from '@/components/AlertsForm';
 import { CustomFlagBuilder } from '@/components/CustomFlagBuilder';
 import { CustomFlagList } from '@/components/CustomFlagList';
 
@@ -22,9 +23,10 @@ export default async function SettingsPage({
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
   }
-  const flags = await api<{ builtins: BuiltinFlag[]; custom: FlagRule[] }>(
-    `/api/projects/${projectId}/flags`,
-  );
+  const [flags, detectorStats] = await Promise.all([
+    api<{ builtins: BuiltinFlag[]; custom: FlagRule[] }>(`/api/projects/${projectId}/flags`),
+    api<DetectorStat[]>(`/api/projects/${projectId}/detector-stats`),
+  ]);
 
   const snippet = `import { Snag } from "@snag/sdk";
 
@@ -62,12 +64,14 @@ Snag.init({
         settings={project.settings}
       />
 
+      <AlertsForm projectId={project.id} settings={project.settings} />
+
       <h2>Detectors</h2>
       <p className="muted" style={{ marginTop: -4 }}>
         Toggle and tune per project. Tier 2 detectors ship off until tuned against real traffic —
-        precision over coverage.
+        precision over coverage. Fire counts show how often each has flagged something.
       </p>
-      <FlagTable projectId={project.id} flags={flags.builtins} />
+      <DetectorTuner projectId={project.id} flags={flags.builtins} stats={detectorStats} />
 
       <h2>Custom flags</h2>
       <CustomFlagList projectId={project.id} rules={flags.custom} />

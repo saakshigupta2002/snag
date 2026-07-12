@@ -1,84 +1,22 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { Issue, IssueGroup, RawEvent } from '@snag/shared';
-import { normalize, type NormalizedEvent } from '@snag/detectors';
+import type { Issue, IssueGroup, IssueNote, TrendPoint } from '@snag/shared';
 import { api, ApiError } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
-import { ReplayPlayer } from '@/components/ReplayPlayer';
+import { SessionReplay } from '@/components/SessionReplay';
 import { StatusButtons } from '@/components/StatusButtons';
+import { ShareButton } from '@/components/ShareButton';
+import { Sparkline } from '@/components/charts';
 
 export const dynamic = 'force-dynamic';
 
-const EVIDENCE_WINDOW_MS = 15_000;
-
-/** Side-panel: the console/network/navigation signals around the moment —
- *  tying the visible frustration to its technical cause. */
-function evidenceAround(events: RawEvent[], tsStart: number, tsEnd: number): NormalizedEvent[] {
-  return normalize(events)
-    .filter(
-      (e) =>
-        e.ts >= tsStart - EVIDENCE_WINDOW_MS &&
-        e.ts <= tsEnd + EVIDENCE_WINDOW_MS &&
-        (e.t === 'console' ||
-          e.t === 'error' ||
-          e.t === 'network' ||
-          e.t === 'navigation' ||
-          e.t === 'click' ||
-          e.t === 'form'),
-    )
-    .slice(0, 80);
-}
-
-function EvidenceLine({ e, tsStart }: { e: NormalizedEvent; tsStart: number }) {
-  const dt = `${((e.ts - tsStart) / 1000).toFixed(1)}s`;
-  const inWindow = e.ts >= tsStart;
-  switch (e.t) {
-    case 'console':
-      return (
-        <div className={inWindow ? 'flagline' : ''}>
-          <span className="t">{dt}</span>
-          <span className="err">console.{e.level}</span> {e.message.slice(0, 160)}
-        </div>
-      );
-    case 'error':
-      return (
-        <div className={inWindow ? 'flagline' : ''}>
-          <span className="t">{dt}</span>
-          <span className="err">uncaught</span> {e.message.slice(0, 160)}
-        </div>
-      );
-    case 'network':
-      return (
-        <div>
-          <span className="t">{dt}</span>
-          <span className="net">
-            {e.method} {e.path}
-          </span>{' '}
-          → {e.status ?? e.error ?? 'timeout'} ({e.durationMs}ms)
-        </div>
-      );
-    case 'navigation':
-      return (
-        <div>
-          <span className="t">{dt}</span>
-          <span className="nav">navigate</span> {e.path} ({e.trigger})
-        </div>
-      );
-    case 'click':
-      return (
-        <div>
-          <span className="t">{dt}</span>click {e.selector}
-          {e.text ? ` “${e.text.slice(0, 40)}”` : ''}
-        </div>
-      );
-    case 'form':
-      return (
-        <div>
-          <span className="t">{dt}</span>form {e.action} {e.formSelector}
-        </div>
-      );
-    default:
-      return null;
+function pageOf(meta: Record<string, unknown>): string {
+  const raw = (meta.page as string) || (meta.url as string) || '';
+  if (!raw) return '—';
+  try {
+    return new URL(raw, 'http://x.local').pathname || '/';
+  } catch {
+    return raw;
   }
 }
 
@@ -89,89 +27,105 @@ export default async function IssueDetailPage({
 }) {
   const { projectId, groupKey } = await params;
 
-  let data: { group: IssueGroup; issues: Issue[] };
+  let data: { group: IssueGroup; issues: Issue[]; notes: IssueNote[]; trend: TrendPoint[] };
   try {
     data = await api(`/api/projects/${projectId}/issues/${groupKey}`);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
   }
-  const { group, issues } = data;
+  const { group, issues, notes, trend } = data;
   const sample = group.sample;
-
-  let evidence: NormalizedEvent[] = [];
-  if (sample.sessionId) {
-    try {
-      const { events } = await api<{ events: RawEvent[] }>(
-        `/api/sessions/${encodeURIComponent(sample.sessionId)}/events`,
-      );
-      evidence = evidenceAround(events, sample.tsStart, sample.tsEnd);
-    } catch {
-      // replay pruned — the issue record still stands on its own
-    }
-  }
 
   return (
     <>
       <p>
         <Link href={`/p/${projectId}/issues`}>← Issues</Link>
       </p>
-      <h1>{group.title}</h1>
+      <div className="section-head" style={{ alignItems: 'flex-start' }}>
+        <h1 style={{ maxWidth: '46ch' }}>{group.title}</h1>
+        <ShareButton />
+      </div>
       <p className="subtitle row">
         <span className={`badge ${group.severity}`}>{group.severity}</span>
         <span className={`badge ${group.status}`}>{group.status}</span>
         <span className="chip">{group.detector}</span>
         <span className="muted">
-          {group.occurrences} occurrence{group.occurrences === 1 ? '' : 's'} across{' '}
-          {group.sessionCount} session{group.sessionCount === 1 ? '' : 's'} · first seen{' '}
-          {timeAgo(group.firstSeen)} · last seen {timeAgo(group.lastSeen)}
+          {group.occurrences} occurrence{group.occurrences === 1 ? '' : 's'} · {group.sessionCount}{' '}
+          session{group.sessionCount === 1 ? '' : 's'} · last seen {timeAgo(group.lastSeen)}
         </span>
       </p>
 
       {group.aiSummary && (
         <div className="ai-summary">
-          <div className="tag">AI read (your key)</div>
+          <div className="tag">◆ AI read · your key</div>
           {group.aiSummary}
         </div>
       )}
 
-      <div className="detail-grid">
-        <div>
-          {sample.sessionId ? (
-            <ReplayPlayer sessionId={sample.sessionId} seekToTs={sample.tsStart} />
-          ) : (
-            <div className="empty">
-              The raw session for this issue has been pruned by retention. The issue record (and
-              your verdict) is kept.
-            </div>
-          )}
-          <StatusButtons projectId={projectId} groupKey={group.groupKey} status={group.status} />
-          {sample.note && (
-            <p className="muted">
-              Note: <em>{sample.note}</em>
-            </p>
-          )}
+      {sample.sessionId ? (
+        <SessionReplay
+          sessionId={sample.sessionId}
+          flagTsStart={sample.tsStart}
+          flagTsEnd={sample.tsEnd}
+          withEvidence
+        />
+      ) : (
+        <div className="empty" style={{ marginBottom: 18 }}>
+          The raw session for this issue was pruned by retention. Your verdict is kept.
         </div>
+      )}
+
+      <div className="detail-grid" style={{ marginTop: 18 }}>
+        <StatusButtons projectId={projectId} groupKey={group.groupKey} status={group.status} />
 
         <div>
           <div className="card">
-            <h2 style={{ marginTop: 0 }}>What happened around it</h2>
-            {evidence.length ? (
-              <div className="evidence">
-                {evidence.map((e, i) => (
-                  <EvidenceLine key={i} e={e} tsStart={sample.tsStart} />
-                ))}
-              </div>
-            ) : (
-              <p className="muted">No nearby console or network signals.</p>
-            )}
+            <h2 style={{ marginTop: 0 }}>Occurrences</h2>
+            <Sparkline data={trend} height={56} />
           </div>
 
           <div className="card">
-            <h2 style={{ marginTop: 0 }}>Evidence</h2>
-            <pre className="snippet" style={{ whiteSpace: 'pre-wrap' }}>
-              {JSON.stringify(sample.meta, null, 2)}
-            </pre>
+            <h2 style={{ marginTop: 0 }}>Context</h2>
+            <dl className="ctx">
+              <dt>page</dt>
+              <dd className="mono">{pageOf(sample.meta)}</dd>
+              <dt>detector</dt>
+              <dd className="mono">{group.detector}</dd>
+              <dt>first seen</dt>
+              <dd>{timeAgo(group.firstSeen)}</dd>
+              <dt>sessions</dt>
+              <dd>{group.sessionCount}</dd>
+              {sample.sessionId && (
+                <>
+                  <dt>session</dt>
+                  <dd>
+                    <Link href={`/p/${projectId}/sessions/${encodeURIComponent(sample.sessionId)}?ts=${sample.tsStart}`}>
+                      watch full →
+                    </Link>
+                  </dd>
+                </>
+              )}
+            </dl>
+          </div>
+
+          <div className="card">
+            <h2 style={{ marginTop: 0 }}>History</h2>
+            {notes.length === 0 ? (
+              <p className="muted" style={{ fontSize: 12.5 }}>No verdict yet.</p>
+            ) : (
+              <div className="notes">
+                {notes.map((n) => (
+                  <div className="note" key={n.id}>
+                    <span className={`badge ${noteBadge(n.action)}`}>{n.action}</span>
+                    <div className="note-body">
+                      {n.note && <div>{n.note}</div>}
+                      <div className="muted mono" style={{ fontSize: 11 }}>{timeAgo(n.createdAt)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {issues.length > 1 && (
@@ -181,16 +135,14 @@ export default async function IssueDetailPage({
                 .slice(-8)
                 .reverse()
                 .map((i) => (
-                  <div key={i.id} className="row" style={{ marginBottom: 6 }}>
+                  <div key={i.id} className="row" style={{ marginBottom: 6, fontSize: 12.5 }}>
                     <span className="muted">{timeAgo(i.createdAt)}</span>
                     {i.sessionId ? (
-                      <Link
-                        href={`/p/${projectId}/sessions/${encodeURIComponent(i.sessionId)}?ts=${i.tsStart}`}
-                      >
+                      <Link href={`/p/${projectId}/sessions/${encodeURIComponent(i.sessionId)}?ts=${i.tsStart}`}>
                         watch
                       </Link>
                     ) : (
-                      <span className="muted">replay pruned</span>
+                      <span className="muted">pruned</span>
                     )}
                   </div>
                 ))}
@@ -200,4 +152,10 @@ export default async function IssueDetailPage({
       </div>
     </>
   );
+}
+
+function noteBadge(action: string): string {
+  if (action === 'confirmed') return 'confirmed';
+  if (action === 'dismissed') return 'dismissed';
+  return 'open';
 }

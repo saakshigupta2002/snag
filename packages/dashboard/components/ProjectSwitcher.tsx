@@ -17,22 +17,26 @@ export function ProjectSwitcher({
 }) {
   const router = useRouter();
   return (
-    <select
-      value={currentId}
-      onChange={(e) => {
-        if (e.target.value === '__new__') router.push('/');
-        else router.push(`/p/${e.target.value}/issues`);
-      }}
-      style={{ width: '100%', marginBottom: 10 }}
-      aria-label="Switch project"
-    >
-      {projects.map((p) => (
-        <option key={p.id} value={p.id}>
-          {p.name}
-          {p.openIssues ? ` (${p.openIssues} open)` : ''}
-        </option>
-      ))}
-      <option value="__new__">＋ New project…</option>
-    </select>
+    <div className="switcher">
+      <select
+        value={currentId}
+        onChange={(e) => {
+          if (e.target.value === '__new__') router.push('/');
+          else router.push(`/p/${e.target.value}`);
+        }}
+        aria-label="Switch project"
+      >
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+            {p.openIssues ? ` · ${p.openIssues} open` : ''}
+          </option>
+        ))}
+        <option value="__new__">+ new project…</option>
+      </select>
+      <span className="switcher-chevron" aria-hidden="true">
+        ⌄
+      </span>
+    </div>
   );
 }

@@ -80,4 +80,14 @@ CREATE TABLE IF NOT EXISTS ai_analyses (
   UNIQUE (project_id, group_key)
 );
 CREATE INDEX IF NOT EXISTS ai_analyses_created_idx ON ai_analyses (created_at);
+
+CREATE TABLE IF NOT EXISTS issue_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  group_key TEXT NOT NULL,
+  action TEXT NOT NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS issue_notes_group_idx ON issue_notes (project_id, group_key, created_at DESC);
 `;

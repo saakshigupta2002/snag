@@ -6,6 +6,11 @@ export interface ProjectSettings {
     /** Analyze at most this fraction of flagged groups when volume is high. */
     sampling?: number;
   };
+  /** Fire a webhook when a new qualifying issue appears. */
+  alerts?: {
+    webhookUrl?: string;
+    minSeverity?: 'low' | 'medium' | 'high';
+  };
   /** Masking notes surfaced in the dashboard; enforcement lives in the SDK config. */
   masking?: {
     maskAllInputs?: boolean;
