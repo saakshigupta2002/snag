@@ -38,6 +38,7 @@ export function SessionReplay({
   const rafRef = useRef<number | null>(null);
   const startRef = useRef(0);
   const dimsRef = useRef<[number, number]>([1280, 800]);
+  const eventsRef = useRef<RawEvent[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'empty' | 'error' | 'blank'>('loading');
   const [playing, setPlaying] = useState(false);
   const [totalMs, setTotalMs] = useState(0);
@@ -71,6 +72,7 @@ export function SessionReplay({
           setState('empty');
           return;
         }
+        eventsRef.current = events;
         const start = events[0]!.timestamp;
         startRef.current = start;
         const metaEv = events.find((e) => e.type === RRWEB_TYPE.Meta)?.data as
@@ -195,6 +197,24 @@ export function SessionReplay({
     if (playing) r.play(clamped);
     else r.pause(clamped);
   };
+  const skip = (delta: number) => {
+    const r = replayerRef.current;
+    if (!r) return;
+    seek(r.getCurrentTime() + delta);
+  };
+  const download = () => {
+    const events = eventsRef.current;
+    if (!events.length) return;
+    const blob = new Blob([JSON.stringify(events)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `snag-session-${sessionId.split(':').pop()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const changeSpeed = (s: number) => {
     setSpeed(s);
     setSpeedOpen(false);
@@ -204,6 +224,34 @@ export function SessionReplay({
     if (document.fullscreenElement) document.exitFullscreen?.();
     else frameRef.current?.requestFullscreen?.();
   };
+
+  // Keep latest actions in a ref so the keyboard listener never goes stale.
+  const actionsRef = useRef({ toggle, skip, fullscreen });
+  actionsRef.current = { toggle, skip, fullscreen };
+
+  useEffect(() => {
+    if (state !== 'ready' && state !== 'blank') return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (/^(input|textarea|select)$/i.test(el.tagName) || el.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const a = actionsRef.current;
+      if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        a.toggle();
+      } else if (e.key === 'ArrowLeft' || e.key === 'j') {
+        e.preventDefault();
+        a.skip(-10000);
+      } else if (e.key === 'ArrowRight' || e.key === 'l') {
+        e.preventDefault();
+        a.skip(10000);
+      } else if (e.key === 'f') {
+        a.fullscreen();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state]);
 
   const currentEvIdx = useMemo(() => {
     let idx = -1;
@@ -223,6 +271,15 @@ export function SessionReplay({
       {state === 'error' && <div className="replay-msg error-text">Could not load the replay.</div>}
       <div className="replay-stage-wrap">
         <div ref={stageRef} className="replay-stage" style={{ display: showControls ? 'block' : 'none' }} />
+        {state === 'ready' && (
+          <div className="replay-overlay" onClick={toggle} title={playing ? 'Pause' : 'Play'}>
+            {!playing && (
+              <span className="replay-bigplay">
+                <svg viewBox="0 0 24 24" width="26" height="26"><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
+              </span>
+            )}
+          </div>
+        )}
         {state === 'blank' && (
           <div className="replay-blank">
             <span>No visual frames in this recording</span>
@@ -264,6 +321,12 @@ export function SessionReplay({
                 <svg viewBox="0 0 24 24" width="17" height="17"><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
               )}
             </button>
+            <button className="rc-btn" onClick={() => skip(-10000)} aria-label="Back 10 seconds" title="Back 10s (←)">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M11 6a7 7 0 1 1-6.3 4" /><path d="M4 4v4h4" /><text x="12" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
+            </button>
+            <button className="rc-btn" onClick={() => skip(10000)} aria-label="Forward 10 seconds" title="Forward 10s (→)">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13 6a7 7 0 1 0 6.3 4" /><path d="M20 4v4h-4" /><text x="12" y="15.5" fontSize="7" fill="currentColor" stroke="none" textAnchor="middle">10</text></svg>
+            </button>
             <span className="rc-time mono">
               {fmt(posMs)} <span className="rc-time-total">/ {fmt(totalMs)}</span>
             </span>
@@ -285,7 +348,10 @@ export function SessionReplay({
                 </>
               )}
             </div>
-            <button className="rc-btn" onClick={fullscreen} aria-label="Fullscreen">
+            <button className="rc-btn" onClick={download} aria-label="Download recording" title="Download recording (.json)">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>
+            </button>
+            <button className="rc-btn" onClick={fullscreen} aria-label="Fullscreen" title="Fullscreen (f)">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
             </button>
           </div>

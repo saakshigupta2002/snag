@@ -661,6 +661,31 @@ pre.snippet {
   font-size: 13.5px;
   min-height: 220px;
 }
+/* Click-anywhere-to-pause overlay (rrweb replay is a viewer, not interactive) */
+.replay-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.replay-bigplay {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(6, 7, 10, 0.55);
+  color: #fff;
+  padding-left: 4px;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 6px 24px -6px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s ease;
+}
+.replay-overlay:hover .replay-bigplay {
+  transform: scale(1.06);
+}
 
 /* YouTube-style control bar */
 .rc {
