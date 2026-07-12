@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { Overview, Project } from '@snag/shared';
 import { api } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
-import { Sparkline, BarList } from '@/components/charts';
+import { BarList } from '@/components/charts';
+import { AreaChart } from '@/components/AreaChart';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,7 +92,7 @@ export default async function OverviewPage({
             <span className="eyebrow">last 14 days</span>
           </div>
           <div style={{ marginTop: 12 }}>
-            <Sparkline data={ov.issuesOverTime} />
+            <AreaChart data={ov.issuesOverTime} height={210} yLabel="issues" />
           </div>
         </div>
 

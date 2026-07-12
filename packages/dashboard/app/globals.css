@@ -629,6 +629,9 @@ pre.snippet {
   overflow: hidden;
   min-height: 120px;
 }
+.replay-stage-wrap {
+  position: relative;
+}
 .replay-stage {
   position: relative;
   width: 100%;
@@ -640,33 +643,225 @@ pre.snippet {
   top: 0;
   left: 0;
 }
-.replay-controls {
+.replay-msg {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 13px;
+}
+.replay-blank {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13.5px;
+  min-height: 220px;
+}
+
+/* YouTube-style control bar */
+.rc {
+  padding: 0 0 8px;
+  background: var(--panel-2);
+  border-top: 1px solid var(--border);
+}
+.rc-track {
+  position: relative;
+  height: 14px;
+  margin: 0 2px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--panel-2);
 }
-.replay-controls button {
-  min-width: 44px;
+.rc-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: height 0.1s ease;
+}
+.rc-track:hover::before {
+  height: 5px;
+}
+.rc-played {
+  position: absolute;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--teal);
+  box-shadow: 0 0 8px -1px var(--teal-glow);
+  transition: height 0.1s ease;
+  z-index: 1;
+}
+.rc-track:hover .rc-played {
+  height: 5px;
+}
+.rc-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--teal);
+  transform: translateX(-50%);
+  box-shadow: 0 0 10px -1px var(--teal-glow);
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.rc-track:hover .rc-handle {
+  opacity: 1;
+}
+.rc-markers {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.rc-marker {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border-radius: 1px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.rc-marker.error {
+  background: var(--high);
+}
+.rc-marker.network {
+  background: var(--medium);
+}
+.rc-marker.flag {
+  background: var(--teal-bright);
+  box-shadow: 0 0 6px 0 var(--teal);
+}
+.rc-marker:hover {
+  height: 13px;
+}
+.rc-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px 0;
+}
+.rc-btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  padding: 7px 10px;
-}
-.replay-controls input[type='range'] {
-  flex: 1;
-  accent-color: var(--teal);
+  width: 32px;
+  height: 32px;
   padding: 0;
-  background: transparent;
   border: none;
-  box-shadow: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-xs);
 }
-.replay-time {
-  font-family: var(--mono);
-  color: var(--text-dim);
+.rc-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--teal-bright);
+}
+.rc-time {
   font-size: 12px;
-  min-width: 96px;
-  text-align: right;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.rc-time-total {
+  color: var(--text-faint);
+}
+.rc-spacer {
+  flex: 1;
+}
+.rc-speed {
+  position: relative;
+}
+.rc-speed-btn {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
+  min-width: 40px;
+}
+.rc-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+}
+.rc-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 6;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+}
+.rc-menu button {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 6px 18px 6px 12px;
+  font-size: 12.5px;
+  border-radius: var(--radius-xs);
+  text-align: left;
+  justify-content: flex-start;
+}
+.rc-menu button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.rc-menu button.on {
+  color: var(--teal-bright);
+  background: var(--teal-soft);
+}
+
+/* Area chart axes + tooltip */
+.ac-axis {
+  fill: var(--text-faint);
+  font-size: 10px;
+  font-family: var(--mono);
+}
+.ac-ylabel {
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: rotate(-90deg) translateX(50%);
+  transform-origin: left center;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.ac-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--text);
+  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.7);
+}
+.ac-tip strong {
+  color: var(--teal-bright);
 }
 
 /* ── AI summary ──────────────────────────────────────────────────────────── */
@@ -1052,58 +1247,7 @@ kbd {
   color: var(--teal-bright);
   border-color: var(--teal-line);
 }
-.speeds {
-  display: flex;
-  gap: 3px;
-}
-
-/* ── Replay: markers, scrub, evidence sync ───────────────────────────────── */
-.scrub {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-.scrub input[type='range'] {
-  width: 100%;
-}
-.markers {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 0;
-  pointer-events: none;
-}
-.marker {
-  position: absolute;
-  top: -7px;
-  width: 3px;
-  height: 14px;
-  padding: 0;
-  border-radius: 1px;
-  border: none;
-  transform: translateX(-1px);
-  pointer-events: auto;
-  cursor: pointer;
-  min-width: 0;
-}
-.marker.error {
-  background: var(--high);
-  box-shadow: 0 0 6px 0 var(--high);
-}
-.marker.network {
-  background: var(--medium);
-  box-shadow: 0 0 6px 0 var(--medium);
-}
-.marker.flag {
-  background: var(--teal);
-  box-shadow: 0 0 6px 0 var(--teal);
-}
-.marker:hover {
-  height: 18px;
-  top: -9px;
-}
+/* ── Replay: evidence sync ───────────────────────────────────────────────── */
 .replay-with-evidence {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;

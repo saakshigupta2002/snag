@@ -6,7 +6,7 @@ import { timeAgo } from '@/lib/format';
 import { SessionReplay } from '@/components/SessionReplay';
 import { StatusButtons } from '@/components/StatusButtons';
 import { ShareButton } from '@/components/ShareButton';
-import { Sparkline } from '@/components/charts';
+import { AreaChart } from '@/components/AreaChart';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +82,7 @@ export default async function IssueDetailPage({
         <div>
           <div className="card">
             <h2 style={{ marginTop: 0 }}>Occurrences</h2>
-            <Sparkline data={trend} height={56} />
+            <AreaChart data={trend} height={150} />
           </div>
 
           <div className="card">

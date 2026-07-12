@@ -14,25 +14,33 @@ export function StatusButtons({
   groupKey: string;
   status: string;
 }) {
-  const [busy, setBusy] = useState(false);
+  const [optimistic, setOptimistic] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const router = useRouter();
   const toast = useToast();
+  const cur = optimistic ?? status;
 
-  async function set(next: 'confirmed' | 'dismissed' | 'open') {
-    setBusy(true);
-    await fetch(`/api/projects/${projectId}/issues/${encodeURIComponent(groupKey)}/status`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ status: next, note: note || undefined }),
-    });
-    setBusy(false);
+  function set(next: 'confirmed' | 'dismissed' | 'open') {
+    const noteVal = note || undefined;
+    setOptimistic(next);
     setNote('');
     toast(
       next === 'confirmed' ? 'Confirmed — real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
       next === 'dismissed' ? 'info' : 'ok',
     );
-    router.refresh();
+    fetch(`/api/projects/${projectId}/issues/${encodeURIComponent(groupKey)}/status`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ status: next, note: noteVal }),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        router.refresh();
+      })
+      .catch(() => {
+        setOptimistic(null);
+        toast('Could not update — try again', 'error');
+      });
   }
 
   return (
@@ -47,17 +55,13 @@ export function StatusButtons({
         style={{ width: '100%', marginBottom: 12 }}
       />
       <div className="row">
-        <button className="confirm" disabled={busy || status === 'confirmed'} onClick={() => set('confirmed')}>
+        <button className="confirm" disabled={cur === 'confirmed'} onClick={() => set('confirmed')}>
           ✓ Confirm — real bug
         </button>
-        <button className="dismiss" disabled={busy || status === 'dismissed'} onClick={() => set('dismissed')}>
+        <button className="dismiss" disabled={cur === 'dismissed'} onClick={() => set('dismissed')}>
           Dismiss — normal
         </button>
-        {status !== 'open' && (
-          <button disabled={busy} onClick={() => set('open')}>
-            Reopen
-          </button>
-        )}
+        {cur !== 'open' && <button onClick={() => set('open')}>Reopen</button>}
       </div>
     </div>
   );

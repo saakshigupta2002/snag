@@ -31,7 +31,6 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
   const [cursor, setCursor] = useState(0);
   const [leaving, setLeaving] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Record<string, IssueStatus>>({});
-  const [busy, setBusy] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const detectors = useMemo(
@@ -63,48 +62,48 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
     if (cursor >= rows.length) setCursor(Math.max(0, rows.length - 1));
   }, [rows.length, cursor]);
 
+  // Optimistic: reflect the verdict instantly, fire the request in the
+  // background, reconcile the server on success, revert on failure.
   const setGroupStatus = useCallback(
-    async (g: IssueGroup, next: IssueStatus) => {
-      if (busy) return;
-      setBusy(true);
-      // slide the row out if it will leave the current filter
+    (g: IssueGroup, next: IssueStatus) => {
+      toast(
+        next === 'confirmed' ? 'Confirmed — real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
+        next === 'dismissed' ? 'info' : 'ok',
+      );
+      const apply = () => setOverrides((o) => ({ ...o, [g.groupKey]: next }));
       const willLeave = status !== 'all' && next !== status;
-      if (willLeave) setLeaving((s) => new Set(s).add(g.groupKey));
-      try {
-        await fetch(`/api/projects/${projectId}/issues/${encodeURIComponent(g.groupKey)}/status`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ status: next }),
-        });
-        toast(
-          next === 'confirmed'
-            ? 'Confirmed — real bug'
-            : next === 'dismissed'
-              ? 'Dismissed'
-              : 'Reopened',
-          next === 'dismissed' ? 'info' : 'ok',
-        );
-        setTimeout(() => {
-          setOverrides((o) => ({ ...o, [g.groupKey]: next }));
+      if (willLeave) {
+        setLeaving((s) => new Set(s).add(g.groupKey));
+        window.setTimeout(() => {
+          apply();
           setLeaving((s) => {
             const n = new Set(s);
             n.delete(g.groupKey);
             return n;
           });
-          router.refresh();
-        }, 180);
-      } catch {
-        toast('Could not update — try again', 'error');
-        setLeaving((s) => {
-          const n = new Set(s);
-          n.delete(g.groupKey);
-          return n;
-        });
-      } finally {
-        setBusy(false);
+        }, 170);
+      } else {
+        apply();
       }
+      fetch(`/api/projects/${projectId}/issues/${encodeURIComponent(g.groupKey)}/status`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error();
+          router.refresh();
+        })
+        .catch(() => {
+          setOverrides((o) => {
+            const n = { ...o };
+            delete n[g.groupKey];
+            return n;
+          });
+          toast('Could not update — try again', 'error');
+        });
     },
-    [busy, status, projectId, toast, router],
+    [status, projectId, toast, router],
   );
 
   // Keyboard triage — active whenever focus isn't in a text field.
@@ -219,7 +218,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
                         <button
                           className="mini confirm"
                           title="Confirm (c)"
-                          disabled={busy || g.status === 'confirmed'}
+                          disabled={g.status === "confirmed"}
                           onClick={() => setGroupStatus(g, 'confirmed')}
                         >
                           ✓
@@ -227,7 +226,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
                         <button
                           className="mini"
                           title="Dismiss (d)"
-                          disabled={busy || g.status === 'dismissed'}
+                          disabled={g.status === "dismissed"}
                           onClick={() => setGroupStatus(g, 'dismissed')}
                         >
                           ✕

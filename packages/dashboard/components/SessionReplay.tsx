@@ -17,7 +17,7 @@ interface Ev {
   bad: boolean;
 }
 
-const SPEEDS = [1, 2, 4, 8];
+const SPEEDS = [0.5, 1, 2, 4, 8];
 
 export function SessionReplay({
   sessionId,
@@ -37,17 +37,21 @@ export function SessionReplay({
   const replayerRef = useRef<ReplayerType | null>(null);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef(0);
-  const [state, setState] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
+  const dimsRef = useRef<[number, number]>([1280, 800]);
+  const [state, setState] = useState<'loading' | 'ready' | 'empty' | 'error' | 'blank'>('loading');
   const [playing, setPlaying] = useState(false);
   const [totalMs, setTotalMs] = useState(0);
   const [posMs, setPosMs] = useState(0);
   const [speed, setSpeed] = useState(1);
+  const [speedOpen, setSpeedOpen] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [evidence, setEvidence] = useState<Ev[]>([]);
 
-  const fit = useCallback((stage: HTMLDivElement, w: number, h: number) => {
-    const wrap = stage.querySelector<HTMLElement>('.replayer-wrapper');
-    if (!wrap || !w) return;
+  const fit = useCallback(() => {
+    const stage = stageRef.current;
+    const wrap = stage?.querySelector<HTMLElement>('.replayer-wrapper');
+    if (!stage || !wrap) return;
+    const [w, h] = dimsRef.current;
     const scale = Math.min((stage.clientWidth || 900) / w, 1);
     wrap.style.transform = `scale(${scale})`;
     wrap.style.transformOrigin = 'top left';
@@ -72,10 +76,18 @@ export function SessionReplay({
         const metaEv = events.find((e) => e.type === RRWEB_TYPE.Meta)?.data as
           | { width?: number; height?: number }
           | undefined;
-        const recW = metaEv?.width ?? 1280;
-        const recH = metaEv?.height ?? 800;
+        dimsRef.current = [metaEv?.width ?? 1280, metaEv?.height ?? 800];
 
-        // Derive markers + evidence from Snag custom events.
+        // A recording is "blank" only if it has no full DOM snapshot to draw.
+        // Determine this from the events (deterministic) rather than probing
+        // the iframe, which isn't populated synchronously after pause().
+        const hasVisual = events.some(
+          (e) =>
+            e.type === RRWEB_TYPE.FullSnapshot &&
+            !!((e.data as { node?: { childNodes?: unknown[] } } | undefined)?.node?.childNodes
+              ?.length),
+        );
+
         const mk: Marker[] = [];
         const ev: Ev[] = [];
         for (const e of events) {
@@ -88,11 +100,11 @@ export function SessionReplay({
             ev.push({ offset: off, kind: p.kind === 'error' ? 'error' : 'console', text, bad: true });
           } else if (p.kind === 'network') {
             const failed = (p.status ?? 0) >= 400 || !!p.error || !!p.timedOut;
-            const text = `${p.method} ${new URL(p.url, 'http://x').pathname} → ${p.status ?? p.error ?? 'timeout'} (${p.durationMs}ms)`;
+            const text = `${p.method} ${safePath(p.url)} → ${p.status ?? p.error ?? 'timeout'} (${p.durationMs}ms)`;
             if (failed) mk.push({ offset: off, kind: 'network', label: text });
             ev.push({ offset: off, kind: 'network', text, bad: failed });
           } else if (p.kind === 'navigation') {
-            ev.push({ offset: off, kind: 'navigation', text: `navigate ${new URL(p.url, 'http://x').pathname}`, bad: false });
+            ev.push({ offset: off, kind: 'navigation', text: `navigate ${safePath(p.url)}`, bad: false });
           } else if (p.kind === 'click') {
             ev.push({ offset: off, kind: 'click', text: `click ${p.selector}${p.text ? ` "${p.text}"` : ''}`.slice(0, 140), bad: false });
           } else if (p.kind === 'form') {
@@ -121,9 +133,10 @@ export function SessionReplay({
           : 0;
         replayer.pause(startOffset);
         setPosMs(startOffset);
-        fit(stage, recW, recH);
+        fit();
         replayer.on('finish', () => setPlaying(false));
-        setState('ready');
+        setState(hasVisual ? 'ready' : 'blank');
+        requestAnimationFrame(fit);
       } catch {
         if (!cancelled) setState('error');
       }
@@ -142,6 +155,13 @@ export function SessionReplay({
       if (stage) stage.innerHTML = '';
     };
   }, [sessionId, flagTsStart, preRollMs, fit]);
+
+  // Re-fit on container/window resize.
+  useEffect(() => {
+    const onResize = () => fit();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [fit]);
 
   useEffect(() => {
     if (!playing) return;
@@ -177,11 +197,13 @@ export function SessionReplay({
   };
   const changeSpeed = (s: number) => {
     setSpeed(s);
-    (replayerRef.current as unknown as { setConfig?: (c: { speed: number }) => void })?.setConfig?.({
-      speed: s,
-    });
+    setSpeedOpen(false);
+    (replayerRef.current as unknown as { setConfig?: (c: { speed: number }) => void })?.setConfig?.({ speed: s });
   };
-  const fullscreen = () => frameRef.current?.requestFullscreen?.();
+  const fullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else frameRef.current?.requestFullscreen?.();
+  };
 
   const currentEvIdx = useMemo(() => {
     let idx = -1;
@@ -189,60 +211,84 @@ export function SessionReplay({
     return idx;
   }, [evidence, posMs]);
 
+  const pct = totalMs ? (posMs / totalMs) * 100 : 0;
+  const showControls = state === 'ready' || state === 'blank';
+
   const player = (
     <div className="replay" ref={frameRef}>
-      {state === 'loading' && <p className="muted" style={{ padding: 20 }}>Loading replay…</p>}
+      {state === 'loading' && <div className="replay-msg muted">Loading replay…</div>}
       {state === 'empty' && (
-        <p className="muted" style={{ padding: 20 }}>
-          This session’s raw recording is no longer available (pruned by retention).
-        </p>
+        <div className="replay-msg muted">This session’s recording was pruned by retention.</div>
       )}
-      {state === 'error' && (
-        <p className="error-text" style={{ padding: 20 }}>
-          Could not load the replay.
-        </p>
-      )}
-      <div ref={stageRef} className="replay-stage" style={{ display: state === 'ready' ? 'block' : 'none' }} />
-      {state === 'ready' && (
-        <div className="replay-controls">
-          <button onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>
-            {playing ? '❚❚' : '▶'}
-          </button>
-          <div className="scrub">
-            <input
-              type="range"
-              min={0}
-              max={totalMs || 0}
-              value={posMs}
-              onChange={(e) => seek(Number(e.target.value))}
-              aria-label="Seek"
-            />
-            <div className="markers">
+      {state === 'error' && <div className="replay-msg error-text">Could not load the replay.</div>}
+      <div className="replay-stage-wrap">
+        <div ref={stageRef} className="replay-stage" style={{ display: showControls ? 'block' : 'none' }} />
+        {state === 'blank' && (
+          <div className="replay-blank">
+            <span>No visual frames in this recording</span>
+            <span className="muted">The events and timeline are still shown →</span>
+          </div>
+        )}
+      </div>
+
+      {showControls && (
+        <div className="rc">
+          <div className="rc-track" onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            seek(((e.clientX - rect.left) / rect.width) * totalMs);
+          }}>
+            <div className="rc-buffered" />
+            <div className="rc-played" style={{ width: `${pct}%` }} />
+            <div className="rc-handle" style={{ left: `${pct}%` }} />
+            <div className="rc-markers">
               {markers.map((m, i) => (
-                <button
+                <span
                   key={i}
-                  className={`marker ${m.kind}`}
+                  className={`rc-marker ${m.kind}`}
                   style={{ left: `${totalMs ? (m.offset / totalMs) * 100 : 0}%` }}
                   title={m.label}
-                  onClick={() => seek(m.offset)}
-                  aria-label={m.label}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    seek(m.offset);
+                  }}
                 />
               ))}
             </div>
           </div>
-          <div className="speeds mono">
-            {SPEEDS.map((s) => (
-              <button key={s} className={`mini ${s === speed ? 'on' : ''}`} onClick={() => changeSpeed(s)}>
-                {s}×
+
+          <div className="rc-bar">
+            <button className="rc-btn" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>
+              {playing ? (
+                <svg viewBox="0 0 24 24" width="17" height="17"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" /><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" /></svg>
+              ) : (
+                <svg viewBox="0 0 24 24" width="17" height="17"><path d="M7 5l12 7-12 7V5Z" fill="currentColor" /></svg>
+              )}
+            </button>
+            <span className="rc-time mono">
+              {fmt(posMs)} <span className="rc-time-total">/ {fmt(totalMs)}</span>
+            </span>
+            <div className="rc-spacer" />
+            <div className="rc-speed">
+              <button className="rc-btn rc-speed-btn mono" onClick={() => setSpeedOpen((o) => !o)}>
+                {speed}×
               </button>
-            ))}
+              {speedOpen && (
+                <>
+                  <div className="rc-menu-backdrop" onClick={() => setSpeedOpen(false)} />
+                  <div className="rc-menu">
+                    {SPEEDS.map((s) => (
+                      <button key={s} className={`mono ${s === speed ? 'on' : ''}`} onClick={() => changeSpeed(s)}>
+                        {s}×
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <button className="rc-btn" onClick={fullscreen} aria-label="Fullscreen">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+            </button>
           </div>
-          <span className="mono replay-time">
-            {fmt(posMs)} / {fmt(totalMs)}
-          </span>
-          <button className="mini" title="Fullscreen" onClick={fullscreen}>
-            ⤢
-          </button>
         </div>
       )}
     </div>
@@ -285,6 +331,13 @@ export function SessionReplay({
   );
 }
 
+function safePath(url: string): string {
+  try {
+    return new URL(url, 'http://x').pathname;
+  } catch {
+    return url;
+  }
+}
 function fmt(ms: number): string {
   const s = Math.max(Math.floor(ms / 1000), 0);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
