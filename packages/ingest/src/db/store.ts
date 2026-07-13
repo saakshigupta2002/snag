@@ -76,6 +76,8 @@ export interface Store {
   listProjects(): Promise<ProjectWithStats[]>;
   getProject(id: string): Promise<Project | undefined>;
   getProjectByKey(projectKey: string): Promise<Project | undefined>;
+  /** Resolve a project from its public demo slug, only if sharing is enabled. */
+  getProjectByPublicId(publicId: string): Promise<Project | undefined>;
   updateProject(
     id: string,
     patch: { name?: string; settings?: ProjectSettings },

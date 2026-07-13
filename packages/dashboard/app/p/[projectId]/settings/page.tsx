@@ -5,6 +5,7 @@ import { CopyButton } from '@/components/CopyButton';
 import { ProjectSettingsForm } from '@/components/ProjectSettingsForm';
 import { DetectorTuner, type BuiltinFlag } from '@/components/DetectorTuner';
 import { AlertsForm } from '@/components/AlertsForm';
+import { ShareForm } from '@/components/ShareForm';
 import { CustomFlagBuilder } from '@/components/CustomFlagBuilder';
 import { CustomFlagList } from '@/components/CustomFlagList';
 
@@ -65,6 +66,8 @@ Snag.init({
       />
 
       <AlertsForm projectId={project.id} settings={project.settings} />
+
+      <ShareForm projectId={project.id} settings={project.settings} />
 
       <h2>Detectors</h2>
       <p className="muted" style={{ marginTop: -4 }}>

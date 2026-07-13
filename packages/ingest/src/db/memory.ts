@@ -73,6 +73,12 @@ export class MemoryStore implements Store {
     return [...this.projects.values()].find((p) => p.projectKey === projectKey);
   }
 
+  async getProjectByPublicId(publicId: string): Promise<Project | undefined> {
+    return [...this.projects.values()].find(
+      (p) => p.settings.share?.enabled && p.settings.share.publicId === publicId,
+    );
+  }
+
   async updateProject(
     id: string,
     patch: { name?: string; settings?: ProjectSettings },

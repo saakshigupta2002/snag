@@ -56,6 +56,10 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   app.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
     if (!req.url.startsWith('/api/')) return;
     if (req.url === '/api/health') return;
+    // Public read-only demo resolve: the unguessable publicId in the path IS the
+    // capability. It returns only {id, name, publicId} for an explicitly shared
+    // project — never traffic, and never anything for a project that isn't shared.
+    if (req.url.startsWith('/api/public-projects/')) return;
     if (!config.apiToken) return;
     const auth = req.headers.authorization;
     if (auth !== `Bearer ${config.apiToken}`) {
@@ -127,6 +131,15 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   });
 
   app.get('/api/projects', async () => store.listProjects());
+
+  // Resolve a public demo project by its share slug. Returns only safe fields
+  // (never the project key). 404 unless sharing is enabled.
+  app.get('/api/public-projects/:publicId', async (req, reply) => {
+    const { publicId } = req.params as { publicId: string };
+    const project = await store.getProjectByPublicId(publicId);
+    if (!project) return reply.code(404).send({ error: 'not found' });
+    return { id: project.id, name: project.name, publicId };
+  });
 
   app.get('/api/projects/:id', async (req, reply) => {
     const { id } = req.params as { id: string };

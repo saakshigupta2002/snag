@@ -7,7 +7,10 @@ export async function middleware(req: NextRequest) {
     pathname === '/login' ||
     pathname === '/api/login' ||
     pathname.startsWith('/_next') ||
-    pathname === '/favicon.ico'
+    pathname === '/favicon.ico' ||
+    // Public, read-only demo share — no login required.
+    pathname.startsWith('/demo') ||
+    pathname.startsWith('/api/demo')
   ) {
     return NextResponse.next();
   }

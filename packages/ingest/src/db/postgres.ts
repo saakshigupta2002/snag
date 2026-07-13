@@ -164,6 +164,16 @@ export class PostgresStore implements Store {
     return row ? projectFromRow(row) : undefined;
   }
 
+  async getProjectByPublicId(publicId: string): Promise<Project | undefined> {
+    const row = await this.one(
+      `SELECT * FROM projects
+       WHERE settings->'share'->>'publicId' = $1
+         AND (settings->'share'->>'enabled')::boolean IS TRUE`,
+      [publicId],
+    );
+    return row ? projectFromRow(row) : undefined;
+  }
+
   async updateProject(
     id: string,
     patch: { name?: string; settings?: ProjectSettings },

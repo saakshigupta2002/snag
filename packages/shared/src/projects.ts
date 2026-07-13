@@ -11,6 +11,12 @@ export interface ProjectSettings {
     webhookUrl?: string;
     minSeverity?: 'low' | 'medium' | 'high';
   };
+  /** Public read-only demo share for this project. */
+  share?: {
+    enabled: boolean;
+    /** Hard-to-guess slug used in the public /demo/<publicId> URL. */
+    publicId?: string;
+  };
   /** Masking notes surfaced in the dashboard; enforcement lives in the SDK config. */
   masking?: {
     maskAllInputs?: boolean;

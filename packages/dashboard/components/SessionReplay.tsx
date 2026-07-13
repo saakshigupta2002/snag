@@ -25,12 +25,15 @@ export function SessionReplay({
   flagTsEnd,
   preRollMs = 5000,
   withEvidence = false,
+  publicId,
 }: {
   sessionId: string;
   flagTsStart?: number;
   flagTsEnd?: number;
   preRollMs?: number;
   withEvidence?: boolean;
+  /** When set, fetch events via the public demo endpoint (read-only share). */
+  publicId?: string;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -64,7 +67,10 @@ export function SessionReplay({
     const stage = stageRef.current;
     (async () => {
       try {
-        const res = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/events`);
+        const eventsUrl = publicId
+          ? `/api/demo/${encodeURIComponent(publicId)}/sessions/${encodeURIComponent(sessionId)}/events`
+          : `/api/sessions/${encodeURIComponent(sessionId)}/events`;
+        const res = await fetch(eventsUrl);
         if (!res.ok) throw new Error(String(res.status));
         const { events } = (await res.json()) as { events: RawEvent[] };
         if (cancelled || !stage) return;
@@ -156,7 +162,7 @@ export function SessionReplay({
       replayerRef.current = null;
       if (stage) stage.innerHTML = '';
     };
-  }, [sessionId, flagTsStart, preRollMs, fit]);
+  }, [sessionId, flagTsStart, preRollMs, fit, publicId]);
 
   // Re-fit on container/window resize.
   useEffect(() => {
