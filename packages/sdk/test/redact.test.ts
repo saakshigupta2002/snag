@@ -8,6 +8,7 @@ import {
   redactHeaders,
   redactUrl,
   scrubText,
+  scrubTextKeepingWidth,
 } from '../src/redact.js';
 
 const JWT =
@@ -51,6 +52,30 @@ describe('scrubText', () => {
     expect(out).not.toContain('user@example.com');
     expect(out).not.toContain(JWT);
     expect(out).toContain('Login failed for');
+  });
+});
+
+describe('scrubTextKeepingWidth', () => {
+  it('hides the secret but keeps the string length so layout does not reflow', () => {
+    const original = 'signed in as jane.doe@company.com';
+    const out = scrubTextKeepingWidth(original);
+    expect(out).not.toContain('jane.doe@company.com');
+    expect(out).toContain('signed in as');
+    // Same character count → element keeps its on-screen width → replay clicks
+    // land on the element the user actually clicked.
+    expect(out.length).toBe(original.length);
+  });
+  it('preserves length for tokens and cards too', () => {
+    expect(scrubTextKeepingWidth(JWT).length).toBe(JWT.length);
+    const card = 'card 4242 4242 4242 4242 on file';
+    expect(scrubTextKeepingWidth(card).length).toBe(card.length);
+    expect(scrubTextKeepingWidth(card)).not.toContain('4242 4242 4242 4242');
+  });
+  it('keeps the "bearer" word, masks only the token', () => {
+    const out = scrubTextKeepingWidth('Bearer abc123def456');
+    expect(out.startsWith('Bearer ')).toBe(true);
+    expect(out).not.toContain('abc123def456');
+    expect(out.length).toBe('Bearer abc123def456'.length);
   });
 });
 

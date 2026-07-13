@@ -1,4 +1,4 @@
-import { looksSensitive, maskChars, scrubText } from './redact.js';
+import { looksSensitive, maskChars, scrubTextKeepingWidth } from './redact.js';
 import type { SnagOptions } from './types.js';
 
 /**
@@ -28,7 +28,9 @@ export function buildMaskingOptions(opts: SnagOptions): Record<string, unknown> 
   const maskTextFn = (text: string, element?: HTMLElement | null): string => {
     if (element?.closest?.(maskSelector)) return maskChars(text);
     // Pattern safety net: emails / cards / tokens masked even if untagged.
-    return scrubText(text);
+    // Width-preserving so masking never reflows the page — a reflow would shift
+    // recorded click coordinates onto the wrong element at replay time.
+    return scrubTextKeepingWidth(text);
   };
 
   return {

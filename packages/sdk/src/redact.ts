@@ -84,15 +84,39 @@ export function looksSensitive(value: string): boolean {
   return false;
 }
 
-/** Replace sensitive-shaped tokens inside otherwise-useful text with ***. */
-export function scrubText(text: string): string {
+/**
+ * Replace sensitive-shaped tokens inside otherwise-useful text. `redact` decides
+ * what each match becomes: a fixed marker for metadata, or a same-length mask for
+ * on-screen text (so the element keeps its width — see scrubTextKeepingWidth).
+ */
+function scrubWith(text: string, redact: (match: string) => string): string {
   let out = text
-    .replace(new RegExp(EMAIL_RE.source, 'g'), REDACTED)
-    .replace(new RegExp(JWT_RE.source, 'g'), REDACTED)
-    .replace(new RegExp(BEARER_RE.source, 'gi'), `bearer ${REDACTED}`)
-    .replace(new RegExp(LONG_TOKEN_RE.source, 'g'), REDACTED);
-  out = out.replace(new RegExp(CARD_RE.source, 'g'), (m) => (luhnValid(m) ? REDACTED : m));
+    .replace(new RegExp(EMAIL_RE.source, 'g'), redact)
+    .replace(new RegExp(JWT_RE.source, 'g'), redact)
+    // Keep the "bearer" word (not sensitive); mask only the token after it.
+    .replace(new RegExp(BEARER_RE.source, 'gi'), (m) => {
+      const sp = m.search(/\s/);
+      return sp === -1 ? redact(m) : m.slice(0, sp + 1) + redact(m.slice(sp + 1));
+    })
+    .replace(new RegExp(LONG_TOKEN_RE.source, 'g'), redact);
+  out = out.replace(new RegExp(CARD_RE.source, 'g'), (m) => (luhnValid(m) ? redact(m) : m));
   return out;
+}
+
+/** Replace sensitive-shaped tokens with a fixed marker. For metadata (logs,
+ *  errors, URLs) where the text isn't laid out on screen. */
+export function scrubText(text: string): string {
+  return scrubWith(text, () => REDACTED);
+}
+
+/**
+ * Like scrubText, but each match keeps its character count so the element keeps
+ * its on-screen width. Used for replayed DOM text: collapsing a long value (an
+ * email, a token) to a fixed "***" reflows the page, which shifts the recorded
+ * click coordinates onto the wrong element at replay time.
+ */
+export function scrubTextKeepingWidth(text: string): string {
+  return scrubWith(text, maskChars);
 }
 
 /** Mask visible characters but keep length/shape (for input echoes). */
