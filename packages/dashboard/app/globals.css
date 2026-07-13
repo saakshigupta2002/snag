@@ -1475,22 +1475,100 @@ kbd {
 .switcher {
   position: relative;
 }
-.switcher select {
+.switcher-btn {
   width: 100%;
-  appearance: none;
-  -webkit-appearance: none;
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 8px 28px 8px 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
   background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.switcher-chevron {
-  position: absolute;
-  right: 11px;
-  top: 50%;
-  transform: translateY(-60%);
-  color: var(--text-dim);
-  pointer-events: none;
+.switcher-name {
+  flex: 1;
+  text-align: left;
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.switcher-count {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--teal);
+  background: var(--teal-soft);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.switcher-chevron {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1;
+}
+.switcher-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 5px;
+  box-shadow: 0 18px 44px -14px rgba(0, 0, 0, 0.75);
+}
+.switcher-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-faint);
+  padding: 6px 9px 4px;
+}
+.switcher-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-xs);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.switcher-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.switcher-item.on {
+  color: var(--text);
+}
+.switcher-item-name {
+  flex: 1;
+  text-align: left;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.switcher-check {
+  color: var(--teal);
+  font-size: 12px;
+}
+.switcher-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 5px 2px;
+}
+.switcher-item.new {
+  color: var(--teal);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  justify-content: flex-start;
+}
+.switcher-item.new:hover {
+  background: var(--teal-soft);
+  color: var(--teal-bright);
 }
