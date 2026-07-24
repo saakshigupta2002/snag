@@ -6,6 +6,7 @@ import type { Config } from './config.js';
 import {
   computeAnalytics,
   computeDetectorStats,
+  computeHeatmap,
   computeOverview,
   computeTrend,
   groupIssues,
@@ -205,6 +206,16 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   app.get('/api/projects/:id/detector-stats', async (req) => {
     const { id } = req.params as { id: string };
     return computeDetectorStats(await store.listIssues(id));
+  });
+
+  app.get('/api/projects/:id/heatmap', async (req) => {
+    const { id } = req.params as { id: string };
+    const q = req.query as { page?: string };
+    const sessions = (await store.listSessions(id, 300)).filter((s) => !s.isBot).slice(0, 120);
+    const pairs = await Promise.all(
+      sessions.map(async (session) => ({ session, events: await store.getSessionEvents(session.id) })),
+    );
+    return computeHeatmap(pairs, q.page ?? null);
   });
 
   // ── Issues ────────────────────────────────────────────────────────────────

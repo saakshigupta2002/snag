@@ -83,6 +83,29 @@ export interface Analytics {
   ingest: IngestHealth;
 }
 
+/** A single recorded click, in the recording's viewport coordinates. */
+export interface HeatPoint {
+  x: number;
+  y: number;
+}
+
+export interface HeatmapPageStat {
+  page: string;
+  clicks: number;
+  sessions: number;
+}
+
+/** Click-heatmap payload for one page, plus the list of pages to choose from. */
+export interface Heatmap {
+  pages: HeatmapPageStat[];
+  page: string | null;
+  width: number;
+  height: number;
+  points: HeatPoint[];
+  /** A representative session that visited the page, to render behind the heat. */
+  sessionId: string | null;
+}
+
 export interface IngestHealth {
   lastSessionAt: string | null;
   sessionsToday: number;

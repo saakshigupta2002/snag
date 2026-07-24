@@ -1,6 +1,10 @@
+import { isSnagEvent, RRWEB_TYPE } from '@snag/shared';
 import type {
   Analytics,
   CountRow,
+  Heatmap,
+  HeatPoint,
+  HeatmapPageStat,
   DetectorStat,
   FlagRule,
   IngestHealth,
@@ -450,6 +454,67 @@ export function computeAnalytics(
     issuesOverTime: ov.issuesOverTime,
     topDetectors: ov.topDetectors,
     ingest: ov.ingest,
+  };
+}
+
+/**
+ * Aggregate recorded clicks per page into a heatmap. Clicks are attributed to
+ * the page in effect (tracked via navigation events) at the time of the click.
+ */
+export function computeHeatmap(
+  pairs: { session: Session; events: RawEvent[] }[],
+  targetPage: string | null,
+): Heatmap {
+  const stats = new Map<string, { clicks: number; sessions: Set<string> }>();
+  const points = new Map<string, HeatPoint[]>();
+  const dims = new Map<string, [number, number]>();
+  const best = new Map<string, { sid: string; count: number }>();
+
+  for (const { session, events } of pairs) {
+    let cur = pageFromUrl(session.urlFirst) ?? '/';
+    let d: [number, number] | null = null;
+    const perPage = new Map<string, number>();
+    for (const e of events) {
+      if (e.type === RRWEB_TYPE.Meta) {
+        const m = e.data as { width?: number; height?: number };
+        if (m.width && m.height) d = [m.width, m.height];
+      }
+      if (!isSnagEvent(e)) continue;
+      const p = e.data.payload;
+      if (p.kind === 'navigation') {
+        cur = pageFromUrl(p.url) ?? cur;
+      } else if (p.kind === 'click' && typeof p.x === 'number' && typeof p.y === 'number') {
+        const st = stats.get(cur) ?? { clicks: 0, sessions: new Set<string>() };
+        st.clicks++;
+        st.sessions.add(session.id);
+        stats.set(cur, st);
+        perPage.set(cur, (perPage.get(cur) ?? 0) + 1);
+        if (d && !dims.has(cur)) dims.set(cur, d);
+        const arr = points.get(cur) ?? [];
+        arr.push({ x: p.x, y: p.y });
+        points.set(cur, arr);
+      }
+    }
+    for (const [page, count] of perPage) {
+      const b = best.get(page);
+      if (!b || count > b.count) best.set(page, { sid: session.id, count });
+    }
+  }
+
+  const pages: HeatmapPageStat[] = [...stats.entries()]
+    .map(([page, st]) => ({ page, clicks: st.clicks, sessions: st.sessions.size }))
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 30);
+
+  const page = targetPage && stats.has(targetPage) ? targetPage : (pages[0]?.page ?? null);
+  const [w, h] = page ? (dims.get(page) ?? [1280, 800]) : [1280, 800];
+  return {
+    pages,
+    page,
+    width: w,
+    height: h,
+    points: page ? (points.get(page) ?? []).slice(0, 4000) : [],
+    sessionId: page ? (best.get(page)?.sid ?? null) : null,
   };
 }
 

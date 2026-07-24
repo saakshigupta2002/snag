@@ -42,6 +42,7 @@ export function SessionReplay({
   withEvidence = false,
   publicId,
   report,
+  heatmap,
 }: {
   sessionId: string;
   flagTsStart?: number;
@@ -53,7 +54,10 @@ export function SessionReplay({
   publicId?: string;
   /** Enables the "steps to reproduce" list + "copy bug report" action. */
   report?: ReportContext;
+  /** Render a click-heatmap overlay over a paused frame (no playback UI). */
+  heatmap?: { points: { x: number; y: number }[] };
 }) {
+  const heatCanvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const replayerRef = useRef<ReplayerType | null>(null);
@@ -220,6 +224,38 @@ export function SessionReplay({
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [fit]);
+
+  // Paint the click heatmap over the paused frame, using the same transform
+  // (scale + centre offset) the replayer is rendered at.
+  useEffect(() => {
+    if (!heatmap) return;
+    const canvas = heatCanvasRef.current;
+    const stage = stageRef.current;
+    if (!canvas || !stage) return;
+    const w = stage.clientWidth;
+    const h = parseInt(stage.style.height || '0', 10) || stage.clientHeight;
+    if (!w || !h) return;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+    const r = 24;
+    for (const pt of heatmap.points) {
+      const cx = view.offsetX + pt.x * view.scale;
+      const cy = pt.y * view.scale;
+      if (cx < -r || cy < -r || cx > w + r || cy > h + r) continue;
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, 'rgba(255,86,38,0.30)');
+      g.addColorStop(0.5, 'rgba(255,150,30,0.13)');
+      g.addColorStop(1, 'rgba(255,150,30,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }, [heatmap, view, state]);
 
   // The flagged clip: a few seconds of lead-in through the end of the flagged
   // window plus a short tail, clamped to the recording.
@@ -421,7 +457,8 @@ export function SessionReplay({
       {state === 'error' && <div className="replay-msg error-text">Could not load the replay.</div>}
       <div className="replay-stage-wrap">
         <div ref={stageRef} className="replay-stage" style={{ display: showControls ? 'block' : 'none' }} />
-        {showControls && activeSpot && (
+        {heatmap && <canvas ref={heatCanvasRef} className="replay-heat" />}
+        {showControls && activeSpot && !heatmap && (
           <div
             className="replay-spot"
             style={{
@@ -430,7 +467,7 @@ export function SessionReplay({
             }}
           />
         )}
-        {state === 'ready' && (
+        {state === 'ready' && !heatmap && (
           <div className={`replay-overlay ${playing ? '' : 'paused'}`} onClick={toggle}>
             <div className="replay-center" onClick={(e) => e.stopPropagation()}>
               <button className="replay-cbtn" onClick={() => skip(-10000)} aria-label="Back 10 seconds" title="Back 10s (←)">
@@ -457,7 +494,7 @@ export function SessionReplay({
         )}
       </div>
 
-      {showControls && (
+      {showControls && !heatmap && (
         <div className="rc">
           <div className="rc-track" onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
