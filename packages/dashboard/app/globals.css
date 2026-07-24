@@ -32,17 +32,18 @@
   --low: #71717a;
   --green: #4ade80;
 
-  --radius-lg: 18px;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-xs: 8px;
+  --radius-lg: 14px;
+  --radius: 11px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
   --pill: 999px;
 
-  /* Raised surface (segmented controls, hover chips) + soft elevation. */
-  --surface: rgba(255, 255, 255, 0.045);
-  --surface-2: rgba(255, 255, 255, 0.07);
-  --shadow-card: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -16px rgba(0, 0, 0, 0.7);
-  --shadow-pop: 0 20px 48px -20px rgba(0, 0, 0, 0.75);
+  /* Flat, minimal: separation comes from hairline borders and a barely-lifted
+     surface — not shadows or glows. Elevation is reserved for true popovers. */
+  --surface: rgba(255, 255, 255, 0.035);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --shadow-card: none;
+  --shadow-pop: 0 16px 40px -20px rgba(0, 0, 0, 0.7);
 
   --display: var(--font-display), 'Sora', ui-sans-serif, system-ui, sans-serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -244,9 +245,8 @@ h2 {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 22px 24px;
-  margin-bottom: 18px;
-  box-shadow: var(--shadow-card);
+  padding: 20px 22px;
+  margin-bottom: 16px;
 }
 .card h2:first-child {
   margin-top: 0;
@@ -256,46 +256,36 @@ h2 {
 .stat-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 30px;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 .stat {
   position: relative;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px 22px;
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.18s ease, transform 0.18s ease;
-}
-.stat::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.04), transparent 60%);
-  pointer-events: none;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  transition: border-color 0.15s ease;
 }
 .stat:hover {
   border-color: var(--border-strong);
-  transform: translateY(-2px);
 }
 .stat .stat-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   font-family: var(--mono);
   font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  margin-bottom: 14px;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  margin-bottom: 16px;
 }
 .stat .stat-value {
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -307,18 +297,15 @@ h2 {
 }
 .dot.high {
   background: var(--high);
-  box-shadow: 0 0 9px -1px var(--high);
 }
 .dot.medium {
   background: var(--medium);
-  box-shadow: 0 0 9px -1px var(--medium);
 }
 .dot.low {
   background: var(--low);
 }
 .dot.accent {
-  background: var(--teal);
-  box-shadow: 0 0 9px -1px var(--teal);
+  background: var(--text-dim);
 }
 
 /* ── Tables ──────────────────────────────────────────────────────────────── */
@@ -327,7 +314,6 @@ h2 {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
 }
 table {
   width: 100%;
@@ -341,13 +327,13 @@ thead th {
   font-weight: 500;
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 14px 20px;
+  letter-spacing: 0.09em;
+  padding: 12px 18px;
   background: transparent;
   border-bottom: 1px solid var(--border);
 }
 td {
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
@@ -380,16 +366,16 @@ tbody tr:hover td {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 11px;
+  padding: 3px 9px;
   border-radius: var(--pill);
   font-family: var(--mono);
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   white-space: nowrap;
-  background: var(--surface);
+  background: transparent;
   color: var(--text-dim);
 }
 .badge::before {
@@ -398,59 +384,52 @@ tbody tr:hover td {
   height: 5px;
   border-radius: 50%;
   background: currentColor;
+  flex-shrink: 0;
 }
 .badge.plain::before {
   display: none;
 }
 .badge.high {
   color: var(--high);
-  background: color-mix(in srgb, var(--high) 15%, transparent);
-  border-color: color-mix(in srgb, var(--high) 30%, transparent);
+  border-color: color-mix(in srgb, var(--high) 26%, transparent);
 }
 .badge.medium {
   color: var(--medium);
-  background: color-mix(in srgb, var(--medium) 15%, transparent);
-  border-color: color-mix(in srgb, var(--medium) 30%, transparent);
+  border-color: color-mix(in srgb, var(--medium) 26%, transparent);
 }
 .badge.low {
-  color: var(--low);
-  background: var(--surface);
-  border-color: var(--border-strong);
+  color: var(--text-faint);
+  border-color: var(--border);
 }
 .badge.open {
-  color: var(--text);
-  background: var(--surface-2);
-  border-color: var(--border-strong);
+  color: var(--text-dim);
+  border-color: var(--border);
 }
 .badge.confirmed {
   color: var(--green);
-  background: color-mix(in srgb, var(--green) 15%, transparent);
-  border-color: color-mix(in srgb, var(--green) 30%, transparent);
+  border-color: color-mix(in srgb, var(--green) 26%, transparent);
 }
 .badge.dismissed {
   color: var(--text-faint);
-  background: transparent;
   border-color: var(--border);
 }
 .badge.tag-new {
-  color: #0a0a0b;
-  background: var(--teal);
-  border-color: var(--teal);
+  color: var(--text);
+  border-color: var(--border-strong);
 }
 .badge.tag-spike {
   color: var(--medium);
-  background: color-mix(in srgb, var(--medium) 15%, transparent);
-  border-color: color-mix(in srgb, var(--medium) 30%, transparent);
+  border-color: color-mix(in srgb, var(--medium) 26%, transparent);
 }
 
 .chip {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-dim);
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--border);
-  border-radius: var(--pill);
-  padding: 3px 11px;
+  border-radius: var(--radius-xs);
+  padding: 2px 8px;
   white-space: nowrap;
 }
 
@@ -520,12 +499,10 @@ button.primary {
   border-color: var(--teal);
   color: #0a0a0b;
   font-weight: 600;
-  box-shadow: 0 8px 24px -12px rgba(255, 255, 255, 0.5);
 }
 button.primary:hover {
-  background: var(--teal-bright);
-  border-color: var(--teal-bright);
-  box-shadow: 0 10px 28px -10px rgba(255, 255, 255, 0.6);
+  background: #e2e2e4;
+  border-color: #e2e2e4;
 }
 button.confirm {
   background: transparent;
@@ -589,8 +566,8 @@ select:focus,
 textarea:focus {
   outline: none;
   background: var(--panel);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 3px var(--teal-soft);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: none;
 }
 label {
   display: block;
@@ -814,7 +791,6 @@ pre.snippet {
   height: 3px;
   border-radius: 2px;
   background: var(--teal);
-  box-shadow: 0 0 8px -1px var(--teal-glow);
   transition: height 0.1s ease;
   z-index: 1;
 }
@@ -828,7 +804,6 @@ pre.snippet {
   border-radius: 50%;
   background: var(--teal);
   transform: translateX(-50%);
-  box-shadow: 0 0 10px -1px var(--teal-glow);
   z-index: 3;
   opacity: 0;
   transition: opacity 0.1s ease;
@@ -1129,7 +1104,6 @@ pre.snippet {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 32px;
-  box-shadow: 0 30px 80px -40px var(--teal-glow);
 }
 
 /* ── Empty state ─────────────────────────────────────────────────────────── */
