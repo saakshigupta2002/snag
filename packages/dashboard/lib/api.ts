@@ -27,3 +27,20 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   return (await res.json()) as T;
 }
+
+/**
+ * Cached read for expensive, read-only analytics (overview, heatmaps). Next's
+ * data cache serves repeat navigations from memory for `revalidate` seconds,
+ * so the dashboard doesn't recompute + round-trip to the ingest every time.
+ */
+export async function apiCached<T>(path: string, revalidate = 15): Promise<T> {
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (process.env.SNAG_API_TOKEN) {
+    headers.authorization = `Bearer ${process.env.SNAG_API_TOKEN}`;
+  }
+  const res = await fetch(`${INGEST_URL}${path}`, { headers, next: { revalidate } });
+  if (!res.ok) {
+    throw new ApiError(res.status, `GET ${path} → ${res.status}`);
+  }
+  return (await res.json()) as T;
+}

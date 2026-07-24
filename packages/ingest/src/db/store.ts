@@ -403,15 +403,15 @@ export function computeAnalytics(
   let newSessions = 0;
   let returningSessions = 0;
   for (const s of recent) {
-    if (!s.visitorId) {
-      newSessions++;
-      continue;
-    }
-    inRange.add(s.visitorId);
+    // Sessions without a visitorId (e.g. recorded before the SDK update) are
+    // treated as distinct anonymous, first-time visitors — keeps unique/new/
+    // returning internally consistent instead of "0 unique · N new".
+    const vid = s.visitorId ?? `anon:${s.id}`;
+    inRange.add(vid);
     const activeTs = Date.parse(s.endedAt ?? s.startedAt);
-    if (s.status === 'active' || activeTs >= liveSince) liveVisitors.add(s.visitorId);
-    const f = firstSeen.get(s.visitorId);
-    if (f !== undefined && Date.parse(s.startedAt) <= f) newSessions++;
+    if (s.status === 'active' || activeTs >= liveSince) liveVisitors.add(vid);
+    const f = s.visitorId ? firstSeen.get(s.visitorId) : undefined;
+    if (f === undefined || Date.parse(s.startedAt) <= f) newSessions++;
     else returningSessions++;
   }
   const users = {

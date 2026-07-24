@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import type { Analytics, Project } from '@snag/shared';
-import { api } from '@/lib/api';
+import { apiCached } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
 import { BarList } from '@/components/charts';
 import { AreaChart } from '@/components/AreaChart';
 import { RangeSelector } from '@/components/RangeSelector';
 
-export const dynamic = 'force-dynamic';
+// Read-only analytics: cache briefly so navigations don't recompute every time.
+export const revalidate = 15;
 
 function splitPct(a: number, b: number): number {
   const total = a + b;
@@ -31,8 +32,8 @@ export default async function OverviewPage({
   const { projectId } = await params;
   const days = Math.min(Math.max(Number((await searchParams).days) || 14, 1), 90);
   const [project, a] = await Promise.all([
-    api<Project>(`/api/projects/${projectId}`),
-    api<Analytics>(`/api/projects/${projectId}/analytics?days=${days}`),
+    apiCached<Project>(`/api/projects/${projectId}`),
+    apiCached<Analytics>(`/api/projects/${projectId}/analytics?days=${days}`),
   ]);
 
   const noData = a.ingest.lastSessionAt === null;
@@ -99,29 +100,27 @@ export default async function OverviewPage({
               </div>
               <div className="user-label">live now</div>
             </div>
+            <span className="user-div" />
             <div className="user-metric">
               <div className="user-num">{a.users.unique}</div>
               <div className="user-label">unique users</div>
             </div>
-            <div className="user-metric grow">
-              <div className="split-bar">
-                <span
-                  className="seg-new"
-                  style={{ width: `${splitPct(a.users.new, a.users.returning)}%` }}
-                />
-                <span
-                  className="seg-ret"
-                  style={{ width: `${splitPct(a.users.returning, a.users.new)}%` }}
-                />
+            <div className="user-metric">
+              <div className="user-num">{a.users.new}</div>
+              <div className="user-label">
+                <i className="dot seg-new-dot" /> new
               </div>
-              <div className="split-legend">
-                <span>
-                  <i className="dot seg-new-dot" /> {a.users.new} new
-                </span>
-                <span>
-                  <i className="dot seg-ret-dot" /> {a.users.returning} returning
-                </span>
+            </div>
+            <div className="user-metric">
+              <div className="user-num">{a.users.returning}</div>
+              <div className="user-label">
+                <i className="dot seg-ret-dot" /> returning
               </div>
+            </div>
+            <div className="user-spacer" />
+            <div className="user-splitmini" title={`${a.users.new} new · ${a.users.returning} returning`}>
+              <span className="seg-new" style={{ width: `${splitPct(a.users.new, a.users.returning)}%` }} />
+              <span className="seg-ret" style={{ width: `${splitPct(a.users.returning, a.users.new)}%` }} />
             </div>
           </div>
 

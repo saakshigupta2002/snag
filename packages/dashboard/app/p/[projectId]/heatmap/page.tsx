@@ -1,9 +1,9 @@
 import type { Heatmap } from '@snag/shared';
-import { api } from '@/lib/api';
+import { apiCached } from '@/lib/api';
 import { SessionReplay } from '@/components/SessionReplay';
 import { HeatmapPagePicker } from '@/components/HeatmapPagePicker';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 20;
 
 export default async function HeatmapPage({
   params,
@@ -14,7 +14,7 @@ export default async function HeatmapPage({
 }) {
   const { projectId } = await params;
   const page = (await searchParams).page;
-  const h = await api<Heatmap>(
+  const h = await apiCached<Heatmap>(
     `/api/projects/${projectId}/heatmap${page ? `?page=${encodeURIComponent(page)}` : ''}`,
   );
 
