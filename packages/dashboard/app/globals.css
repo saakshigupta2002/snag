@@ -630,14 +630,14 @@ button:active,
   transform: translateY(0.5px);
 }
 button.primary {
-  background: var(--teal);
-  border-color: var(--teal);
-  color: #0a0a0b;
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
   font-weight: 550;
 }
 button.primary:hover {
-  background: #dedee0;
-  border-color: #dedee0;
+  background: var(--surface);
+  border-color: rgba(255, 255, 255, 0.34);
 }
 button.confirm {
   background: transparent;
