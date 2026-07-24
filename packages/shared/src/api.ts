@@ -14,6 +14,8 @@ export interface IngestPayload {
     device?: string;
     /** document.referrer at session start (external referrer). First flush only. */
     referrer?: string;
+    /** Stable per-browser id (localStorage) for unique / returning-user counts. */
+    visitorId?: string;
     /** Set on the final flush (pagehide) so the session seals promptly. */
     final?: boolean;
   };

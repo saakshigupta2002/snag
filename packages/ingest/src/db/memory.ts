@@ -106,6 +106,8 @@ export class MemoryStore implements Store {
         urlFirst: chunk.meta.url ?? null,
         device: chunk.meta.device ?? deviceFromUserAgent(chunk.meta.userAgent),
         referrer: referrerHost(chunk.meta.referrer),
+        visitorId: chunk.meta.visitorId ?? null,
+        country: chunk.country ?? null,
         status: 'active',
         eventCount: 0,
         lastSeenAt: nowIso,

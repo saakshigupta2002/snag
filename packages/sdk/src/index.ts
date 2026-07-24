@@ -4,7 +4,7 @@ import { buildMaskingOptions } from './masking.js';
 import { installEmitters } from './emitters.js';
 import { installNetworkCapture } from './network.js';
 import { Transport } from './transport.js';
-import { getSessionId } from './session.js';
+import { getSessionId, getVisitorId } from './session.js';
 import type { SnagHandle, SnagOptions } from './types.js';
 
 export type { SnagOptions, SnagHandle } from './types.js';
@@ -65,6 +65,7 @@ function start(options: SnagOptions): SnagHandle {
     endpoint: options.endpoint,
     projectKey: options.projectKey,
     sessionId,
+    visitorId: getVisitorId(),
     flushIntervalMs: options.flushIntervalMs ?? 5000,
     maxBufferBytes: (options.maxBatchKb ?? 64) * 1024,
   });

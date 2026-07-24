@@ -35,7 +35,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   is_bot BOOLEAN,
   lcp_ms INTEGER,
   inp_ms INTEGER,
-  cls REAL
+  cls REAL,
+  visitor_id TEXT,
+  country TEXT
 );
 CREATE INDEX IF NOT EXISTS sessions_project_idx ON sessions (project_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS sessions_status_idx ON sessions (status, last_seen_at);
@@ -53,6 +55,9 @@ ALTER TABLE sessions ADD COLUMN IF NOT EXISTS is_bot BOOLEAN;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS lcp_ms INTEGER;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS inp_ms INTEGER;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS cls REAL;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS visitor_id TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS country TEXT;
+CREATE INDEX IF NOT EXISTS sessions_visitor_idx ON sessions (project_id, visitor_id);
 
 -- Ordered chunks of rrweb events (a batch = a chunk), not one row per event.
 CREATE TABLE IF NOT EXISTS event_chunks (

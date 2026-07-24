@@ -59,6 +59,13 @@ export interface Analytics {
     avgScrollPct: number | null;
     eventsTotal: number;
   };
+  users: {
+    unique: number;
+    new: number;
+    returning: number;
+    live: number;
+  };
+  countries: CountRow[];
   insights: InsightStat[];
   device: CountRow[];
   browser: CountRow[];

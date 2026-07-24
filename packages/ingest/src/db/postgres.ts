@@ -77,6 +77,8 @@ function sessionFromRow(r: Row): Session {
     lcpMs: numOrNull(r.lcp_ms),
     inpMs: numOrNull(r.inp_ms),
     cls: numOrNull(r.cls),
+    visitorId: (r.visitor_id as string | null) ?? null,
+    country: (r.country as string | null) ?? null,
   };
 }
 
@@ -211,8 +213,8 @@ export class PostgresStore implements Store {
     try {
       await client.query('BEGIN');
       await client.query(
-        `INSERT INTO sessions (id, project_id, started_at, last_seen_at, user_agent, url_first, device, referrer, status, event_count)
-         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'active', 0)
+        `INSERT INTO sessions (id, project_id, started_at, last_seen_at, user_agent, url_first, device, referrer, visitor_id, country, status, event_count)
+         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, $8, $9, 'active', 0)
          ON CONFLICT (id) DO NOTHING`,
         [
           sid,
@@ -222,6 +224,8 @@ export class PostgresStore implements Store {
           chunk.meta.url ?? null,
           chunk.meta.device ?? deviceFromUserAgent(chunk.meta.userAgent),
           referrerHost(chunk.meta.referrer),
+          chunk.meta.visitorId ?? null,
+          chunk.country ?? null,
         ],
       );
       await client.query(

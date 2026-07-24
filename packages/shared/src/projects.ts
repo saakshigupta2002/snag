@@ -48,6 +48,10 @@ export interface Session {
   eventCount: number;
   /** External referrer host, captured at session start. */
   referrer?: string | null;
+  /** Stable per-browser id for unique/returning-user counts. */
+  visitorId?: string | null;
+  /** ISO country code from the ingest edge (Vercel geo header). */
+  country?: string | null;
   /** Per-session aggregates, computed once when the session is processed. */
   pageviews?: number | null;
   entryPage?: string | null;

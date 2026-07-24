@@ -8,6 +8,11 @@ import { RangeSelector } from '@/components/RangeSelector';
 
 export const dynamic = 'force-dynamic';
 
+function splitPct(a: number, b: number): number {
+  const total = a + b;
+  return total ? (a / total) * 100 : 0;
+}
+
 function fmtDuration(ms: number): string {
   if (!ms) return '0s';
   const s = Math.round(ms / 1000);
@@ -85,6 +90,41 @@ export default async function OverviewPage({
             </div>
           </div>
 
+          {/* ── Users ───────────────────────────────────────────────── */}
+          <div className="users-row">
+            <div className="user-metric">
+              <div className="user-num">
+                <span className={`live-dot ${a.users.live > 0 ? 'on' : ''}`} />
+                {a.users.live}
+              </div>
+              <div className="user-label">live now</div>
+            </div>
+            <div className="user-metric">
+              <div className="user-num">{a.users.unique}</div>
+              <div className="user-label">unique users</div>
+            </div>
+            <div className="user-metric grow">
+              <div className="split-bar">
+                <span
+                  className="seg-new"
+                  style={{ width: `${splitPct(a.users.new, a.users.returning)}%` }}
+                />
+                <span
+                  className="seg-ret"
+                  style={{ width: `${splitPct(a.users.returning, a.users.new)}%` }}
+                />
+              </div>
+              <div className="split-legend">
+                <span>
+                  <i className="dot seg-new-dot" /> {a.users.new} new
+                </span>
+                <span>
+                  <i className="dot seg-ret-dot" /> {a.users.returning} returning
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* ── Behaviour insights ──────────────────────────────────── */}
           <h2>Behaviour insights</h2>
           <div className="insight-grid">
@@ -112,6 +152,10 @@ export default async function OverviewPage({
             <div className="card">
               <h2 style={{ marginTop: 0 }}>Operating systems</h2>
               <BarList rows={a.os} total={n} empty="No OS data." />
+            </div>
+            <div className="card">
+              <h2 style={{ marginTop: 0 }}>Countries</h2>
+              <BarList rows={a.countries} total={n} empty="No geo data yet." />
             </div>
             <div className="card">
               <h2 style={{ marginTop: 0 }}>Referrers</h2>

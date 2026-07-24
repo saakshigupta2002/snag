@@ -106,6 +106,14 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
       return reply.code(413).send({ error: 'batch too large' });
     }
 
+    // Geo comes from the edge (Vercel sets these headers from the request IP);
+    // never trusted from the client.
+    const h = req.headers;
+    const country =
+      (h['x-vercel-ip-country'] as string | undefined) ||
+      (h['cf-ipcountry'] as string | undefined) ||
+      null;
+
     await store.appendChunk({
       projectId: project.id,
       clientSessionId: body.sessionId,
@@ -113,6 +121,7 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
       seqFrom: body.seqFrom,
       seqTo: body.seqTo,
       meta: body.meta,
+      country: country && country !== 'XX' ? country.toUpperCase() : null,
     });
 
     // Serverless path: no interval worker exists, so the final flush is the

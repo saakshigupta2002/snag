@@ -4,6 +4,7 @@ export interface TransportOptions {
   endpoint: string;
   projectKey: string;
   sessionId: string;
+  visitorId: string;
   flushIntervalMs: number;
   maxBufferBytes: number;
 }
@@ -64,6 +65,7 @@ export class Transport {
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
         // External referrer is only meaningful once, at session start.
         referrer: this.seq === 0 && this.referrer ? this.referrer : undefined,
+        visitorId: this.opts.visitorId,
         final: final || undefined,
       },
     };

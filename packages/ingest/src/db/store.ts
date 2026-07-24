@@ -40,6 +40,8 @@ export interface ChunkAppend {
   seqFrom: number;
   seqTo: number;
   meta: IngestPayload['meta'];
+  /** ISO country code derived from the request IP at the edge (not client). */
+  country?: string | null;
 }
 
 export interface ProjectWithStats extends Project {
@@ -309,9 +311,11 @@ export function computeAnalytics(
   const entry = new Map<string, number>();
   const exit = new Map<string, number>();
   const ref = new Map<string, number>();
+  const country = new Map<string, number>();
 
   for (const s of recent) {
     eventsTotal += s.eventCount;
+    bump(country, s.country);
     totalPages += s.pageviews ?? 1;
     if (s.durationMs != null) {
       durSum += s.durationMs;
@@ -373,6 +377,41 @@ export function computeAnalytics(
     if (at !== undefined) sessionsOverTime[at]!.count++;
   }
 
+  // Users: unique visitors in range; a visitor is "new" if their first-ever
+  // session (across all sessions, not just the range) falls inside it.
+  const firstSeen = new Map<string, number>();
+  for (const s of sessions) {
+    if (!s.visitorId) continue;
+    const t = Date.parse(s.startedAt);
+    const prev = firstSeen.get(s.visitorId);
+    if (prev === undefined || t < prev) firstSeen.set(s.visitorId, t);
+  }
+  const inRange = new Set<string>();
+  const liveSince = now - 5 * 60_000;
+  const liveVisitors = new Set<string>();
+  // Session-level new/returning (matches Clarity): a session is "returning" if
+  // that visitor was seen in an earlier session.
+  let newSessions = 0;
+  let returningSessions = 0;
+  for (const s of recent) {
+    if (!s.visitorId) {
+      newSessions++;
+      continue;
+    }
+    inRange.add(s.visitorId);
+    const activeTs = Date.parse(s.endedAt ?? s.startedAt);
+    if (s.status === 'active' || activeTs >= liveSince) liveVisitors.add(s.visitorId);
+    const f = firstSeen.get(s.visitorId);
+    if (f !== undefined && Date.parse(s.startedAt) <= f) newSessions++;
+    else returningSessions++;
+  }
+  const users = {
+    unique: inRange.size,
+    new: newSessions,
+    returning: returningSessions,
+    live: liveVisitors.size,
+  };
+
   const pct = (c: number) => (n ? Math.round((c / n) * 1000) / 10 : 0);
   const entryRows = topCounts(entry);
 
@@ -385,6 +424,8 @@ export function computeAnalytics(
       avgScrollPct: scrollN ? Math.round(scrollSum / scrollN) : null,
       eventsTotal,
     },
+    users,
+    countries: topCounts(country),
     insights,
     device: topCounts(device),
     browser: topCounts(browser),
