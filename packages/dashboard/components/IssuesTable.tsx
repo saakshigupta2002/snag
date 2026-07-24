@@ -136,6 +136,19 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
     return () => window.removeEventListener('keydown', onKey);
   }, [rows, cursor, projectId, router, setGroupStatus]);
 
+  // Per-severity counts within the current status filter — shown on the
+  // severity tabs so the at-a-glance breakdown lives where you act on it.
+  const sevCounts = useMemo(() => {
+    const base = groups
+      .map((g) => ({ ...g, status: overrides[g.groupKey] ?? g.status }))
+      .filter((g) => (status === 'all' ? true : g.status === status));
+    const by = (s: Severity) => base.filter((g) => g.severity === s).length;
+    return { all: base.length, high: by('high'), medium: by('medium'), low: by('low') } as Record<
+      string,
+      number
+    >;
+  }, [groups, status, overrides]);
+
   const pill = (v: string, cur: string, on: () => void) => (
     <a key={v} className={v === cur ? 'active' : ''} onClick={on} role="button" tabIndex={0}>
       {v === 'all' ? 'all' : v}
@@ -165,7 +178,18 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
       <div className="filters">
         {STATUS.map((s) => pill(s, status, () => setStatus(s)))}
         <span className="sep" />
-        {SEV.map((s) => pill(s === 'all' ? 'all' : s, severity, () => setSeverity(s as Severity | 'all')))}
+        {SEV.map((s) => (
+          <a
+            key={s}
+            className={s === severity ? 'active' : ''}
+            onClick={() => setSeverity(s as Severity | 'all')}
+            role="button"
+            tabIndex={0}
+          >
+            {s}
+            <span className="pill-count">{sevCounts[s]}</span>
+          </a>
+        ))}
         <span className="kbd-legend mono">
           <kbd>j</kbd><kbd>k</kbd> move · <kbd>↵</kbd> open · <kbd>c</kbd> confirm · <kbd>d</kbd> dismiss
         </span>
