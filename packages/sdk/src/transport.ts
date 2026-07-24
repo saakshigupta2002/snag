@@ -24,9 +24,11 @@ export class Transport {
   private seq = 0;
   private timer: ReturnType<typeof setInterval> | undefined;
   private readonly url: string;
+  private readonly referrer: string;
 
   constructor(private readonly opts: TransportOptions) {
     this.url = ingestUrl(opts.endpoint);
+    this.referrer = typeof document !== 'undefined' ? document.referrer : '';
   }
 
   start(): void {
@@ -60,6 +62,8 @@ export class Transport {
         url: typeof location !== 'undefined' ? location.href : undefined,
         ts: Date.now(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        // External referrer is only meaningful once, at session start.
+        referrer: this.seq === 0 && this.referrer ? this.referrer : undefined,
         final: final || undefined,
       },
     };
@@ -67,16 +71,24 @@ export class Transport {
     const body = JSON.stringify(payload);
 
     try {
-      if (final && typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
-        const ok = navigator.sendBeacon(this.url, new Blob([body], { type: 'application/json' }));
-        if (ok) return;
-      }
+      // Prefer keepalive fetch even on the final flush: sendBeacon() sends a
+      // JSON blob as a CORS-preflighted request, which it silently drops
+      // cross-origin — so the last batch (page-hide events, Web Vitals) would
+      // never arrive. keepalive fetch survives unload AND handles the preflight.
       void fetch(this.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body,
         keepalive: final,
-      }).catch(() => undefined);
+      }).catch(() => {
+        if (final && typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+          try {
+            navigator.sendBeacon(this.url, new Blob([body], { type: 'application/json' }));
+          } catch {
+            // best effort
+          }
+        }
+      });
     } catch {
       // Never let telemetry break the host app.
     }

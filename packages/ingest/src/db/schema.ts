@@ -22,10 +22,37 @@ CREATE TABLE IF NOT EXISTS sessions (
   url_first TEXT,
   device TEXT,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','completed','processed')),
-  event_count INTEGER NOT NULL DEFAULT 0
+  event_count INTEGER NOT NULL DEFAULT 0,
+  referrer TEXT,
+  pageviews INTEGER,
+  entry_page TEXT,
+  exit_page TEXT,
+  js_errors INTEGER,
+  max_scroll_pct INTEGER,
+  duration_ms INTEGER,
+  browser TEXT,
+  os TEXT,
+  is_bot BOOLEAN,
+  lcp_ms INTEGER,
+  inp_ms INTEGER,
+  cls REAL
 );
 CREATE INDEX IF NOT EXISTS sessions_project_idx ON sessions (project_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS sessions_status_idx ON sessions (status, last_seen_at);
+-- Analytics columns for already-provisioned databases (idempotent).
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS referrer TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS pageviews INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS entry_page TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS exit_page TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS js_errors INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS max_scroll_pct INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS browser TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS os TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS is_bot BOOLEAN;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS lcp_ms INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS inp_ms INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS cls REAL;
 
 -- Ordered chunks of rrweb events (a batch = a chunk), not one row per event.
 CREATE TABLE IF NOT EXISTS event_chunks (

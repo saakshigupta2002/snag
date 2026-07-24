@@ -45,9 +45,21 @@ export function Sparkline({
   );
 }
 
-export function BarList({ rows, accent = 'var(--teal)' }: { rows: CountRow[]; accent?: string }) {
-  if (!rows.length) return <div className="muted" style={{ fontSize: 12.5 }}>Nothing yet.</div>;
+export function BarList({
+  rows,
+  accent = 'var(--barfill)',
+  total,
+  empty = 'Nothing yet.',
+}: {
+  rows: CountRow[];
+  accent?: string;
+  /** When given, each row also shows its share of this total. */
+  total?: number;
+  empty?: string;
+}) {
+  if (!rows.length) return <div className="muted" style={{ fontSize: 12.5 }}>{empty}</div>;
   const max = Math.max(1, ...rows.map((r) => r.count));
+  const denom = total && total > 0 ? total : 0;
   return (
     <div className="barlist">
       {rows.map((r) => (
@@ -59,6 +71,9 @@ export function BarList({ rows, accent = 'var(--teal)' }: { rows: CountRow[]; ac
             />
             <span className="barrow-label mono">{r.key}</span>
           </div>
+          {denom ? (
+            <span className="barrow-pct mono">{Math.round((r.count / denom) * 100)}%</span>
+          ) : null}
           <span className="barrow-count mono">{r.count}</span>
         </div>
       ))}

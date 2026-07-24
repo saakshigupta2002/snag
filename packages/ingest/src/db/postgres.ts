@@ -13,6 +13,7 @@ import type {
 } from '@snag/shared';
 import {
   deviceFromUserAgent,
+  referrerHost,
   newProjectKey,
   sessionDbId,
   type AiAnalysisRecord,
@@ -20,6 +21,7 @@ import {
   type NewFlagRule,
   type NewIssue,
   type ProjectWithStats,
+  type SessionAggregates,
   type Store,
 } from './store.js';
 
@@ -51,6 +53,7 @@ function projectFromRow(r: Row): Project {
 }
 
 function sessionFromRow(r: Row): Session {
+  const numOrNull = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
   return {
     id: String(r.id),
     projectId: String(r.project_id),
@@ -61,6 +64,19 @@ function sessionFromRow(r: Row): Session {
     device: (r.device as string | null) ?? null,
     status: r.status as Session['status'],
     eventCount: Number(r.event_count ?? 0),
+    referrer: (r.referrer as string | null) ?? null,
+    pageviews: numOrNull(r.pageviews),
+    entryPage: (r.entry_page as string | null) ?? null,
+    exitPage: (r.exit_page as string | null) ?? null,
+    jsErrors: numOrNull(r.js_errors),
+    maxScrollPct: numOrNull(r.max_scroll_pct),
+    durationMs: numOrNull(r.duration_ms),
+    browser: (r.browser as string | null) ?? null,
+    os: (r.os as string | null) ?? null,
+    isBot: r.is_bot === null || r.is_bot === undefined ? null : Boolean(r.is_bot),
+    lcpMs: numOrNull(r.lcp_ms),
+    inpMs: numOrNull(r.inp_ms),
+    cls: numOrNull(r.cls),
   };
 }
 
@@ -195,8 +211,8 @@ export class PostgresStore implements Store {
     try {
       await client.query('BEGIN');
       await client.query(
-        `INSERT INTO sessions (id, project_id, started_at, last_seen_at, user_agent, url_first, device, status, event_count)
-         VALUES ($1, $2, $3, $3, $4, $5, $6, 'active', 0)
+        `INSERT INTO sessions (id, project_id, started_at, last_seen_at, user_agent, url_first, device, referrer, status, event_count)
+         VALUES ($1, $2, $3, $3, $4, $5, $6, $7, 'active', 0)
          ON CONFLICT (id) DO NOTHING`,
         [
           sid,
@@ -205,6 +221,7 @@ export class PostgresStore implements Store {
           chunk.meta.userAgent ?? null,
           chunk.meta.url ?? null,
           chunk.meta.device ?? deviceFromUserAgent(chunk.meta.userAgent),
+          referrerHost(chunk.meta.referrer),
         ],
       );
       await client.query(
@@ -270,6 +287,31 @@ export class PostgresStore implements Store {
 
   async markSessionProcessed(sessionId: string): Promise<void> {
     await this.pool.query(`UPDATE sessions SET status = 'processed' WHERE id = $1`, [sessionId]);
+  }
+
+  async setSessionAggregates(sessionId: string, agg: SessionAggregates): Promise<void> {
+    await this.pool.query(
+      `UPDATE sessions SET
+         pageviews = $2, entry_page = $3, exit_page = $4, js_errors = $5,
+         max_scroll_pct = $6, duration_ms = $7, browser = $8, os = $9,
+         is_bot = $10, lcp_ms = $11, inp_ms = $12, cls = $13
+       WHERE id = $1`,
+      [
+        sessionId,
+        agg.pageviews,
+        agg.entryPage,
+        agg.exitPage,
+        agg.jsErrors,
+        agg.maxScrollPct,
+        agg.durationMs,
+        agg.browser,
+        agg.os,
+        agg.isBot,
+        agg.lcpMs,
+        agg.inpMs,
+        agg.cls,
+      ],
+    );
   }
 
   async insertIssues(newIssues: NewIssue[]): Promise<void> {

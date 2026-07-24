@@ -156,10 +156,67 @@ export function installEmitters(emit: Emit): () => void {
     document.removeEventListener('invalid', onInvalid, true);
   });
 
+  // ── Web Vitals (LCP / CLS / INP≈) ───────────────────────────────────────
+  // Captured via PerformanceObserver and reported once, on the way out.
+  let lcpMs: number | undefined;
+  let cls = 0;
+  let inpMs = 0;
+  let vitalsSent = false;
+  const observers: PerformanceObserver[] = [];
+  const observe = (type: string, cb: (entries: PerformanceEntryList) => void) => {
+    try {
+      const po = new PerformanceObserver((list) => cb(list.getEntries()));
+      po.observe({ type, buffered: true } as PerformanceObserverInit);
+      observers.push(po);
+    } catch {
+      // entry type unsupported in this browser — skip
+    }
+  };
+  observe('largest-contentful-paint', (entries) => {
+    const last = entries[entries.length - 1];
+    if (last) lcpMs = Math.round(last.startTime);
+  });
+  observe('layout-shift', (entries) => {
+    for (const e of entries as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
+      if (!e.hadRecentInput) cls += e.value;
+    }
+  });
+  observe('event', (entries) => {
+    for (const e of entries) if (e.duration > inpMs) inpMs = e.duration;
+  });
+  cleanups.push(() => {
+    for (const o of observers) {
+      try {
+        o.disconnect();
+      } catch {
+        // best effort
+      }
+    }
+  });
+  const flushVitals = () => {
+    if (vitalsSent) return;
+    vitalsSent = true;
+    if (lcpMs === undefined && cls === 0 && inpMs === 0) return;
+    emit({
+      kind: 'vitals',
+      lcpMs,
+      cls: cls > 0 ? Math.round(cls * 1000) / 1000 : undefined,
+      inpMs: inpMs > 0 ? Math.round(inpMs) : undefined,
+    });
+  };
+
   // ── Page hide (also triggers the final flush in index.ts) ───────────────
-  const onPageHide = () => emit({ kind: 'page_hide' });
+  const onPageHide = () => {
+    flushVitals();
+    emit({ kind: 'page_hide' });
+  };
   window.addEventListener('pagehide', onPageHide);
   cleanups.push(() => window.removeEventListener('pagehide', onPageHide));
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') flushVitals();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  cleanups.push(() => document.removeEventListener('visibilitychange', onVisibility));
 
   return () => {
     for (const fn of cleanups) {

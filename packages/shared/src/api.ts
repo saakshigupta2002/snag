@@ -12,6 +12,8 @@ export interface IngestPayload {
     ts: number;
     userAgent?: string;
     device?: string;
+    /** document.referrer at session start (external referrer). First flush only. */
+    referrer?: string;
     /** Set on the final flush (pagehide) so the session seals promptly. */
     final?: boolean;
   };

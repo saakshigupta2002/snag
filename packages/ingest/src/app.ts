@@ -4,6 +4,7 @@ import type { IngestPayload, IssueStatus, ProjectSettings, Severity } from '@sna
 import { registry } from '@snag/detectors';
 import type { Config } from './config.js';
 import {
+  computeAnalytics,
   computeDetectorStats,
   computeOverview,
   computeTrend,
@@ -179,6 +180,17 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
       store.listSessions(id, 2000),
     ]);
     return computeOverview(issues, sessions);
+  });
+
+  app.get('/api/projects/:id/analytics', async (req) => {
+    const { id } = req.params as { id: string };
+    const q = req.query as { days?: string };
+    const days = Math.min(Math.max(Number(q.days) || 14, 1), 90);
+    const [issues, sessions] = await Promise.all([
+      store.listIssues(id),
+      store.listSessions(id, 5000),
+    ]);
+    return computeAnalytics(issues, sessions, days);
   });
 
   app.get('/api/projects/:id/detector-stats', async (req) => {

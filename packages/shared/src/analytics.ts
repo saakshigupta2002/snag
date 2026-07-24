@@ -27,6 +27,55 @@ export interface Overview {
   ingest: IngestHealth;
 }
 
+/** A behaviour-insight stat: how often a detector fired, as % of sessions. */
+export interface InsightStat {
+  detector: string;
+  label: string;
+  sessions: number;
+  pct: number;
+}
+
+/** Core Web Vitals rollup for the performance card. */
+export interface VitalStat {
+  lcpMs: number | null;
+  inpMs: number | null;
+  cls: number | null;
+  /** 0–100 Clarity-style score, or null when no samples. */
+  score: number | null;
+  /** % of pageviews in each Web-Vitals bucket. */
+  good: number;
+  needs: number;
+  poor: number;
+  sampleSize: number;
+}
+
+/** Rich, session-centric analytics for the Clarity-style overview. */
+export interface Analytics {
+  days: number;
+  kpis: {
+    sessions: number;
+    avgPagesPerSession: number;
+    avgDurationMs: number;
+    avgScrollPct: number | null;
+    eventsTotal: number;
+  };
+  insights: InsightStat[];
+  device: CountRow[];
+  browser: CountRow[];
+  os: CountRow[];
+  topPages: CountRow[];
+  entryPages: CountRow[];
+  exitPages: CountRow[];
+  referrers: CountRow[];
+  jsErrors: { total: number; sessionsWith: number; pct: number };
+  bots: { sessions: number; pct: number };
+  performance: VitalStat;
+  sessionsOverTime: TrendPoint[];
+  issuesOverTime: TrendPoint[];
+  topDetectors: CountRow[];
+  ingest: IngestHealth;
+}
+
 export interface IngestHealth {
   lastSessionAt: string | null;
   sessionsToday: number;

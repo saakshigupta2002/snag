@@ -11,10 +11,12 @@ import type {
 } from '@snag/shared';
 import {
   deviceFromUserAgent,
+  referrerHost,
   newProjectKey,
   sessionDbId,
   type AiAnalysisRecord,
   type ChunkAppend,
+  type SessionAggregates,
   type NewFlagRule,
   type NewIssue,
   type ProjectWithStats,
@@ -103,6 +105,7 @@ export class MemoryStore implements Store {
         userAgent: chunk.meta.userAgent ?? null,
         urlFirst: chunk.meta.url ?? null,
         device: chunk.meta.device ?? deviceFromUserAgent(chunk.meta.userAgent),
+        referrer: referrerHost(chunk.meta.referrer),
         status: 'active',
         eventCount: 0,
         lastSeenAt: nowIso,
@@ -162,6 +165,11 @@ export class MemoryStore implements Store {
   async markSessionProcessed(sessionId: string): Promise<void> {
     const s = this.sessions.get(sessionId);
     if (s) s.status = 'processed';
+  }
+
+  async setSessionAggregates(sessionId: string, agg: SessionAggregates): Promise<void> {
+    const s = this.sessions.get(sessionId);
+    if (s) Object.assign(s, agg);
   }
 
   async insertIssues(newIssues: NewIssue[]): Promise<void> {

@@ -1,9 +1,78 @@
 import { runEngine, type EngineRule } from '@snag/detectors';
-import type { Session } from '@snag/shared';
+import { isSnagEvent, type RawEvent, type Session } from '@snag/shared';
 import type { Config } from './config.js';
-import type { NewIssue, Store } from './db/store.js';
+import {
+  browserFromUA,
+  isBotUA,
+  osFromUA,
+  type NewIssue,
+  type SessionAggregates,
+  type Store,
+} from './db/store.js';
 import { runAiPass } from './ai/runner.js';
 import { fireAlerts } from './alerts.js';
+
+function pathOf(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, 'http://x.local').pathname || '/';
+  } catch {
+    return url;
+  }
+}
+
+/** One-pass rollup over a session's events, computed when it's processed. */
+export function computeSessionAggregates(session: Session, events: RawEvent[]): SessionAggregates {
+  let pageviews = 0;
+  let jsErrors = 0;
+  let lcpMs: number | null = null;
+  let inpMs: number | null = null;
+  let cls: number | null = null;
+  let entryPage = pathOf(session.urlFirst);
+  let exitPage = entryPage;
+  for (const e of events) {
+    if (!isSnagEvent(e)) continue;
+    const p = e.data.payload;
+    if (p.kind === 'navigation') {
+      pageviews++;
+      const path = pathOf(p.url);
+      if (path) {
+        exitPage = path;
+        if (!entryPage) entryPage = path;
+      }
+    } else if (p.kind === 'error' || (p.kind === 'console' && p.level === 'error')) {
+      jsErrors++;
+    } else if (p.kind === 'vitals') {
+      if (p.lcpMs != null) lcpMs = p.lcpMs;
+      if (p.inpMs != null) inpMs = p.inpMs;
+      if (p.cls != null) cls = p.cls;
+    }
+  }
+  // Duration comes from the event timestamps (real elapsed time) — the session
+  // row's started/ended can collapse when events flush in a single chunk.
+  const firstTs = events.length ? events[0]!.timestamp : null;
+  const lastTs = events.length ? events[events.length - 1]!.timestamp : null;
+  const durFromEvents = firstTs != null && lastTs != null ? lastTs - firstTs : null;
+  const durFromRow =
+    session.endedAt && session.startedAt
+      ? Date.parse(session.endedAt) - Date.parse(session.startedAt)
+      : null;
+  const dur = durFromEvents != null && durFromEvents > 0 ? durFromEvents : durFromRow;
+  return {
+    pageviews: Math.max(pageviews, 1),
+    entryPage,
+    exitPage,
+    jsErrors,
+    maxScrollPct: null, // deferred — rrweb scroll depth is only approximate
+    durationMs: dur != null && dur >= 0 ? dur : null,
+    browser: browserFromUA(session.userAgent),
+    os: osFromUA(session.userAgent),
+    isBot: isBotUA(session.userAgent),
+    lcpMs,
+    inpMs,
+    cls,
+  };
+}
 
 export interface WorkerPassResult {
   sealed: number;
@@ -26,6 +95,9 @@ export async function processSession(store: Store, session: Session): Promise<nu
       store.existingGroupKeys(session.projectId),
       store.getProject(session.projectId),
     ]);
+    // Persist the analytics rollup for every session, issues or not.
+    await store.setSessionAggregates(session.id, computeSessionAggregates(session, events));
+
     const engineRules: EngineRule[] = rules
       .filter((r) => r.kind === 'builtin' || r.kind === 'custom_mechanical')
       .map((r) => ({ detector: r.detector, kind: r.kind, enabled: r.enabled, params: r.params }));

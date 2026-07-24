@@ -41,7 +41,8 @@ export type SnagPayload =
   | NetworkPayload
   | NavigationPayload
   | FormPayload
-  | PageHidePayload;
+  | PageHidePayload
+  | VitalsPayload;
 
 export interface ClickPayload {
   kind: 'click';
@@ -97,6 +98,18 @@ export interface FormPayload {
 
 export interface PageHidePayload {
   kind: 'page_hide';
+}
+
+/** Core Web Vitals, captured once per page on pagehide. INP is approximated
+ *  as the longest interaction (event) duration observed. */
+export interface VitalsPayload {
+  kind: 'vitals';
+  /** Largest Contentful Paint, ms. */
+  lcpMs?: number;
+  /** Interaction to Next Paint (approx: max event duration), ms. */
+  inpMs?: number;
+  /** Cumulative Layout Shift, unitless score. */
+  cls?: number;
 }
 
 /** Shape of an rrweb custom event carrying a Snag payload. */

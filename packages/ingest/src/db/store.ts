@@ -1,4 +1,6 @@
 import type {
+  Analytics,
+  CountRow,
   DetectorStat,
   FlagRule,
   IngestHealth,
@@ -90,6 +92,8 @@ export interface Store {
   sealIdleSessions(idleMs: number, now?: number): Promise<number>;
   takeCompletedSessions(limit: number): Promise<Session[]>;
   markSessionProcessed(sessionId: string): Promise<void>;
+  /** Persist the per-session rollup computed during detection. */
+  setSessionAggregates(sessionId: string, agg: SessionAggregates): Promise<void>;
 
   insertIssues(issues: NewIssue[]): Promise<void>;
   listIssues(projectId: string, limit?: number): Promise<Issue[]>;
@@ -232,6 +236,182 @@ export function computeIngestHealth(sessions: Session[], now = Date.now()): Inge
   };
 }
 
+const INSIGHT_DETECTORS: { detector: string; label: string }[] = [
+  { detector: 'rage_click', label: 'Rage clicks' },
+  { detector: 'dead_click', label: 'Dead clicks' },
+  { detector: 'backward_navigation', label: 'Quick backs' },
+  { detector: 'refresh_spam', label: 'Refresh spam' },
+];
+
+function bump(m: Map<string, number>, key: string | null | undefined): void {
+  if (!key) return;
+  m.set(key, (m.get(key) ?? 0) + 1);
+}
+function topCounts(m: Map<string, number>, k = 6): CountRow[] {
+  return [...m.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, k)
+    .map(([key, count]) => ({ key, count }));
+}
+/** Web-Vitals bucket for one session: worst-of the three thresholds. */
+function vitalsBucket(
+  lcp: number | null | undefined,
+  inp: number | null | undefined,
+  cls: number | null | undefined,
+): 'good' | 'needs' | 'poor' {
+  const rate = (v: number | null | undefined, good: number, poor: number) =>
+    v == null ? null : v <= good ? 0 : v <= poor ? 1 : 2;
+  const scores = [rate(lcp, 2500, 4000), rate(inp, 200, 500), rate(cls, 0.1, 0.25)].filter(
+    (x): x is number => x != null,
+  );
+  const worst = scores.length ? Math.max(...scores) : 0;
+  return worst === 2 ? 'poor' : worst === 1 ? 'needs' : 'good';
+}
+
+/**
+ * Session-centric analytics for the Clarity-style overview. Reuses
+ * computeOverview for the issue trend / detectors / ingest health, then rolls
+ * up the per-session aggregates persisted at seal time.
+ */
+export function computeAnalytics(
+  issues: Issue[],
+  sessions: Session[],
+  days = 14,
+  now = Date.now(),
+): Analytics {
+  const cutoff = now - days * DAY_MS;
+  const recent = sessions.filter((s) => Date.parse(s.startedAt) >= cutoff);
+  const ov = computeOverview(issues, recent, days, now);
+  const n = recent.length;
+
+  let totalPages = 0;
+  let durSum = 0;
+  let durN = 0;
+  let scrollSum = 0;
+  let scrollN = 0;
+  let eventsTotal = 0;
+  let jsErrTotal = 0;
+  let sessWithErr = 0;
+  let botCount = 0;
+  let lcpSum = 0,
+    lcpN = 0,
+    inpSum = 0,
+    inpN = 0,
+    clsSum = 0,
+    clsN = 0;
+  let good = 0,
+    needs = 0,
+    poor = 0,
+    vitalsN = 0;
+  const device = new Map<string, number>();
+  const browser = new Map<string, number>();
+  const os = new Map<string, number>();
+  const entry = new Map<string, number>();
+  const exit = new Map<string, number>();
+  const ref = new Map<string, number>();
+
+  for (const s of recent) {
+    eventsTotal += s.eventCount;
+    totalPages += s.pageviews ?? 1;
+    if (s.durationMs != null) {
+      durSum += s.durationMs;
+      durN++;
+    }
+    if (s.maxScrollPct != null) {
+      scrollSum += s.maxScrollPct;
+      scrollN++;
+    }
+    bump(device, s.device);
+    bump(browser, s.browser);
+    bump(os, s.os);
+    bump(entry, s.entryPage ?? pageFromUrl(s.urlFirst));
+    bump(exit, s.exitPage);
+    bump(ref, s.referrer);
+    if (s.jsErrors != null) {
+      jsErrTotal += s.jsErrors;
+      if (s.jsErrors > 0) sessWithErr++;
+    }
+    if (s.isBot) botCount++;
+    if (s.lcpMs != null) {
+      lcpSum += s.lcpMs;
+      lcpN++;
+    }
+    if (s.inpMs != null) {
+      inpSum += s.inpMs;
+      inpN++;
+    }
+    if (s.cls != null) {
+      clsSum += s.cls;
+      clsN++;
+    }
+    if (s.lcpMs != null || s.inpMs != null || s.cls != null) {
+      vitalsN++;
+      const b = vitalsBucket(s.lcpMs, s.inpMs, s.cls);
+      if (b === 'good') good++;
+      else if (b === 'needs') needs++;
+      else poor++;
+    }
+  }
+
+  // Behaviour insights: distinct sessions per detector ÷ total sessions.
+  const byDetector = new Map<string, Set<string>>();
+  for (const i of issues) {
+    if (!i.sessionId || Date.parse(i.createdAt) < cutoff) continue;
+    let set = byDetector.get(i.detector);
+    if (!set) byDetector.set(i.detector, (set = new Set()));
+    set.add(i.sessionId);
+  }
+  const insights = INSIGHT_DETECTORS.map(({ detector, label }) => {
+    const c = byDetector.get(detector)?.size ?? 0;
+    return { detector, label, sessions: c, pct: n ? Math.round((c / n) * 1000) / 10 : 0 };
+  });
+
+  const sessionsOverTime = emptyDays(days, now);
+  const sIdx = new Map(sessionsOverTime.map((b, i) => [b.day, i]));
+  for (const s of recent) {
+    const at = sIdx.get(dayKey(s.startedAt));
+    if (at !== undefined) sessionsOverTime[at]!.count++;
+  }
+
+  const pct = (c: number) => (n ? Math.round((c / n) * 1000) / 10 : 0);
+  const entryRows = topCounts(entry);
+
+  return {
+    days,
+    kpis: {
+      sessions: n,
+      avgPagesPerSession: n ? Math.round((totalPages / n) * 10) / 10 : 0,
+      avgDurationMs: durN ? Math.round(durSum / durN) : 0,
+      avgScrollPct: scrollN ? Math.round(scrollSum / scrollN) : null,
+      eventsTotal,
+    },
+    insights,
+    device: topCounts(device),
+    browser: topCounts(browser),
+    os: topCounts(os),
+    topPages: entryRows,
+    entryPages: entryRows,
+    exitPages: topCounts(exit),
+    referrers: topCounts(ref),
+    jsErrors: { total: jsErrTotal, sessionsWith: sessWithErr, pct: pct(sessWithErr) },
+    bots: { sessions: botCount, pct: pct(botCount) },
+    performance: {
+      lcpMs: lcpN ? Math.round(lcpSum / lcpN) : null,
+      inpMs: inpN ? Math.round(inpSum / inpN) : null,
+      cls: clsN ? Math.round((clsSum / clsN) * 1000) / 1000 : null,
+      score: vitalsN ? Math.round((good * 100 + needs * 50) / vitalsN) : null,
+      good: vitalsN ? Math.round((good / vitalsN) * 100) : 0,
+      needs: vitalsN ? Math.round((needs / vitalsN) * 100) : 0,
+      poor: vitalsN ? Math.round((poor / vitalsN) * 100) : 0,
+      sampleSize: vitalsN,
+    },
+    sessionsOverTime,
+    issuesOverTime: ov.issuesOverTime,
+    topDetectors: ov.topDetectors,
+    ingest: ov.ingest,
+  };
+}
+
 /** Per-day occurrence trend for one issue group (its own created_at buckets). */
 export function computeTrend(issues: Issue[], groupKey: string, days = 14, now = Date.now()): TrendPoint[] {
   const buckets = emptyDays(days, now);
@@ -276,6 +456,15 @@ function pageOf(issue: Issue): string {
     return new URL(raw, 'http://snag.local').pathname || '/';
   } catch {
     return raw.split('?')[0] || '';
+  }
+}
+
+function pageFromUrl(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, 'http://snag.local').pathname || '/';
+  } catch {
+    return url.split('?')[0] || null;
   }
 }
 
@@ -343,7 +532,62 @@ export function newProjectKey(): string {
   return `pk_live_${s}`;
 }
 
-export function deviceFromUserAgent(ua?: string): string | null {
+export function deviceFromUserAgent(ua?: string | null): string | null {
   if (!ua) return null;
-  return /Mobi|Android|iPhone|iPad/i.test(ua) ? 'mobile' : 'desktop';
+  if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)))
+    return 'tablet';
+  return /Mobi|Android|iPhone|iPod/i.test(ua) ? 'mobile' : 'desktop';
+}
+
+export function browserFromUA(ua?: string | null): string | null {
+  if (!ua) return null;
+  if (/Edg\//.test(ua)) return 'Edge';
+  if (/OPR\/|Opera/.test(ua)) return 'Opera';
+  if (/Firefox\//.test(ua)) return 'Firefox';
+  if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) return 'Chrome';
+  if (/Safari\//.test(ua) && /Version\//.test(ua)) return 'Safari';
+  return 'Other';
+}
+
+export function osFromUA(ua?: string | null): string | null {
+  if (!ua) return null;
+  if (/Windows NT/.test(ua)) return 'Windows';
+  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Mac OS X|Macintosh/.test(ua)) return 'macOS';
+  if (/Linux/.test(ua)) return 'Linux';
+  return 'Other';
+}
+
+/** Bare hostname of an external referrer, or null for empty/unparseable. */
+export function referrerHost(ref?: string | null): string | null {
+  if (!ref) return null;
+  try {
+    return new URL(ref).hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+export function isBotUA(ua?: string | null): boolean {
+  if (!ua) return false;
+  return /bot|crawl|spider|slurp|bingpreview|headless|lighthouse|pingdom|monitor|\bcurl\b|wget/i.test(
+    ua,
+  );
+}
+
+/** Per-session rollup computed once when the session is processed. */
+export interface SessionAggregates {
+  pageviews: number;
+  entryPage: string | null;
+  exitPage: string | null;
+  jsErrors: number;
+  maxScrollPct: number | null;
+  durationMs: number | null;
+  browser: string | null;
+  os: string | null;
+  isBot: boolean;
+  lcpMs: number | null;
+  inpMs: number | null;
+  cls: number | null;
 }

@@ -46,4 +46,19 @@ export interface Session {
   device: string | null;
   status: SessionStatus;
   eventCount: number;
+  /** External referrer host, captured at session start. */
+  referrer?: string | null;
+  /** Per-session aggregates, computed once when the session is processed. */
+  pageviews?: number | null;
+  entryPage?: string | null;
+  exitPage?: string | null;
+  jsErrors?: number | null;
+  maxScrollPct?: number | null;
+  durationMs?: number | null;
+  browser?: string | null;
+  os?: string | null;
+  isBot?: boolean | null;
+  lcpMs?: number | null;
+  inpMs?: number | null;
+  cls?: number | null;
 }
