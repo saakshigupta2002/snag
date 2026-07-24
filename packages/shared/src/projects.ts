@@ -23,6 +23,15 @@ export interface ProjectSettings {
     block?: string[];
     unmask?: string[];
   };
+  /** User-defined conversion funnels (ordered page-path steps). */
+  funnels?: FunnelDef[];
+}
+
+export interface FunnelDef {
+  id: string;
+  name: string;
+  /** Ordered page-path steps; a page matches by exact path or path-prefix. */
+  steps: string[];
 }
 
 export interface Project {

@@ -6,6 +6,7 @@ import type { Config } from './config.js';
 import {
   computeAnalytics,
   computeDetectorStats,
+  computeFunnel,
   computeHeatmap,
   computeOverview,
   computeTrend,
@@ -206,6 +207,18 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   app.get('/api/projects/:id/detector-stats', async (req) => {
     const { id } = req.params as { id: string };
     return computeDetectorStats(await store.listIssues(id));
+  });
+
+  app.get('/api/projects/:id/funnels', async (req) => {
+    const { id } = req.params as { id: string };
+    const project = await store.getProject(id);
+    const funnels = project?.settings?.funnels ?? [];
+    if (!funnels.length) return { funnels: [], results: [] };
+    const sessions = (await store.listSessions(id, 500)).filter((s) => !s.isBot).slice(0, 300);
+    const pairs = await Promise.all(
+      sessions.map(async (session) => ({ session, events: await store.getSessionEvents(session.id) })),
+    );
+    return { funnels, results: funnels.map((f) => computeFunnel(f, pairs)) };
   });
 
   app.get('/api/projects/:id/heatmap', async (req) => {

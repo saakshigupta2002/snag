@@ -2,6 +2,9 @@ import { isSnagEvent, RRWEB_TYPE } from '@snag/shared';
 import type {
   Analytics,
   CountRow,
+  FunnelDef,
+  FunnelResult,
+  FunnelStepResult,
   Heatmap,
   HeatPoint,
   HeatmapPageStat,
@@ -516,6 +519,43 @@ export function computeHeatmap(
     points: page ? (points.get(page) ?? []).slice(0, 4000) : [],
     sessionId: page ? (best.get(page)?.sid ?? null) : null,
   };
+}
+
+/** Ordered, de-duplicated list of page paths a session visited. */
+function sessionPaths(session: Session, events: RawEvent[]): string[] {
+  const paths: string[] = [];
+  const push = (p: string | null) => {
+    if (p && p !== paths[paths.length - 1]) paths.push(p);
+  };
+  push(pageFromUrl(session.urlFirst));
+  for (const e of events) {
+    if (isSnagEvent(e) && e.data.payload.kind === 'navigation') push(pageFromUrl(e.data.payload.url));
+  }
+  return paths;
+}
+
+function stepMatches(path: string, step: string): boolean {
+  return path === step || path.startsWith(step.endsWith('/') ? step : `${step}/`);
+}
+
+/** Ordered-step conversion: how many sessions reached each funnel step in order. */
+export function computeFunnel(
+  def: FunnelDef,
+  pairs: { session: Session; events: RawEvent[] }[],
+): FunnelResult {
+  const counts = new Array<number>(def.steps.length).fill(0);
+  for (const { session, events } of pairs) {
+    const paths = sessionPaths(session, events);
+    let idx = 0;
+    for (const path of paths) {
+      if (idx < def.steps.length && stepMatches(path, def.steps[idx]!)) {
+        counts[idx]!++;
+        idx++;
+      }
+    }
+  }
+  const steps: FunnelStepResult[] = def.steps.map((step, i) => ({ step, count: counts[i]! }));
+  return { id: def.id, name: def.name, steps, entered: counts[0] ?? 0 };
 }
 
 /** Per-day occurrence trend for one issue group (its own created_at buckets). */

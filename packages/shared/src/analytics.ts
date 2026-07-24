@@ -106,6 +106,18 @@ export interface Heatmap {
   sessionId: string | null;
 }
 
+export interface FunnelStepResult {
+  step: string;
+  count: number;
+}
+export interface FunnelResult {
+  id: string;
+  name: string;
+  steps: FunnelStepResult[];
+  /** Sessions that reached the first step (the funnel's 100% baseline). */
+  entered: number;
+}
+
 export interface IngestHealth {
   lastSessionAt: string | null;
   sessionsToday: number;
