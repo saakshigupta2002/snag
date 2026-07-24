@@ -19,21 +19,40 @@ interface Ev {
 
 const SPEEDS = [0.5, 1, 2, 4, 8];
 
+interface Spot {
+  offset: number;
+  x: number;
+  y: number;
+}
+
+export interface ReportContext {
+  title: string;
+  finding: string;
+  pagePath: string;
+  /** Deep link to the flagged moment, e.g. /p/x/sessions/y?ts=… */
+  sessionHref: string;
+}
+
 export function SessionReplay({
   sessionId,
   flagTsStart,
   flagTsEnd,
   preRollMs = 5000,
+  postRollMs = 3500,
   withEvidence = false,
   publicId,
+  report,
 }: {
   sessionId: string;
   flagTsStart?: number;
   flagTsEnd?: number;
   preRollMs?: number;
+  postRollMs?: number;
   withEvidence?: boolean;
   /** When set, fetch events via the public demo endpoint (read-only share). */
   publicId?: string;
+  /** Enables the "steps to reproduce" list + "copy bug report" action. */
+  report?: ReportContext;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -50,16 +69,32 @@ export function SessionReplay({
   const [speedOpen, setSpeedOpen] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [evidence, setEvidence] = useState<Ev[]>([]);
+  const [spots, setSpots] = useState<Spot[]>([]);
+  const [view, setView] = useState({ scale: 1, offsetX: 0 });
+  // "clip" plays just the flagged window; toggling off plays the full session.
+  const [clip, setClip] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   const fit = useCallback(() => {
     const stage = stageRef.current;
     const wrap = stage?.querySelector<HTMLElement>('.replayer-wrapper');
     if (!stage || !wrap) return;
     const [w, h] = dimsRef.current;
-    const scale = Math.min((stage.clientWidth || 900) / w, 1);
-    wrap.style.transform = `scale(${scale})`;
+    const availW = stage.clientWidth || 900;
+    // Bound the height so tall (portrait / mobile) recordings don't turn the
+    // player into an endless scroll, and fit to *both* axes so we never
+    // overflow. The recording is then centred with a letterbox rather than
+    // left-aligned in a sea of white.
+    const maxH = Math.max(320, Math.min(Math.round(window.innerHeight * 0.62), 760));
+    const scale = Math.min(availW / w, maxH / h, 1);
+    const dispW = Math.round(w * scale);
+    const dispH = Math.round(h * scale);
+    const offsetX = Math.max(0, Math.round((availW - dispW) / 2));
+    wrap.style.transform = `translateX(${offsetX}px) scale(${scale})`;
     wrap.style.transformOrigin = 'top left';
-    stage.style.height = `${Math.round(h * scale)}px`;
+    stage.style.height = `${dispH}px`;
+    // Publish the transform so the in-frame spotlight can track the element.
+    setView((v) => (v.scale === scale && v.offsetX === offsetX ? v : { scale, offsetX }));
   }, []);
 
   useEffect(() => {
@@ -98,6 +133,11 @@ export function SessionReplay({
 
         const mk: Marker[] = [];
         const ev: Ev[] = [];
+        const sp: Spot[] = [];
+        // Clicks landing inside the flagged window are what the spotlight
+        // points at (± a little slack for single-instant flags).
+        const spotFrom = flagTsStart ? flagTsStart - 800 : Infinity;
+        const spotTo = (flagTsEnd ?? flagTsStart ?? 0) + 800;
         for (const e of events) {
           if (!isSnagEvent(e)) continue;
           const off = e.timestamp - start;
@@ -115,6 +155,9 @@ export function SessionReplay({
             ev.push({ offset: off, kind: 'navigation', text: `navigate ${safePath(p.url)}`, bad: false });
           } else if (p.kind === 'click') {
             ev.push({ offset: off, kind: 'click', text: `click ${p.selector}${p.text ? ` "${p.text}"` : ''}`.slice(0, 140), bad: false });
+            if (e.timestamp >= spotFrom && e.timestamp <= spotTo && typeof p.x === 'number' && typeof p.y === 'number') {
+              sp.push({ offset: off, x: p.x, y: p.y });
+            }
           } else if (p.kind === 'form') {
             ev.push({ offset: off, kind: 'form', text: `form ${p.action} ${p.formSelector}`, bad: p.action === 'invalid' });
           }
@@ -123,6 +166,7 @@ export function SessionReplay({
         ev.sort((a, b) => a.offset - b.offset);
         setMarkers(mk);
         setEvidence(ev);
+        setSpots(sp);
 
         const { Replayer } = await import('rrweb');
         if (cancelled || !stage) return;
@@ -145,6 +189,12 @@ export function SessionReplay({
         replayer.on('finish', () => setPlaying(false));
         setState(hasVisual ? 'ready' : 'blank');
         requestAnimationFrame(fit);
+        // When we're here for a specific flagged moment, roll the clip straight
+        // away — the point is to see the problem, not to press play and hunt.
+        if (flagTsStart && hasVisual) {
+          replayer.play(startOffset);
+          setPlaying(true);
+        }
       } catch {
         if (!cancelled) setState('error');
       }
@@ -171,18 +221,38 @@ export function SessionReplay({
     return () => window.removeEventListener('resize', onResize);
   }, [fit]);
 
+  // The flagged clip: a few seconds of lead-in through the end of the flagged
+  // window plus a short tail, clamped to the recording.
+  const clipBounds = useMemo(() => {
+    if (!flagTsStart || !totalMs || !startRef.current) return null;
+    const s = Math.min(Math.max(flagTsStart - startRef.current - preRollMs, 0), totalMs);
+    const e = Math.min((flagTsEnd ?? flagTsStart) - startRef.current + postRollMs, totalMs);
+    return { start: s, end: Math.max(e, s + 1500) };
+  }, [flagTsStart, flagTsEnd, totalMs, preRollMs, postRollMs, state]);
+
   useEffect(() => {
     if (!playing) return;
     const tick = () => {
       const r = replayerRef.current;
-      if (r) setPosMs(Math.min(r.getCurrentTime(), totalMs));
+      if (r) {
+        const t = Math.min(r.getCurrentTime(), totalMs);
+        // In clip mode, stop at the end of the flagged window instead of
+        // playing on through the rest of the session.
+        if (clip && clipBounds && t >= clipBounds.end) {
+          r.pause(clipBounds.end);
+          setPosMs(clipBounds.end);
+          setPlaying(false);
+          return;
+        }
+        setPosMs(t);
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [playing, totalMs]);
+  }, [playing, totalMs, clip, clipBounds]);
 
   const toggle = () => {
     const r = replayerRef.current;
@@ -191,7 +261,14 @@ export function SessionReplay({
       r.pause();
       setPlaying(false);
     } else {
-      r.play(posMs >= totalMs ? 0 : posMs);
+      let from = posMs >= totalMs ? 0 : posMs;
+      // Replaying after the clip auto-stopped (or before it starts) restarts
+      // the clip rather than doing nothing / drifting past it.
+      if (clip && clipBounds && (posMs >= clipBounds.end || posMs < clipBounds.start)) {
+        from = clipBounds.start;
+      }
+      setPosMs(from);
+      r.play(from);
       setPlaying(true);
     }
   };
@@ -199,6 +276,11 @@ export function SessionReplay({
     const r = replayerRef.current;
     if (!r) return;
     const clamped = Math.min(Math.max(ms, 0), totalMs);
+    // Navigating outside the flagged clip means the user wants the wider
+    // session — drop clip mode so playback doesn't snap back to the clip.
+    if (clip && clipBounds && (clamped < clipBounds.start - 50 || clamped > clipBounds.end + 50)) {
+      setClip(false);
+    }
     setPosMs(clamped);
     if (playing) r.play(clamped);
     else r.pause(clamped);
@@ -268,6 +350,68 @@ export function SessionReplay({
   const pct = totalMs ? (posMs / totalMs) * 100 : 0;
   const showControls = state === 'ready' || state === 'blank';
 
+  // The click the detector reacted to — shown as a spotlight ring in the frame
+  // while the playhead is near it, so "the problem is here" is literal.
+  const activeSpot = useMemo(() => {
+    for (const s of spots) if (posMs >= s.offset - 400 && posMs <= s.offset + 2600) return s;
+    return null;
+  }, [spots, posMs]);
+
+  // Where the detector flagged the problem, as a % band on the scrubber so the
+  // moment that matters is impossible to miss (and one click away).
+  const flag = useMemo(() => {
+    if (!flagTsStart || !totalMs || !startRef.current) return null;
+    const startOff = Math.max(flagTsStart - startRef.current, 0);
+    const endOff = Math.min(Math.max((flagTsEnd ?? flagTsStart) - startRef.current, startOff), totalMs);
+    return {
+      startOff,
+      left: (startOff / totalMs) * 100,
+      width: Math.max(((endOff - startOff) / totalMs) * 100, 0.8),
+    };
+  }, [flagTsStart, flagTsEnd, totalMs, state]);
+
+  // The handful of user actions right before the flag — a reproduction recipe
+  // assembled from the event trail, each seekable.
+  const steps = useMemo(() => {
+    if (!report || !flag) return [];
+    return evidence
+      .filter(
+        (e) =>
+          e.offset < flag.startOff &&
+          (e.kind === 'navigation' || e.kind === 'click' || e.kind === 'form'),
+      )
+      .slice(-5);
+  }, [evidence, flag, report]);
+
+  const copyReport = async () => {
+    if (!report) return;
+    const [w, h] = dimsRef.current;
+    const device = w <= 640 ? 'mobile' : w <= 1024 ? 'tablet' : 'desktop';
+    const lines = [`### ${report.title}`, '', `**What we found:** ${report.finding}`, ''];
+    if (steps.length) {
+      lines.push('**Steps to reproduce:**');
+      steps.forEach((s, i) => lines.push(`${i + 1}. ${humanStep(s)}`));
+      lines.push(`${steps.length + 1}. ⚠ ${report.title}`, '');
+    }
+    const href = report.sessionHref.startsWith('http')
+      ? report.sessionHref
+      : `${window.location.origin}${report.sessionHref}`;
+    lines.push(
+      `**Page:** \`${report.pagePath}\``,
+      `**Viewport:** ${w}×${h} (${device})`,
+      `**Replay:** ${href}`,
+      '',
+      '_Reported via snag_',
+    );
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard unavailable (insecure context) */
+    }
+  };
+
   const player = (
     <div className="replay" ref={frameRef}>
       {state === 'loading' && <div className="replay-msg muted">Loading replay…</div>}
@@ -277,6 +421,15 @@ export function SessionReplay({
       {state === 'error' && <div className="replay-msg error-text">Could not load the replay.</div>}
       <div className="replay-stage-wrap">
         <div ref={stageRef} className="replay-stage" style={{ display: showControls ? 'block' : 'none' }} />
+        {showControls && activeSpot && (
+          <div
+            className="replay-spot"
+            style={{
+              left: `${view.offsetX + activeSpot.x * view.scale}px`,
+              top: `${activeSpot.y * view.scale}px`,
+            }}
+          />
+        )}
         {state === 'ready' && (
           <div className={`replay-overlay ${playing ? '' : 'paused'}`} onClick={toggle}>
             <div className="replay-center" onClick={(e) => e.stopPropagation()}>
@@ -311,6 +464,13 @@ export function SessionReplay({
             seek(((e.clientX - rect.left) / rect.width) * totalMs);
           }}>
             <div className="rc-buffered" />
+            {flag && (
+              <div
+                className="rc-flagband"
+                style={{ left: `${flag.left}%`, width: `${flag.width}%` }}
+                title="Flagged moment"
+              />
+            )}
             <div className="rc-played" style={{ width: `${pct}%` }} />
             <div className="rc-handle" style={{ left: `${pct}%` }} />
             <div className="rc-markers">
@@ -340,6 +500,32 @@ export function SessionReplay({
             <span className="rc-time mono">
               {fmt(posMs)} <span className="rc-time-total">/ {fmt(totalMs)}</span>
             </span>
+            {flag && (
+              <>
+                <button
+                  className="rc-flagjump mono"
+                  onClick={() => seek(flag.startOff)}
+                  title="Jump to the flagged moment"
+                >
+                  ◆ flagged moment
+                </button>
+                <button
+                  className={`rc-cliptoggle mono ${clip ? 'on' : ''}`}
+                  onClick={() => {
+                    const next = !clip;
+                    setClip(next);
+                    if (next && clipBounds) seek(clipBounds.start);
+                  }}
+                  title={
+                    clip
+                      ? 'Playing just the flagged clip — switch to the full session'
+                      : 'Playing the full session — switch back to the flagged clip'
+                  }
+                >
+                  {clip ? 'clip' : 'full'}
+                </button>
+              </>
+            )}
             <div className="rc-spacer" />
             <div className="rc-speed">
               <button className="rc-btn rc-speed-btn mono" onClick={() => setSpeedOpen((o) => !o)}>
@@ -375,36 +561,65 @@ export function SessionReplay({
   return (
     <div className="replay-with-evidence">
       {player}
-      <div className="card evidence-card">
-        <h2 style={{ marginTop: 0 }}>Timeline</h2>
-        {evidence.length === 0 ? (
-          <p className="muted" style={{ fontSize: 12.5 }}>No console or network signals.</p>
-        ) : (
-          <div className="evidence">
-            {evidence.map((e, i) => {
-              const rel = flagTsStart ? e.offset - (flagTsStart - startRef.current) : e.offset;
-              const inFlag =
-                flagTsStart && flagTsEnd &&
-                e.offset + startRef.current >= flagTsStart &&
-                e.offset + startRef.current <= flagTsEnd;
-              return (
-                <div
-                  key={i}
-                  className={`ev ${i === currentEvIdx ? 'now' : ''} ${inFlag ? 'flagline' : ''}`}
-                  onClick={() => seek(e.offset)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="t">{fmtRel(rel)}</span>
-                  <span className={e.bad ? 'err' : e.kind === 'navigation' ? 'nav' : ''}>{e.text}</span>
-                </div>
-              );
-            })}
+      <div className="evidence-col">
+        {report && (
+          <button className={`copy-report ${copied ? 'done' : ''}`} onClick={copyReport}>
+            {copied ? '✓ Copied — paste into GitHub / Linear / Slack' : '⧉ Copy bug report'}
+          </button>
+        )}
+
+        {report && steps.length > 0 && (
+          <div className="card steps-card">
+            <h2 style={{ marginTop: 0 }}>Steps to reproduce</h2>
+            <ol className="steps">
+              {steps.map((s, i) => (
+                <li key={i} onClick={() => seek(s.offset)} role="button" tabIndex={0}>
+                  {humanStep(s)}
+                </li>
+              ))}
+              <li className="flag-step">⚠ {report.title}</li>
+            </ol>
           </div>
         )}
+
+        <div className="card evidence-card">
+          <h2 style={{ marginTop: 0 }}>Timeline</h2>
+          {evidence.length === 0 ? (
+            <p className="muted" style={{ fontSize: 12.5 }}>No console or network signals.</p>
+          ) : (
+            <div className="evidence">
+              {evidence.map((e, i) => {
+                const rel = flagTsStart ? e.offset - (flagTsStart - startRef.current) : e.offset;
+                const inFlag =
+                  flagTsStart && flagTsEnd &&
+                  e.offset + startRef.current >= flagTsStart &&
+                  e.offset + startRef.current <= flagTsEnd;
+                return (
+                  <div
+                    key={i}
+                    className={`ev ${i === currentEvIdx ? 'now' : ''} ${inFlag ? 'flagline' : ''}`}
+                    onClick={() => seek(e.offset)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <span className="t">{fmtRel(rel)}</span>
+                    <span className={e.bad ? 'err' : e.kind === 'navigation' ? 'nav' : ''}>{e.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function humanStep(e: Ev): string {
+  if (e.kind === 'navigation') return e.text.replace(/^navigate /, 'Went to ');
+  if (e.kind === 'click') return e.text.replace(/^click /, 'Clicked ');
+  if (e.kind === 'form') return e.text.replace(/^form /, 'Form ');
+  return e.text;
 }
 
 function safePath(url: string): string {

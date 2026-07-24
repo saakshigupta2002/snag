@@ -4,6 +4,7 @@ import type { Issue, IssueGroup, IssueNote, TrendPoint } from '@snag/shared';
 import { api, ApiError } from '@/lib/api';
 import { resolveDemo } from '@/lib/demo';
 import { timeAgo } from '@/lib/format';
+import { describeIssue, evidenceCode, issueSignals } from '@/lib/issue';
 import { SessionReplay } from '@/components/SessionReplay';
 import { AreaChart } from '@/components/AreaChart';
 
@@ -37,6 +38,9 @@ export default async function DemoIssueDetail({
   }
   const { group, issues, notes, trend } = data;
   const sample = group.sample;
+  const finding = describeIssue(group.detector, sample.meta);
+  const code = evidenceCode(group.detector, sample.meta);
+  const { isNew, isSpike } = issueSignals(group.firstSeen, trend);
 
   return (
     <>
@@ -47,12 +51,28 @@ export default async function DemoIssueDetail({
       <p className="subtitle row">
         <span className={`badge ${group.severity}`}>{group.severity}</span>
         <span className={`badge ${group.status}`}>{group.status}</span>
+        {isNew && <span className="badge tag-new">new</span>}
+        {isSpike && <span className="badge tag-spike">spike</span>}
         <span className="chip">{group.detector}</span>
         <span className="muted">
           {group.occurrences} occurrence{group.occurrences === 1 ? '' : 's'} · {group.sessionCount}{' '}
           session{group.sessionCount === 1 ? '' : 's'} · last seen {timeAgo(group.lastSeen)}
         </span>
       </p>
+
+      {finding && (
+        <div className="finding">
+          <div className="tag">What we found</div>
+          <p className="finding-body">{finding}</p>
+          {code && <pre className="finding-code">{code}</pre>}
+          {sample.sessionId && (
+            <p className="finding-hint muted">
+              The flagged moment is highlighted on the replay timeline below — hit play, or click
+              <span className="finding-chip">◆ flagged moment</span> to jump straight to it.
+            </p>
+          )}
+        </div>
+      )}
 
       {group.aiSummary && (
         <div className="ai-summary">
@@ -68,6 +88,12 @@ export default async function DemoIssueDetail({
           flagTsEnd={sample.tsEnd}
           publicId={publicId}
           withEvidence
+          report={{
+            title: group.title,
+            finding,
+            pagePath: pageOf(sample.meta),
+            sessionHref: `/demo/${publicId}/sessions/${encodeURIComponent(sample.sessionId)}?ts=${sample.tsStart}`,
+          }}
         />
       ) : (
         <div className="empty" style={{ marginBottom: 18 }}>

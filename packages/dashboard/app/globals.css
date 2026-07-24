@@ -415,6 +415,14 @@ tbody tr:hover td {
   color: var(--text-faint);
   border-color: var(--border);
 }
+.badge.tag-new {
+  color: var(--teal-bright);
+  border-color: var(--teal-line);
+}
+.badge.tag-spike {
+  color: var(--medium);
+  border-color: color-mix(in srgb, var(--medium) 38%, transparent);
+}
 
 .chip {
   font-family: var(--mono);
@@ -636,7 +644,9 @@ pre.snippet {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #fff;
+  /* Neutral letterbox behind the (centred) recording, so portrait / mobile
+     replays read as a framed device rather than content lost in white. */
+  background: var(--panel-2);
 }
 .replay-stage .replayer-wrapper {
   position: absolute;
@@ -647,6 +657,32 @@ pre.snippet {
   padding: 40px 20px;
   text-align: center;
   font-size: 13px;
+}
+/* In-frame spotlight: a pulsing ring on the element the detector reacted to. */
+.replay-spot {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  border: 2px solid var(--teal-bright);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35), 0 0 14px 2px var(--teal-glow);
+  pointer-events: none;
+  z-index: 4;
+  animation: spot-pulse 1.2s ease-out infinite;
+}
+@keyframes spot-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
 }
 .replay-blank {
   position: absolute;
@@ -790,6 +826,56 @@ pre.snippet {
   background: var(--teal-bright);
   box-shadow: 0 0 6px 0 var(--teal);
 }
+/* Highlighted region on the scrubber for the moment the detector flagged. */
+.rc-flagband {
+  position: absolute;
+  top: 50%;
+  height: 9px;
+  min-width: 3px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--teal-soft);
+  box-shadow: inset 0 0 0 1px var(--teal-line);
+  pointer-events: none;
+  z-index: 1;
+}
+.rc-flagjump {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--teal-line);
+  border-radius: 999px;
+  background: var(--teal-soft);
+  color: var(--teal-bright);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rc-flagjump:hover {
+  border-color: var(--teal);
+  color: var(--teal-bright);
+}
+.rc-cliptoggle {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rc-cliptoggle.on {
+  border-color: var(--teal-line);
+  color: var(--teal-bright);
+  background: var(--teal-soft);
+}
 .rc-marker:hover {
   height: 13px;
 }
@@ -910,6 +996,63 @@ pre.snippet {
 }
 
 /* ── AI summary ──────────────────────────────────────────────────────────── */
+.finding {
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--high);
+  padding: 13px 16px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+}
+.finding .tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.finding-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.finding-code {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow: auto;
+}
+.finding-hint {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.finding-chip {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--teal-line);
+  border-radius: 999px;
+  background: var(--teal-soft);
+  color: var(--teal-bright);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .ai-summary {
   border: 1px solid var(--teal-line);
   padding: 13px 16px;
@@ -1303,6 +1446,63 @@ kbd {
   .replay-with-evidence {
     grid-template-columns: 1fr;
   }
+}
+.evidence-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.copy-report {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--teal-line);
+  border-radius: var(--radius);
+  background: var(--teal-soft);
+  color: var(--teal-bright);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.copy-report:hover {
+  border-color: var(--teal);
+}
+.copy-report.done {
+  color: var(--teal-bright);
+  border-color: var(--teal);
+}
+.steps-card {
+  margin-bottom: 0;
+}
+.steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.steps li {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  color: var(--text-dim);
+}
+.steps li:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+.steps li.flag-step {
+  list-style: none;
+  margin-left: -20px;
+  color: var(--high);
+  font-weight: 600;
+  cursor: default;
+}
+.steps li.flag-step:hover {
+  background: transparent;
 }
 .evidence-card {
   margin-bottom: 0;

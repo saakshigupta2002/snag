@@ -21,8 +21,10 @@ export const consoleError: Detector = {
     for (const e of events) {
       let message: string;
       let uncaught = false;
+      let stack: string | undefined;
       if (e.t === 'error') {
         message = e.message;
+        stack = e.stack;
         uncaught = true;
       } else if (e.t === 'console' && e.level === 'error') {
         message = e.message;
@@ -40,7 +42,9 @@ export const consoleError: Detector = {
         title: uncaught
           ? `Uncaught exception: ${truncate(message, 90)}`
           : `Console error: ${truncate(message, 90)}`,
-        meta: { message, uncaught },
+        // stack (uncaught only) lets the issue view show the trace inline, so a
+        // dev can often fix without opening the replay at all.
+        meta: stack ? { message, uncaught, stack } : { message, uncaught },
         occurrences: 1,
       });
     }
