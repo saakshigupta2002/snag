@@ -16,6 +16,7 @@ import {
   sessionDbId,
   type AiAnalysisRecord,
   type ChunkAppend,
+  type SessionActivity,
   type SessionAggregates,
   type NewFlagRule,
   type NewIssue,
@@ -128,7 +129,39 @@ export class MemoryStore implements Store {
       .filter((s) => s.projectId === projectId)
       .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
       .slice(0, limit)
-      .map(({ lastSeenAt: _drop, ...s }) => s);
+      .map(({ lastSeenAt: _drop, clickPoints: _cp, paths: _p, ...s }) => s);
+  }
+
+  async listSessionsSince(projectId: string, sinceMs: number, limit = 20000): Promise<Session[]> {
+    return [...this.sessions.values()]
+      .filter((s) => s.projectId === projectId && Date.parse(s.startedAt) >= sinceMs)
+      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
+      .slice(0, limit)
+      .map(({ lastSeenAt: _drop, clickPoints: _cp, paths: _p, ...s }) => s);
+  }
+
+  async visitorFirstSeen(projectId: string): Promise<Map<string, number>> {
+    const m = new Map<string, number>();
+    for (const s of this.sessions.values()) {
+      if (s.projectId !== projectId || !s.visitorId) continue;
+      const t = Date.parse(s.startedAt);
+      const prev = m.get(s.visitorId);
+      if (prev === undefined || t < prev) m.set(s.visitorId, t);
+    }
+    return m;
+  }
+
+  async listSessionActivity(projectId: string, limit = 2000): Promise<SessionActivity[]> {
+    return [...this.sessions.values()]
+      .filter((s) => s.projectId === projectId && s.status === 'processed')
+      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
+      .slice(0, limit)
+      .map((s) => ({
+        id: s.id,
+        isBot: s.isBot ?? null,
+        clickPoints: s.clickPoints ?? null,
+        paths: s.paths ?? null,
+      }));
   }
 
   async getSession(sessionId: string): Promise<Session | undefined> {
@@ -157,11 +190,20 @@ export class MemoryStore implements Store {
     return sealed;
   }
 
+  async claimSession(sessionId: string): Promise<Session | undefined> {
+    const s = this.sessions.get(sessionId);
+    if (!s || s.status !== 'completed') return undefined;
+    s.status = 'processing';
+    const { lastSeenAt: _drop, ...rest } = s;
+    return rest;
+  }
+
   async takeCompletedSessions(limit: number): Promise<Session[]> {
-    return [...this.sessions.values()]
+    const claimed = [...this.sessions.values()]
       .filter((s) => s.status === 'completed')
-      .slice(0, limit)
-      .map(({ lastSeenAt: _drop, ...s }) => s);
+      .slice(0, limit);
+    for (const s of claimed) s.status = 'processing'; // atomic claim (single-threaded)
+    return claimed.map(({ lastSeenAt: _drop, ...s }) => s);
   }
 
   async markSessionProcessed(sessionId: string): Promise<void> {

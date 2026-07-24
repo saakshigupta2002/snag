@@ -43,7 +43,7 @@ export interface Project {
   createdAt: string;
 }
 
-export type SessionStatus = 'active' | 'completed' | 'processed';
+export type SessionStatus = 'active' | 'completed' | 'processing' | 'processed';
 
 export interface Session {
   id: string;
@@ -74,4 +74,7 @@ export interface Session {
   lcpMs?: number | null;
   inpMs?: number | null;
   cls?: number | null;
+  /** Precomputed at seal so heatmaps/funnels don't re-scan raw events. */
+  clickPoints?: { page: string; x: number; y: number }[] | null;
+  paths?: string[] | null;
 }

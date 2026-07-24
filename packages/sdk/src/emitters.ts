@@ -172,13 +172,43 @@ export function installEmitters(emit: Emit): () => void {
       // entry type unsupported in this browser — skip
     }
   };
+  // LCP is only valid up to the first user interaction; freeze it there.
+  let lcpFrozen = false;
   observe('largest-contentful-paint', (entries) => {
+    if (lcpFrozen) return;
     const last = entries[entries.length - 1];
     if (last) lcpMs = Math.round(last.startTime);
   });
+  const freezeLcp = () => {
+    lcpFrozen = true;
+  };
+  addEventListener('pointerdown', freezeLcp, { once: true, capture: true });
+  addEventListener('keydown', freezeLcp, { once: true, capture: true });
+  cleanups.push(() => {
+    removeEventListener('pointerdown', freezeLcp, true);
+    removeEventListener('keydown', freezeLcp, true);
+  });
+  // CLS = the largest burst of shifts within a 5s / 1s-gap session window,
+  // not the naive lifetime sum (which over-reports on long-lived pages).
+  let clsWindow = 0;
+  let windowStart = 0;
+  let windowPrev = 0;
   observe('layout-shift', (entries) => {
-    for (const e of entries as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
-      if (!e.hadRecentInput) cls += e.value;
+    for (const e of entries as (PerformanceEntry & {
+      value: number;
+      hadRecentInput: boolean;
+      startTime: number;
+    })[]) {
+      if (e.hadRecentInput) continue;
+      const t = e.startTime;
+      if (clsWindow === 0 || t - windowPrev > 1000 || t - windowStart > 5000) {
+        clsWindow = e.value;
+        windowStart = t;
+      } else {
+        clsWindow += e.value;
+      }
+      windowPrev = t;
+      if (clsWindow > cls) cls = clsWindow;
     }
   });
   observe('event', (entries) => {

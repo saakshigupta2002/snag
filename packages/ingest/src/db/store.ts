@@ -1,4 +1,3 @@
-import { isSnagEvent, RRWEB_TYPE } from '@snag/shared';
 import type {
   Analytics,
   CountRow,
@@ -96,10 +95,19 @@ export interface Store {
 
   appendChunk(chunk: ChunkAppend): Promise<void>;
   listSessions(projectId: string, limit?: number): Promise<Session[]>;
+  /** Lean per-session heatmap/funnel data (processed sessions only). */
+  listSessionActivity(projectId: string, limit?: number): Promise<SessionActivity[]>;
+  /** Sessions started on/after `sinceMs` (for range-scoped analytics). */
+  listSessionsSince(projectId: string, sinceMs: number, limit?: number): Promise<Session[]>;
+  /** visitorId → epoch-ms of that visitor's first-ever session. */
+  visitorFirstSeen(projectId: string): Promise<Map<string, number>>;
   getSession(sessionId: string): Promise<Session | undefined>;
   getSessionEvents(sessionId: string): Promise<RawEvent[]>;
   sealIdleSessions(idleMs: number, now?: number): Promise<number>;
+  /** Atomically claim up to `limit` completed sessions (→ 'processing'). */
   takeCompletedSessions(limit: number): Promise<Session[]>;
+  /** Atomically claim one completed session (→ 'processing'); undefined if already taken. */
+  claimSession(sessionId: string): Promise<Session | undefined>;
   markSessionProcessed(sessionId: string): Promise<void>;
   /** Persist the per-session rollup computed during detection. */
   setSessionAggregates(sessionId: string, agg: SessionAggregates): Promise<void>;
@@ -285,6 +293,7 @@ function vitalsBucket(
 export function computeAnalytics(
   issues: Issue[],
   sessions: Session[],
+  firstSeen: Map<string, number>,
   days = 14,
   now = Date.now(),
 ): Analytics {
@@ -384,15 +393,8 @@ export function computeAnalytics(
     if (at !== undefined) sessionsOverTime[at]!.count++;
   }
 
-  // Users: unique visitors in range; a visitor is "new" if their first-ever
-  // session (across all sessions, not just the range) falls inside it.
-  const firstSeen = new Map<string, number>();
-  for (const s of sessions) {
-    if (!s.visitorId) continue;
-    const t = Date.parse(s.startedAt);
-    const prev = firstSeen.get(s.visitorId);
-    if (prev === undefined || t < prev) firstSeen.set(s.visitorId, t);
-  }
+  // Users: unique visitors in range; a session is "returning" if the visitor's
+  // first-ever session (from the passed firstSeen map) predates it.
   const inRange = new Set<string>();
   const liveSince = now - 5 * 60_000;
   const liveVisitors = new Set<string>();
@@ -460,47 +462,36 @@ export function computeAnalytics(
   };
 }
 
-/**
- * Aggregate recorded clicks per page into a heatmap. Clicks are attributed to
- * the page in effect (tracked via navigation events) at the time of the click.
- */
-export function computeHeatmap(
-  pairs: { session: Session; events: RawEvent[] }[],
-  targetPage: string | null,
-): Heatmap {
+/** Lean per-session data for heatmaps/funnels (precomputed at seal). */
+export interface SessionActivity {
+  id: string;
+  isBot: boolean | null;
+  clickPoints: { page: string; x: number; y: number }[] | null;
+  paths: string[] | null;
+}
+
+/** Aggregate the precomputed per-page clicks into a heatmap. */
+export function computeHeatmap(sessions: SessionActivity[], targetPage: string | null): Heatmap {
   const stats = new Map<string, { clicks: number; sessions: Set<string> }>();
   const points = new Map<string, HeatPoint[]>();
-  const dims = new Map<string, [number, number]>();
   const best = new Map<string, { sid: string; count: number }>();
 
-  for (const { session, events } of pairs) {
-    let cur = pageFromUrl(session.urlFirst) ?? '/';
-    let d: [number, number] | null = null;
+  for (const s of sessions) {
+    if (!s.clickPoints?.length) continue;
     const perPage = new Map<string, number>();
-    for (const e of events) {
-      if (e.type === RRWEB_TYPE.Meta) {
-        const m = e.data as { width?: number; height?: number };
-        if (m.width && m.height) d = [m.width, m.height];
-      }
-      if (!isSnagEvent(e)) continue;
-      const p = e.data.payload;
-      if (p.kind === 'navigation') {
-        cur = pageFromUrl(p.url) ?? cur;
-      } else if (p.kind === 'click' && typeof p.x === 'number' && typeof p.y === 'number') {
-        const st = stats.get(cur) ?? { clicks: 0, sessions: new Set<string>() };
-        st.clicks++;
-        st.sessions.add(session.id);
-        stats.set(cur, st);
-        perPage.set(cur, (perPage.get(cur) ?? 0) + 1);
-        if (d && !dims.has(cur)) dims.set(cur, d);
-        const arr = points.get(cur) ?? [];
-        arr.push({ x: p.x, y: p.y });
-        points.set(cur, arr);
-      }
+    for (const cp of s.clickPoints) {
+      const st = stats.get(cp.page) ?? { clicks: 0, sessions: new Set<string>() };
+      st.clicks++;
+      st.sessions.add(s.id);
+      stats.set(cp.page, st);
+      perPage.set(cp.page, (perPage.get(cp.page) ?? 0) + 1);
+      const arr = points.get(cp.page) ?? [];
+      arr.push({ x: cp.x, y: cp.y });
+      points.set(cp.page, arr);
     }
     for (const [page, count] of perPage) {
       const b = best.get(page);
-      if (!b || count > b.count) best.set(page, { sid: session.id, count });
+      if (!b || count > b.count) best.set(page, { sid: s.id, count });
     }
   }
 
@@ -510,42 +501,25 @@ export function computeHeatmap(
     .slice(0, 30);
 
   const page = targetPage && stats.has(targetPage) ? targetPage : (pages[0]?.page ?? null);
-  const [w, h] = page ? (dims.get(page) ?? [1280, 800]) : [1280, 800];
   return {
     pages,
     page,
-    width: w,
-    height: h,
+    width: 1280,
+    height: 800,
     points: page ? (points.get(page) ?? []).slice(0, 4000) : [],
     sessionId: page ? (best.get(page)?.sid ?? null) : null,
   };
-}
-
-/** Ordered, de-duplicated list of page paths a session visited. */
-function sessionPaths(session: Session, events: RawEvent[]): string[] {
-  const paths: string[] = [];
-  const push = (p: string | null) => {
-    if (p && p !== paths[paths.length - 1]) paths.push(p);
-  };
-  push(pageFromUrl(session.urlFirst));
-  for (const e of events) {
-    if (isSnagEvent(e) && e.data.payload.kind === 'navigation') push(pageFromUrl(e.data.payload.url));
-  }
-  return paths;
 }
 
 function stepMatches(path: string, step: string): boolean {
   return path === step || path.startsWith(step.endsWith('/') ? step : `${step}/`);
 }
 
-/** Ordered-step conversion: how many sessions reached each funnel step in order. */
-export function computeFunnel(
-  def: FunnelDef,
-  pairs: { session: Session; events: RawEvent[] }[],
-): FunnelResult {
+/** Ordered-step conversion from precomputed session path sequences. */
+export function computeFunnel(def: FunnelDef, sessions: SessionActivity[]): FunnelResult {
   const counts = new Array<number>(def.steps.length).fill(0);
-  for (const { session, events } of pairs) {
-    const paths = sessionPaths(session, events);
+  for (const s of sessions) {
+    const paths = s.paths ?? [];
     let idx = 0;
     for (const path of paths) {
       if (idx < def.steps.length && stepMatches(path, def.steps[idx]!)) {
@@ -736,4 +710,6 @@ export interface SessionAggregates {
   lcpMs: number | null;
   inpMs: number | null;
   cls: number | null;
+  clickPoints: { page: string; x: number; y: number }[];
+  paths: string[];
 }

@@ -21,6 +21,7 @@ import {
   type NewFlagRule,
   type NewIssue,
   type ProjectWithStats,
+  type SessionActivity,
   type SessionAggregates,
   type Store,
 } from './store.js';
@@ -52,6 +53,11 @@ function projectFromRow(r: Row): Project {
   };
 }
 
+const SESSION_COLS =
+  'id, project_id, started_at, ended_at, last_seen_at, user_agent, url_first, device, status, ' +
+  'event_count, referrer, pageviews, entry_page, exit_page, js_errors, max_scroll_pct, ' +
+  'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country';
+
 function sessionFromRow(r: Row): Session {
   const numOrNull = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
   return {
@@ -79,6 +85,8 @@ function sessionFromRow(r: Row): Session {
     cls: numOrNull(r.cls),
     visitorId: (r.visitor_id as string | null) ?? null,
     country: (r.country as string | null) ?? null,
+    clickPoints: (r.click_points as { page: string; x: number; y: number }[] | null) ?? null,
+    paths: (r.paths as string[] | null) ?? null,
   };
 }
 
@@ -251,11 +259,49 @@ export class PostgresStore implements Store {
   }
 
   async listSessions(projectId: string, limit = 100): Promise<Session[]> {
+    // Excludes the heavy click_points/paths JSON — those are only for
+    // heatmaps/funnels (see listSessionActivity).
     const res = await this.pool.query(
-      `SELECT * FROM sessions WHERE project_id = $1 ORDER BY started_at DESC LIMIT $2`,
+      `SELECT ${SESSION_COLS} FROM sessions WHERE project_id = $1 ORDER BY started_at DESC LIMIT $2`,
       [projectId, limit],
     );
     return res.rows.map(sessionFromRow);
+  }
+
+  async listSessionsSince(projectId: string, sinceMs: number, limit = 20000): Promise<Session[]> {
+    const res = await this.pool.query(
+      `SELECT ${SESSION_COLS} FROM sessions
+       WHERE project_id = $1 AND started_at >= $2
+       ORDER BY started_at DESC LIMIT $3`,
+      [projectId, new Date(sinceMs).toISOString(), limit],
+    );
+    return res.rows.map(sessionFromRow);
+  }
+
+  async visitorFirstSeen(projectId: string): Promise<Map<string, number>> {
+    const res = await this.pool.query(
+      `SELECT visitor_id, MIN(started_at) AS first FROM sessions
+       WHERE project_id = $1 AND visitor_id IS NOT NULL GROUP BY visitor_id`,
+      [projectId],
+    );
+    const m = new Map<string, number>();
+    for (const r of res.rows) m.set(String(r.visitor_id), Date.parse(r.first as string));
+    return m;
+  }
+
+  async listSessionActivity(projectId: string, limit = 2000): Promise<SessionActivity[]> {
+    const res = await this.pool.query(
+      `SELECT id, is_bot, click_points, paths FROM sessions
+       WHERE project_id = $1 AND status = 'processed'
+       ORDER BY started_at DESC LIMIT $2`,
+      [projectId, limit],
+    );
+    return res.rows.map((r) => ({
+      id: String(r.id),
+      isBot: r.is_bot === null || r.is_bot === undefined ? null : Boolean(r.is_bot),
+      clickPoints: (r.click_points as { page: string; x: number; y: number }[] | null) ?? null,
+      paths: (r.paths as string[] | null) ?? null,
+    }));
   }
 
   async getSession(sessionId: string): Promise<Session | undefined> {
@@ -282,11 +328,27 @@ export class PostgresStore implements Store {
   }
 
   async takeCompletedSessions(limit: number): Promise<Session[]> {
+    // Atomic claim: SKIP LOCKED lets multiple workers/instances share the queue
+    // without processing the same session twice.
     const res = await this.pool.query(
-      `SELECT * FROM sessions WHERE status = 'completed' ORDER BY last_seen_at ASC LIMIT $1`,
+      `UPDATE sessions SET status = 'processing'
+       WHERE id IN (
+         SELECT id FROM sessions WHERE status = 'completed'
+         ORDER BY last_seen_at ASC LIMIT $1 FOR UPDATE SKIP LOCKED
+       )
+       RETURNING ${SESSION_COLS}`,
       [limit],
     );
     return res.rows.map(sessionFromRow);
+  }
+
+  async claimSession(sessionId: string): Promise<Session | undefined> {
+    const res = await this.pool.query(
+      `UPDATE sessions SET status = 'processing'
+       WHERE id = $1 AND status = 'completed' RETURNING ${SESSION_COLS}`,
+      [sessionId],
+    );
+    return res.rows[0] ? sessionFromRow(res.rows[0]) : undefined;
   }
 
   async markSessionProcessed(sessionId: string): Promise<void> {
@@ -298,7 +360,8 @@ export class PostgresStore implements Store {
       `UPDATE sessions SET
          pageviews = $2, entry_page = $3, exit_page = $4, js_errors = $5,
          max_scroll_pct = $6, duration_ms = $7, browser = $8, os = $9,
-         is_bot = $10, lcp_ms = $11, inp_ms = $12, cls = $13
+         is_bot = $10, lcp_ms = $11, inp_ms = $12, cls = $13,
+         click_points = $14, paths = $15
        WHERE id = $1`,
       [
         sessionId,
@@ -314,6 +377,8 @@ export class PostgresStore implements Store {
         agg.lcpMs,
         agg.inpMs,
         agg.cls,
+        JSON.stringify(agg.clickPoints),
+        JSON.stringify(agg.paths),
       ],
     );
   }

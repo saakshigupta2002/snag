@@ -30,6 +30,17 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
   let cls: number | null = null;
   let entryPage = pathOf(session.urlFirst);
   let exitPage = entryPage;
+  // Compact per-session data for heatmaps/funnels, so those endpoints never
+  // re-scan raw events. Bounded so the JSON stays small.
+  const MAX_CLICKS = 300;
+  const MAX_PATHS = 60;
+  const clickPoints: { page: string; x: number; y: number }[] = [];
+  const paths: string[] = [];
+  let cur = entryPage ?? '/';
+  const pushPath = (p: string | null) => {
+    if (p && p !== paths[paths.length - 1] && paths.length < MAX_PATHS) paths.push(p);
+  };
+  pushPath(cur);
   for (const e of events) {
     if (!isSnagEvent(e)) continue;
     const p = e.data.payload;
@@ -38,8 +49,12 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
       const path = pathOf(p.url);
       if (path) {
         exitPage = path;
+        cur = path;
+        pushPath(path);
         if (!entryPage) entryPage = path;
       }
+    } else if (p.kind === 'click' && typeof p.x === 'number' && typeof p.y === 'number') {
+      if (clickPoints.length < MAX_CLICKS) clickPoints.push({ page: cur, x: p.x, y: p.y });
     } else if (p.kind === 'error' || (p.kind === 'console' && p.level === 'error')) {
       jsErrors++;
     } else if (p.kind === 'vitals') {
@@ -71,6 +86,8 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
     lcpMs,
     inpMs,
     cls,
+    clickPoints,
+    paths,
   };
 }
 

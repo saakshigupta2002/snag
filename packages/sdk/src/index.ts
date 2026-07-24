@@ -67,7 +67,9 @@ function start(options: SnagOptions): SnagHandle {
     sessionId,
     visitorId: getVisitorId(),
     flushIntervalMs: options.flushIntervalMs ?? 5000,
-    maxBufferBytes: (options.maxBatchKb ?? 64) * 1024,
+    // Keep batches under the browsers' ~64KB keepalive cap so the final
+    // page-hide flush (keepalive fetch / sendBeacon) is never dropped.
+    maxBufferBytes: (options.maxBatchKb ?? 48) * 1024,
   });
   transport.start();
 

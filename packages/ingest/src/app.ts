@@ -26,8 +26,10 @@ const RATE_LIMIT_PER_MIN = 240;
 /** Naive per-key sliding-window rate limiter — enough for v1 self-hosting. */
 class RateLimiter {
   private hits = new Map<string, number[]>();
+  private lastSweep = 0;
   allow(key: string, now = Date.now()): boolean {
     const windowStart = now - 60_000;
+    if (now - this.lastSweep > 60_000) this.sweep(windowStart);
     const list = (this.hits.get(key) ?? []).filter((t) => t > windowStart);
     if (list.length >= RATE_LIMIT_PER_MIN) {
       this.hits.set(key, list);
@@ -36,6 +38,13 @@ class RateLimiter {
     list.push(now);
     this.hits.set(key, list);
     return true;
+  }
+  /** Drop keys with no hits in the current window so the map can't grow forever. */
+  private sweep(windowStart: number): void {
+    this.lastSweep = Date.now();
+    for (const [key, list] of this.hits) {
+      if (!list.some((t) => t > windowStart)) this.hits.delete(key);
+    }
   }
 }
 
@@ -129,8 +138,9 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     // Serverless path: no interval worker exists, so the final flush is the
     // moment to run detection for this session.
     if (body.meta.final && config.processOnFinal) {
-      const session = await store.getSession(sessionDbId(project.id, body.sessionId));
-      if (session?.status === 'completed') await processSession(store, session);
+      // Atomic claim so a concurrent worker can't also process this session.
+      const claimed = await store.claimSession(sessionDbId(project.id, body.sessionId));
+      if (claimed) await processSession(store, claimed);
     }
     return reply.code(202).send({ ok: true });
   });
@@ -197,11 +207,13 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     const { id } = req.params as { id: string };
     const q = req.query as { days?: string };
     const days = Math.min(Math.max(Number(q.days) || 14, 1), 90);
-    const [issues, sessions] = await Promise.all([
+    const sinceMs = Date.now() - days * 86_400_000;
+    const [issues, sessions, firstSeen] = await Promise.all([
       store.listIssues(id),
-      store.listSessions(id, 5000),
+      store.listSessionsSince(id, sinceMs, 20000),
+      store.visitorFirstSeen(id),
     ]);
-    return computeAnalytics(issues, sessions, days);
+    return computeAnalytics(issues, sessions, firstSeen, days);
   });
 
   app.get('/api/projects/:id/detector-stats', async (req) => {
@@ -214,21 +226,15 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     const project = await store.getProject(id);
     const funnels = project?.settings?.funnels ?? [];
     if (!funnels.length) return { funnels: [], results: [] };
-    const sessions = (await store.listSessions(id, 500)).filter((s) => !s.isBot).slice(0, 300);
-    const pairs = await Promise.all(
-      sessions.map(async (session) => ({ session, events: await store.getSessionEvents(session.id) })),
-    );
-    return { funnels, results: funnels.map((f) => computeFunnel(f, pairs)) };
+    const sessions = (await store.listSessionActivity(id, 5000)).filter((s) => !s.isBot);
+    return { funnels, results: funnels.map((f) => computeFunnel(f, sessions)) };
   });
 
   app.get('/api/projects/:id/heatmap', async (req) => {
     const { id } = req.params as { id: string };
     const q = req.query as { page?: string };
-    const sessions = (await store.listSessions(id, 300)).filter((s) => !s.isBot).slice(0, 120);
-    const pairs = await Promise.all(
-      sessions.map(async (session) => ({ session, events: await store.getSessionEvents(session.id) })),
-    );
-    return computeHeatmap(pairs, q.page ?? null);
+    const sessions = (await store.listSessionActivity(id, 5000)).filter((s) => !s.isBot);
+    return computeHeatmap(sessions, q.page ?? null);
   });
 
   // ── Issues ────────────────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   user_agent TEXT,
   url_first TEXT,
   device TEXT,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','completed','processed')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','completed','processing','processed')),
   event_count INTEGER NOT NULL DEFAULT 0,
   referrer TEXT,
   pageviews INTEGER,
@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   inp_ms INTEGER,
   cls REAL,
   visitor_id TEXT,
-  country TEXT
+  country TEXT,
+  click_points JSONB,
+  paths JSONB
 );
 CREATE INDEX IF NOT EXISTS sessions_project_idx ON sessions (project_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS sessions_status_idx ON sessions (status, last_seen_at);
@@ -57,7 +59,13 @@ ALTER TABLE sessions ADD COLUMN IF NOT EXISTS inp_ms INTEGER;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS cls REAL;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS visitor_id TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS click_points JSONB;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS paths JSONB;
 CREATE INDEX IF NOT EXISTS sessions_visitor_idx ON sessions (project_id, visitor_id);
+-- Allow the transient 'processing' status used for atomic worker claims.
+ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_status_check;
+ALTER TABLE sessions ADD CONSTRAINT sessions_status_check
+  CHECK (status IN ('active','completed','processing','processed'));
 
 -- Ordered chunks of rrweb events (a batch = a chunk), not one row per event.
 CREATE TABLE IF NOT EXISTS event_chunks (
