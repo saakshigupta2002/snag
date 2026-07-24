@@ -605,18 +605,20 @@ tbody tr:hover td {
 button,
 .btn {
   font: inherit;
+  font-size: 13px;
   font-weight: 500;
-  padding: 8px 15px;
-  border-radius: var(--radius-sm);
+  line-height: 1;
+  padding: 8px 13px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  transition: background 0.13s ease, border-color 0.13s ease, transform 0.08s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
 }
 button:hover,
 .btn:hover {
@@ -625,17 +627,17 @@ button:hover,
 }
 button:active,
 .btn:active {
-  transform: translateY(1px);
+  transform: translateY(0.5px);
 }
 button.primary {
   background: var(--teal);
   border-color: var(--teal);
   color: #0a0a0b;
-  font-weight: 600;
+  font-weight: 550;
 }
 button.primary:hover {
-  background: #e2e2e4;
-  border-color: #e2e2e4;
+  background: #dedee0;
+  border-color: #dedee0;
 }
 button.confirm {
   background: transparent;
