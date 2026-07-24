@@ -7,17 +7,17 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #09090b;
-  --panel: #101012;
-  --panel-2: #161619;
-  --hover: #1e1e22;
-  --border: rgba(255, 255, 255, 0.08);
+  --bg: #0d0d0f;
+  --panel: #161618;
+  --panel-2: #1c1c1f;
+  --hover: #232327;
+  --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.16);
   --grid: rgba(255, 255, 255, 0.02);
 
-  --text: #eaeaec;
-  --text-dim: #9a9aa4;
-  --text-faint: #5c5c66;
+  --text: #ececee;
+  --text-dim: #a0a0a8;
+  --text-faint: #6a6a72;
 
   /* Accent = white. Kept under the --teal* names so the whole app inherits
      the swap without touching every rule that references the accent. */
@@ -123,19 +123,17 @@ a:hover {
   display: flex;
   align-items: baseline;
   gap: 1px;
-  font-family: var(--mono);
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  padding: 0 9px 6px;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  padding: 0 9px 4px;
   color: var(--text);
   user-select: none;
 }
 .wm-cursor {
-  color: var(--teal);
-  font-weight: 700;
-  animation: blink 1.15s steps(1) infinite;
-  text-shadow: 0 0 10px var(--teal-glow);
+  color: var(--text-faint);
+  font-weight: 500;
 }
 @keyframes blink {
   50% {
@@ -158,21 +156,17 @@ a:hover {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 9px 12px;
+  padding: 7px 12px;
   border-radius: var(--radius-sm);
   color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: -0.01em;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 450;
+  letter-spacing: -0.005em;
+  text-transform: capitalize;
   transition:
     background 0.14s ease,
     color 0.14s ease;
-}
-.side-nav a::before {
-  content: '~/';
-  color: var(--text-faint);
-  margin-right: 7px;
-  transition: color 0.14s ease;
 }
 .side-nav a:hover {
   background: var(--hover);
@@ -180,13 +174,9 @@ a:hover {
   text-decoration: none;
 }
 .side-nav a.active {
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text);
-}
-.side-nav a.active::before {
-  content: '›';
-  color: var(--text);
-  font-weight: 700;
+  font-weight: 550;
 }
 
 .sidebar .spacer {
@@ -199,44 +189,37 @@ a:hover {
 
 .main {
   flex: 1;
-  padding: 34px 44px 90px;
+  padding: 40px 52px 96px;
   min-width: 0;
-  max-width: 1320px;
-  /* faint blueprint grid, fading in from the top-left */
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 46px 46px;
-  background-position: -1px -1px;
+  max-width: 1240px;
 }
 
 /* ── Typography ──────────────────────────────────────────────────────────── */
 h1 {
-  font-family: var(--display);
-  font-size: 27px;
+  font-family: var(--sans);
+  font-size: 21px;
   font-weight: 600;
-  letter-spacing: -0.025em;
-  margin: 0 0 6px;
+  letter-spacing: -0.012em;
+  margin: 0 0 5px;
   color: var(--text);
 }
 h2 {
-  font-family: var(--display);
-  font-size: 15.5px;
+  font-family: var(--sans);
+  font-size: 14.5px;
   font-weight: 600;
-  letter-spacing: -0.015em;
-  margin: 30px 0 12px;
+  letter-spacing: -0.005em;
+  margin: 28px 0 12px;
 }
 .subtitle {
   color: var(--text-dim);
   margin: 0 0 26px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.11em;
-  color: var(--teal);
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--text-dim);
   font-weight: 500;
 }
 
@@ -250,6 +233,80 @@ h2 {
 }
 .card h2:first-child {
   margin-top: 0;
+}
+.card h3 {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0 0 12px;
+  color: var(--text);
+}
+
+/* ── Settings: full-page left-tab layout ─────────────────────────────────── */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 44px;
+  align-items: start;
+  margin-top: 4px;
+}
+@media (max-width: 860px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 40px;
+}
+@media (max-width: 860px) {
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+.settings-nav button {
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 450;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+.settings-nav button:hover {
+  background: var(--surface);
+  border-color: transparent;
+  color: var(--text);
+}
+.settings-nav button.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 550;
+}
+.settings-panel {
+  min-width: 0;
+}
+.settings-section-head {
+  margin-bottom: 18px;
+}
+.settings-section-head h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.settings-section-head p {
+  margin: 0;
+  font-size: 13px;
 }
 
 /* ── Stat tiles ──────────────────────────────────────────────────────────── */
@@ -273,13 +330,13 @@ h2 {
 .stat .stat-label {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-faint);
-  margin-bottom: 16px;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 450;
+  letter-spacing: 0;
+  color: var(--text-dim);
+  margin-bottom: 14px;
 }
 .stat .stat-value {
   font-family: var(--display);
@@ -322,13 +379,12 @@ table {
 }
 thead th {
   text-align: left;
-  font-family: var(--mono);
+  font-family: var(--sans);
   color: var(--text-faint);
   font-weight: 500;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  padding: 12px 18px;
+  font-size: 12px;
+  letter-spacing: 0;
+  padding: 11px 18px;
   background: transparent;
   border-bottom: 1px solid var(--border);
 }
@@ -366,13 +422,13 @@ tbody tr:hover td {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 9px;
+  padding: 3px 9px 3px 8px;
   border-radius: var(--pill);
-  font-family: var(--mono);
-  font-size: 10px;
+  font-family: var(--sans);
+  font-size: 11.5px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: capitalize;
+  letter-spacing: 0;
   border: 1px solid var(--border);
   white-space: nowrap;
   background: transparent;
@@ -449,12 +505,13 @@ tbody tr:hover td {
 }
 .filters a {
   padding: 6px 13px;
-  border-radius: var(--pill);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.01em;
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: capitalize;
   transition: all 0.14s ease;
 }
 .filters a.active {
@@ -569,14 +626,20 @@ textarea:focus {
   border-color: rgba(255, 255, 255, 0.32);
   box-shadow: none;
 }
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: #d4d4d8;
+  width: auto;
+  padding: 0;
+}
 label {
   display: block;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-  margin-bottom: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text);
+  margin-bottom: 7px;
 }
 .field {
   margin-bottom: 15px;

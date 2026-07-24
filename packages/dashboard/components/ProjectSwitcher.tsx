@@ -44,7 +44,7 @@ export function ProjectSwitcher({
   return (
     <div className="switcher" ref={ref}>
       <button className="switcher-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        <span className="switcher-name mono">{current?.name ?? 'project'}</span>
+        <span className="switcher-name">{current?.name ?? 'project'}</span>
         {current?.openIssues ? <span className="switcher-count">{current.openIssues}</span> : null}
         <span className="switcher-chevron" aria-hidden="true">
           ⌄
@@ -52,7 +52,7 @@ export function ProjectSwitcher({
       </button>
       {open && (
         <div className="switcher-menu" role="menu">
-          <div className="switcher-head mono">projects</div>
+          <div className="switcher-head">projects</div>
           {projects.map((p) => (
             <button
               key={p.id}
@@ -60,7 +60,7 @@ export function ProjectSwitcher({
               onClick={() => go(`/p/${p.id}`)}
               role="menuitem"
             >
-              <span className="switcher-item-name mono">{p.name}</span>
+              <span className="switcher-item-name">{p.name}</span>
               {p.openIssues ? <span className="switcher-count">{p.openIssues}</span> : null}
               {p.id === currentId && <span className="switcher-check">✓</span>}
             </button>

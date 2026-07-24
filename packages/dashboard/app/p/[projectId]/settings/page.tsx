@@ -1,13 +1,8 @@
 import { notFound } from 'next/navigation';
 import type { DetectorStat, FlagRule, Project } from '@snag/shared';
 import { api, ApiError } from '@/lib/api';
-import { CopyButton } from '@/components/CopyButton';
-import { ProjectSettingsForm } from '@/components/ProjectSettingsForm';
-import { DetectorTuner, type BuiltinFlag } from '@/components/DetectorTuner';
-import { AlertsForm } from '@/components/AlertsForm';
-import { ShareForm } from '@/components/ShareForm';
-import { CustomFlagBuilder } from '@/components/CustomFlagBuilder';
-import { CustomFlagList } from '@/components/CustomFlagList';
+import { SettingsTabs } from '@/components/SettingsTabs';
+import type { BuiltinFlag } from '@/components/DetectorTuner';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,44 +37,12 @@ Snag.init({
     <>
       <h1>Settings</h1>
       <p className="subtitle">{project.name}</p>
-
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>Install the SDK</h2>
-        <div className="row" style={{ marginBottom: 8 }}>
-          <span className="muted">Project key</span>
-          <code className="chip">{project.projectKey}</code>
-          <CopyButton text={project.projectKey} />
-        </div>
-        <pre className="snippet">{snippet}</pre>
-        <p className="muted" style={{ fontSize: 12.5 }}>
-          Masking happens in the browser before anything is sent: passwords always, all inputs by
-          default, plus a pattern safety net for emails/cards/tokens. Add{' '}
-          <code>.snag-block</code> to hide an element entirely, <code>.snag-mask</code> to keep
-          layout but hide text.
-        </p>
-      </div>
-
-      <ProjectSettingsForm
-        projectId={project.id}
-        name={project.name}
-        settings={project.settings}
+      <SettingsTabs
+        project={project}
+        flags={flags}
+        detectorStats={detectorStats}
+        snippet={snippet}
       />
-
-      <AlertsForm projectId={project.id} settings={project.settings} />
-
-      <ShareForm projectId={project.id} settings={project.settings} />
-
-      <h2>Detectors</h2>
-      <p className="muted" style={{ marginTop: -4 }}>
-        Toggle and tune per project. Tier 2 detectors ship off until tuned against real traffic —
-        precision over coverage. Fire counts show how often each has flagged something.
-      </p>
-      <DetectorTuner projectId={project.id} flags={flags.builtins} stats={detectorStats} />
-
-      <h2>Custom flags</h2>
-      <CustomFlagList projectId={project.id} rules={flags.custom} />
-      <div style={{ height: 10 }} />
-      <CustomFlagBuilder projectId={project.id} />
     </>
   );
 }

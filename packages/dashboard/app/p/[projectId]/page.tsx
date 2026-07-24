@@ -39,7 +39,7 @@ export default async function OverviewPage({
         </div>
       ) : (
         <div className="ingest-bar">
-          <span className="dot accent" style={{ boxShadow: '0 0 10px 0 var(--teal)' }} />
+          <span className="dot accent" />
           <span>
             Last session <strong>{timeAgo(ov.ingest.lastSessionAt!)}</strong>
           </span>

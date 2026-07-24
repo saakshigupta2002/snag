@@ -3,8 +3,8 @@
 export function LogoutButton() {
   return (
     <button
-      className="dismiss mono"
-      style={{ width: '100%', justifyContent: 'center', fontSize: 12.5 }}
+      className="dismiss"
+      style={{ width: '100%', justifyContent: 'center', fontSize: 13 }}
       onClick={async () => {
         await fetch('/api/logout', { method: 'POST' });
         window.location.href = '/login';

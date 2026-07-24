@@ -9,7 +9,7 @@ export function CommandHint() {
     );
   };
   return (
-    <button className="cmd-hint mono" onClick={open} aria-label="Open command palette">
+    <button className="cmd-hint" onClick={open} aria-label="Open command palette">
       <span>search</span>
       <kbd>⌘K</kbd>
     </button>
