@@ -19,38 +19,26 @@ export default async function IssuesPage({
       <h1>Issues</h1>
       <p className="subtitle">What looks wrong, ranked. Open one, watch the clip, make the call.</p>
 
-      <div className="stat-row">
-        <div className="stat">
-          <div className="stat-label">
-            <span className="dot accent" />
-            open issues
-          </div>
-          <div className="stat-value">{open.length}</div>
+      <div className="issue-summary">
+        <div className="s-item">
+          <span className="s-val">{open.length}</span>
+          <span className="s-label">open</span>
         </div>
-        <div className="stat">
-          <div className="stat-label">
-            <span className="dot high" />
-            high
-          </div>
-          <div className="stat-value" style={{ color: 'var(--high)' }}>
-            {count('high')}
-          </div>
+        <span className="s-div" />
+        <div className="s-item">
+          <span className="dot high" />
+          <span className="s-val">{count('high')}</span>
+          <span className="s-label">high</span>
         </div>
-        <div className="stat">
-          <div className="stat-label">
-            <span className="dot medium" />
-            medium
-          </div>
-          <div className="stat-value" style={{ color: 'var(--medium)' }}>
-            {count('medium')}
-          </div>
+        <div className="s-item">
+          <span className="dot medium" />
+          <span className="s-val">{count('medium')}</span>
+          <span className="s-label">medium</span>
         </div>
-        <div className="stat">
-          <div className="stat-label">
-            <span className="dot low" />
-            low
-          </div>
-          <div className="stat-value">{count('low')}</div>
+        <div className="s-item">
+          <span className="dot low" />
+          <span className="s-val">{count('low')}</span>
+          <span className="s-label">low</span>
         </div>
       </div>
 

@@ -200,20 +200,20 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
                   onClick={() => router.push(`/p/${projectId}/issues/${encodeURIComponent(g.groupKey)}`)}
                 >
                   <td>
-                    <span className={`badge ${g.severity}`}>{g.severity}</span>
+                    <span className={`sev ${g.severity}`}>{g.severity}</span>
                   </td>
                   <td>
                     <span className="cell-title">{g.title}</span>
                     {g.aiSummary && <div className="cell-sub">{g.aiSummary}</div>}
                   </td>
                   <td>
-                    <span className="chip">{g.detector}</span>
+                    <span className="det">{g.detector}</span>
                   </td>
                   <td className="muted">{g.occurrences}</td>
                   <td className="muted">{timeAgo(g.lastSeen)}</td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className="row-actions">
-                      <span className={`badge ${g.status}`}>{g.status}</span>
+                      <span className={`st ${g.status}`}>{g.status}</span>
                       <div className="inline-acts">
                         <button
                           className="mini confirm"
