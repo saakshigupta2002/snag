@@ -54,17 +54,21 @@ export default async function OverviewPage({
       <LiveRefresh intervalMs={20000} />
       <div className="section-head" style={{ alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ marginBottom: 4 }}>Overview</h1>
-          <p className="subtitle" style={{ margin: 0 }}>
-            {project.name} —{' '}
+          <h1 style={{ marginBottom: 9 }}>Overview</h1>
+          <div className={`rec-bar ${noData ? 'idle' : ''}`}>
+            <span className="rec-dot" />
             {noData ? (
-              'no sessions yet.'
+              <>
+                idle <span className="rec-sep">·</span> no sessions yet
+              </>
             ) : (
               <>
-                last session {timeAgo(a.ingest.lastSessionAt!)} · {a.ingest.sessionsToday} today
+                REC <span className="rec-sep">·</span> watching <strong>{project.name}</strong>
+                <span className="rec-sep">·</span> {a.ingest.sessionsToday} today
+                <span className="rec-sep">·</span> last {timeAgo(a.ingest.lastSessionAt!)}
               </>
             )}
-          </p>
+          </div>
         </div>
         <RangeSelector days={days} />
       </div>

@@ -7,11 +7,15 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #0d0d0f;
-  --panel: #161618;
-  --panel-2: #1c1c1f;
-  --hover: #232327;
-  --border: rgba(255, 255, 255, 0.09);
+  /* Elevation: one deep ink base, then surfaces that genuinely climb toward the
+     light. Each raised surface also gets a 1px top highlight (--edge-hi) so it
+     reads as lit from above — depth without drop-shadows. */
+  --bg: #08080a;
+  --panel: #141417;
+  --panel-2: #1b1b1f;
+  --hover: #242429;
+  --edge-hi: rgba(255, 255, 255, 0.055);
+  --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
   --grid: rgba(255, 255, 255, 0.02);
 
@@ -60,6 +64,16 @@
   --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --display: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  /* The data face: every measured number is monospace + tabular, so the app
+     reads like an instrument, not a marketing page. */
+  --data: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Type scale — deliberate steps, not near-uniform sizing. */
+  --fs-display: 30px;
+  --fs-h1: 22px;
+  --fs-h2: 14.5px;
+  --fs-body: 14px;
+  --fs-label: 11.5px;
 }
 
 * {
@@ -235,14 +249,17 @@ a:hover {
   padding: 40px 52px 96px;
   min-width: 0;
   max-width: 1240px;
+  /* Faint overhead glow so the page has atmosphere, not a flat fill. */
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.022), transparent 60%);
 }
 
 /* ── Typography ──────────────────────────────────────────────────────────── */
 h1 {
   font-family: var(--sans);
-  font-size: 21px;
-  font-weight: 600;
-  letter-spacing: -0.012em;
+  font-size: var(--fs-h1);
+  font-weight: 640;
+  letter-spacing: -0.02em;
   margin: 0 0 5px;
   color: var(--text);
 }
@@ -259,20 +276,39 @@ h2 {
   font-size: 13.5px;
 }
 .eyebrow {
-  font-family: var(--sans);
-  font-size: 12px;
-  letter-spacing: 0;
-  color: var(--text-dim);
+  font-family: var(--data);
+  font-size: var(--fs-label);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
   font-weight: 500;
 }
 
 /* ── Cards ───────────────────────────────────────────────────────────────── */
 .card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px 22px;
   margin-bottom: 16px;
+}
+/* Lit-from-above: a 1px highlight along the top edge for real depth. */
+.card::before,
+.stat::before,
+.insight-card::before,
+.users-row::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--edge-hi) 18%, var(--edge-hi) 82%, transparent);
+  pointer-events: none;
+}
+.insight-card,
+.users-row {
+  position: relative;
 }
 .card h2:first-child {
   margin-top: 0;
@@ -374,18 +410,19 @@ h2 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  font-weight: 450;
-  letter-spacing: 0;
-  color: var(--text-dim);
+  font-family: var(--data);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
   margin-bottom: 14px;
 }
 .stat .stat-value {
-  font-family: var(--display);
-  font-size: 30px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--data);
+  font-size: 29px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -1802,10 +1839,10 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--data);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -1826,6 +1863,69 @@ kbd {
 .live-dot.on {
   background: var(--green);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent);
+  animation: live-pulse 2s var(--ease) infinite;
+}
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 40%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 0%, transparent);
+  }
+}
+
+/* Signature: the "recording" status line — a live rec-pulse + console prompt,
+   so the app announces that it is watching in real time. */
+.rec-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 12px 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--pill);
+  background: var(--surface);
+  font-family: var(--data);
+  font-size: var(--fs-label);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.rec-bar .rec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--high);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--high) 55%, transparent);
+  animation: rec-pulse 1.8s var(--ease) infinite;
+}
+.rec-bar.idle .rec-dot {
+  background: var(--text-faint);
+  animation: none;
+}
+.rec-bar .rec-sep {
+  color: var(--text-faint);
+}
+.rec-bar strong {
+  color: var(--text);
+  font-weight: 500;
+}
+@keyframes rec-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--high) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--high) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--high) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot.on,
+  .rec-bar .rec-dot {
+    animation: none;
+  }
 }
 .user-splitmini {
   display: flex;
@@ -1878,10 +1978,10 @@ kbd {
   margin-bottom: 12px;
 }
 .insight-pct {
-  font-family: var(--display);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--data);
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -1898,9 +1998,9 @@ kbd {
   margin-bottom: 14px;
 }
 .perf-score-num {
-  font-family: var(--display);
-  font-size: 34px;
-  font-weight: 600;
+  font-family: var(--data);
+  font-size: 32px;
+  font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
