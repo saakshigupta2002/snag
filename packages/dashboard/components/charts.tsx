@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { CountRow, TrendPoint } from '@snag/shared';
 
 /**
@@ -50,33 +51,47 @@ export function BarList({
   accent = 'var(--barfill)',
   total,
   empty = 'Nothing yet.',
+  hrefFor,
 }: {
   rows: CountRow[];
   accent?: string;
   /** When given, each row also shows its share of this total. */
   total?: number;
   empty?: string;
+  /** When given, each row becomes a drill-down link to the sessions behind it. */
+  hrefFor?: (key: string) => string;
 }) {
   if (!rows.length) return <div className="muted" style={{ fontSize: 12.5 }}>{empty}</div>;
   const max = Math.max(1, ...rows.map((r) => r.count));
   const denom = total && total > 0 ? total : 0;
   return (
     <div className="barlist">
-      {rows.map((r) => (
-        <div className="barrow" key={r.key}>
-          <div className="barrow-track">
-            <div
-              className="barrow-fill"
-              style={{ width: `${(r.count / max) * 100}%`, background: accent }}
-            />
-            <span className="barrow-label mono">{r.key}</span>
+      {rows.map((r) => {
+        const inner = (
+          <>
+            <div className="barrow-track">
+              <div
+                className="barrow-fill"
+                style={{ width: `${(r.count / max) * 100}%`, background: accent }}
+              />
+              <span className="barrow-label mono">{r.key}</span>
+            </div>
+            {denom ? (
+              <span className="barrow-pct mono">{Math.round((r.count / denom) * 100)}%</span>
+            ) : null}
+            <span className="barrow-count mono">{r.count}</span>
+          </>
+        );
+        return hrefFor ? (
+          <Link className="barrow barrow-link" key={r.key} href={hrefFor(r.key)} title={`View ${r.key} sessions`}>
+            {inner}
+          </Link>
+        ) : (
+          <div className="barrow" key={r.key}>
+            {inner}
           </div>
-          {denom ? (
-            <span className="barrow-pct mono">{Math.round((r.count / denom) * 100)}%</span>
-          ) : null}
-          <span className="barrow-count mono">{r.count}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

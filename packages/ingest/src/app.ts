@@ -180,10 +180,55 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   });
 
   // ── Sessions ──────────────────────────────────────────────────────────────
+  // Filter params mirror the analytics breakdowns, so a click on any overview
+  // card can drill straight to the sessions behind that number.
   app.get('/api/projects/:id/sessions', async (req) => {
     const { id } = req.params as { id: string };
-    const { limit } = req.query as { limit?: string };
-    return store.listSessions(id, Math.min(Number(limit) || 100, 500));
+    const q = req.query as {
+      limit?: string;
+      device?: string;
+      browser?: string;
+      os?: string;
+      country?: string;
+      channel?: string;
+      detector?: string;
+      errors?: string;
+      bot?: string;
+      from?: string;
+      to?: string;
+    };
+    const limit = Math.min(Number(q.limit) || 100, 500);
+    const hasFilter =
+      q.device || q.browser || q.os || q.country || q.channel || q.detector ||
+      q.errors || q.bot != null || q.from || q.to;
+    // Only over-fetch when we actually need to filter a superset down.
+    let sessions = await store.listSessions(id, hasFilter ? 2000 : limit);
+
+    if (q.from) {
+      const fromMs = Date.parse(q.from);
+      if (!Number.isNaN(fromMs)) sessions = sessions.filter((s) => Date.parse(s.startedAt) >= fromMs);
+    }
+    if (q.to) {
+      const toMs = Date.parse(q.to);
+      // `to` is an inclusive day → extend to end-of-day.
+      if (!Number.isNaN(toMs)) sessions = sessions.filter((s) => Date.parse(s.startedAt) < toMs + 86_400_000);
+    }
+    if (q.device) sessions = sessions.filter((s) => s.device === q.device);
+    if (q.browser) sessions = sessions.filter((s) => s.browser === q.browser);
+    if (q.os) sessions = sessions.filter((s) => s.os === q.os);
+    if (q.country) sessions = sessions.filter((s) => s.country === q.country);
+    if (q.channel) sessions = sessions.filter((s) => channelOf(s.referrer) === q.channel);
+    if (q.errors === '1') sessions = sessions.filter((s) => (s.jsErrors ?? 0) > 0);
+    if (q.bot === '1') sessions = sessions.filter((s) => s.isBot === true);
+    else if (q.bot === '0') sessions = sessions.filter((s) => !s.isBot);
+    if (q.detector) {
+      const issues = await store.listIssues(id);
+      const withDetector = new Set(
+        issues.filter((i) => i.detector === q.detector && i.sessionId).map((i) => i.sessionId),
+      );
+      sessions = sessions.filter((s) => withDetector.has(s.id));
+    }
+    return sessions.slice(0, limit);
   });
 
   app.get('/api/sessions/:sid/events', async (req, reply) => {

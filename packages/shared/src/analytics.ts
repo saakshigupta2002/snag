@@ -78,11 +78,30 @@ export interface Analytics {
   smartEvents: { name: string; sessions: number; count: number }[];
   jsErrors: { total: number; sessionsWith: number; pct: number };
   bots: { sessions: number; pct: number };
+  /** How far visitors scroll, as a cumulative depth distribution. */
+  scrollDepth: ScrollDepth;
   performance: VitalStat;
   sessionsOverTime: TrendPoint[];
   issuesOverTime: TrendPoint[];
   topDetectors: CountRow[];
   ingest: IngestHealth;
+}
+
+/** One cumulative depth band: how many sessions scrolled at least `pct` down. */
+export interface ScrollDepthBucket {
+  /** Depth threshold, e.g. 25 | 50 | 75 | 100. */
+  pct: number;
+  /** Human sessions that reached at least this depth. */
+  sessions: number;
+  /** That count as a share of the sampled sessions (0–100). */
+  sharePct: number;
+}
+
+/** Distribution of how far visitors scroll — the "reach" gradient. */
+export interface ScrollDepth {
+  buckets: ScrollDepthBucket[];
+  /** Sessions with a recorded scroll depth (the denominator). */
+  sampleSize: number;
 }
 
 /** A single recorded click, in the recording's viewport coordinates. */

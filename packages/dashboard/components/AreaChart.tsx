@@ -1,28 +1,37 @@
 'use client';
 
 import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { TrendPoint } from '@snag/shared';
 
 /**
  * A proper time-series area chart: y-axis with nice ticks + dashed gridlines,
- * x-axis day labels, a smooth teal area, point markers, and a hover crosshair
- * with a tooltip. Single-hue magnitude (teal) — no categorical palette.
- * Sizes to its container via ResizeObserver so text stays crisp.
+ * x-axis day labels, a smooth area, point markers, and a hover crosshair with a
+ * tooltip. Single-hue magnitude — no categorical palette. Sizes to its
+ * container via ResizeObserver so text stays crisp.
+ *
+ * When `drillBase` is set the chart becomes a range picker: click a day to open
+ * that day's sessions, or drag across a span to open the sessions in it —
+ * `drillBase?from=YYYY-MM-DD&to=YYYY-MM-DD`.
  */
 export function AreaChart({
   data,
   height = 200,
   yLabel,
   accent = 'var(--teal)',
+  drillBase,
 }: {
   data: TrendPoint[];
   height?: number;
   yLabel?: string;
   accent?: string;
+  drillBase?: string;
 }) {
+  const router = useRouter();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(600);
   const [hover, setHover] = useState<number | null>(null);
+  const [drag, setDrag] = useState<{ from: number; to: number } | null>(null);
   const gid = `ac-${useId().replace(/[^a-z0-9]/gi, '')}`;
 
   useLayoutEffect(() => {
@@ -67,14 +76,42 @@ export function AreaChart({
   // Label density: show ~10 x-labels max.
   const step = Math.ceil(data.length / 10);
 
-  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const idxFromEvent = (e: React.MouseEvent<SVGSVGElement>): number => {
     const rect = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * width;
     const i = Math.round(((px - padL) / plotW) * (data.length - 1));
-    setHover(Math.max(0, Math.min(data.length - 1, i)));
+    return Math.max(0, Math.min(data.length - 1, i));
+  };
+
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const i = idxFromEvent(e);
+    setHover(i);
+    if (drag) setDrag({ from: drag.from, to: i });
+  };
+
+  const drillTo = (fromI: number, toI: number) => {
+    if (!drillBase) return;
+    const [lo, hi] = fromI <= toI ? [fromI, toI] : [toI, fromI];
+    const p = new URLSearchParams({ from: data[lo]!.day, to: data[hi]!.day });
+    router.push(`${drillBase}?${p.toString()}`);
+  };
+
+  const onDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!drillBase) return;
+    const i = idxFromEvent(e);
+    setDrag({ from: i, to: i });
+  };
+  const onUp = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!drillBase || !drag) return;
+    const i = idxFromEvent(e);
+    setDrag(null);
+    drillTo(drag.from, i);
   };
 
   const hv = hover !== null ? data[hover]! : null;
+  const sel = drag && drag.from !== drag.to
+    ? { lo: Math.min(drag.from, drag.to), hi: Math.max(drag.from, drag.to) }
+    : null;
 
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
@@ -83,8 +120,14 @@ export function AreaChart({
         width="100%"
         height={height}
         role="img"
+        style={drillBase ? { cursor: 'crosshair' } : undefined}
         onMouseMove={onMove}
-        onMouseLeave={() => setHover(null)}
+        onMouseLeave={() => {
+          setHover(null);
+          setDrag(null);
+        }}
+        onMouseDown={onDown}
+        onMouseUp={onUp}
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
@@ -119,6 +162,21 @@ export function AreaChart({
           ) : null,
         )}
 
+        {/* drag-to-select range highlight */}
+        {sel && (
+          <rect
+            x={x(sel.lo)}
+            y={padT}
+            width={Math.max(x(sel.hi) - x(sel.lo), 1)}
+            height={plotH}
+            fill={accent}
+            fillOpacity="0.10"
+            stroke={accent}
+            strokeOpacity="0.35"
+            pointerEvents="none"
+          />
+        )}
+
         <path d={area} fill={`url(#${gid})`} />
         <path d={line} fill="none" stroke={accent} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
@@ -145,6 +203,7 @@ export function AreaChart({
           style={{ left: `${(x(hover!) / width) * 100}%`, top: y(hv.count) - 8 }}
         >
           <strong>{hv.count}</strong> · {hv.day.slice(5)}
+          {drillBase && <span className="ac-tip-hint"> · click to view</span>}
         </div>
       )}
     </div>

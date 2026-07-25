@@ -323,6 +323,9 @@ export function computeAnalytics(
   let durN = 0;
   let scrollSum = 0;
   let scrollN = 0;
+  // Cumulative scroll-reach bands: how many sessions got at least this deep.
+  const SCROLL_BANDS = [25, 50, 75, 100];
+  const scrollReach = [0, 0, 0, 0];
   let eventsTotal = 0;
   let jsErrTotal = 0;
   let sessWithErr = 0;
@@ -364,6 +367,9 @@ export function computeAnalytics(
     if (s.maxScrollPct != null) {
       scrollSum += s.maxScrollPct;
       scrollN++;
+      for (let bi = 0; bi < SCROLL_BANDS.length; bi++) {
+        if (s.maxScrollPct >= SCROLL_BANDS[bi]!) scrollReach[bi]!++;
+      }
     }
     bump(device, s.device);
     bump(browser, s.browser);
@@ -476,6 +482,14 @@ export function computeAnalytics(
     bots: {
       sessions: botCount,
       pct: recent.length ? Math.round((botCount / recent.length) * 1000) / 10 : 0,
+    },
+    scrollDepth: {
+      sampleSize: scrollN,
+      buckets: SCROLL_BANDS.map((pct, i) => ({
+        pct,
+        sessions: scrollReach[i]!,
+        sharePct: scrollN ? Math.round((scrollReach[i]! / scrollN) * 100) : 0,
+      })),
     },
     performance: {
       lcpMs: lcpN ? Math.round(lcpSum / lcpN) : null,
