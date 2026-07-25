@@ -45,6 +45,17 @@
   --surface-2: rgba(255, 255, 255, 0.06);
   --shadow-card: none;
   --shadow-pop: 0 16px 40px -20px rgba(0, 0, 0, 0.7);
+  /* Lift for interactive surfaces on hover — a hairline, not a drop-shadow. */
+  --shadow-hover: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
+
+  /* Motion system: one snappy ease + one gentle spring, shared everywhere so
+     every interaction feels like the same physical material. */
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --t-fast: 0.11s;
+  --t-med: 0.18s;
+  /* Accent focus ring for keyboard users — visible, on-brand, offset. */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255, 255, 255, 0.55);
 
   --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --display: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -157,6 +168,24 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .wm-cursor {
     animation: none;
+  }
+  /* Honour the OS setting: keep feedback (color/opacity) but drop all motion. */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  button:hover,
+  .btn:hover,
+  .tile-link:hover,
+  button:active,
+  .btn:active,
+  .tile-link:active,
+  a.barrow-link:active {
+    transform: none !important;
   }
 }
 
@@ -615,7 +644,11 @@ button,
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.13s ease, border-color 0.13s ease, transform 0.08s ease;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -625,10 +658,33 @@ button:hover,
 .btn:hover {
   background: var(--surface-2);
   border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
+/* A real press: the control sinks in and darkens under the cursor. */
 button:active,
 .btn:active {
-  transform: translateY(0.5px);
+  transform: translateY(1px) scale(0.975);
+  background: var(--hover);
+  box-shadow: inset 0 2px 5px -2px rgba(0, 0, 0, 0.6);
+  transition-duration: 0.04s;
+}
+button:disabled:active,
+.btn:disabled:active {
+  transform: none;
+  box-shadow: none;
+}
+/* Keyboard focus ring — accessible and on-brand, never shown on mouse click. */
+button:focus-visible,
+.btn:focus-visible,
+a:focus-visible,
+.filter-chip:focus-visible,
+.tile-link:focus-visible,
+.barrow-link:focus-visible,
+.side-nav a:focus-visible,
+[role='button']:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-xs);
 }
 button.primary {
   background: transparent;
@@ -720,8 +776,8 @@ select:focus,
 textarea:focus {
   outline: none;
   background: var(--panel);
-  border-color: rgba(255, 255, 255, 0.32);
-  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 input[type='checkbox'],
 input[type='radio'] {
@@ -2404,6 +2460,9 @@ a.barrow-link:hover .barrow-fill {
 a.barrow-link:hover .barrow-label {
   color: var(--text);
 }
+a.barrow-link:active {
+  transform: scale(0.992);
+}
 
 /* KPI / insight / big-number cards that drill */
 .tile-link {
@@ -2411,10 +2470,19 @@ a.barrow-link:hover .barrow-label {
   color: inherit;
   display: block;
   position: relative;
-  transition: border-color 0.15s ease, transform 0.12s ease;
+  transition:
+    border-color var(--t-med) var(--ease),
+    box-shadow var(--t-med) var(--ease),
+    transform var(--t-med) var(--ease);
 }
 .tile-link:hover {
   border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.tile-link:active {
+  transform: translateY(0) scale(0.99);
+  transition-duration: 0.05s;
 }
 .tile-link::after {
   content: '→';
@@ -2512,4 +2580,74 @@ a.filter-chip:hover {
 .ac-tip-hint {
   color: var(--text-faint);
   font-size: 10.5px;
+}
+
+/* ── Interaction polish: shared press/hover feedback ─────────────────────── */
+/* Segmented range + filter tabs feel like physical toggles */
+.range-selector button {
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.range-selector button:active {
+  transform: scale(0.94);
+}
+.range-selector button.active {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.filters a,
+.side-nav a,
+.settings-nav button,
+.heat-pagelist button {
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.filters a:active,
+.side-nav a:active,
+.heat-pagelist button:active {
+  transform: scale(0.97);
+}
+/* Non-link stat/insight cards still acknowledge a hover */
+.stat,
+.insight-card {
+  transition:
+    border-color var(--t-med) var(--ease),
+    transform var(--t-med) var(--ease),
+    box-shadow var(--t-med) var(--ease);
+}
+.insight-card:hover {
+  border-color: var(--border-strong);
+}
+/* Table rows: a clearer, quicker hover acknowledgement */
+tbody tr {
+  transition: background var(--t-fast) var(--ease);
+}
+/* Copy-confirm + toast entrances use the shared spring */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast {
+  animation: pop-in var(--t-med) var(--spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .range-selector button:active,
+  .filters a:active,
+  .side-nav a:active,
+  .heat-pagelist button:active {
+    transform: none !important;
+  }
+  .toast {
+    animation: none;
+  }
 }
