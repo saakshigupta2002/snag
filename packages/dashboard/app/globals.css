@@ -1688,6 +1688,39 @@ kbd {
   color: var(--text);
 }
 
+/* ── Overview: filter bar / segments ──────────────────────────────────────── */
+.filterbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -6px 0 20px;
+}
+.filterbar select {
+  padding: 6px 30px 6px 11px;
+  font-size: 12.5px;
+  background-size: 13px;
+  background-position: right 9px center;
+}
+.filter-chips {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: var(--pill);
+  border: 1px solid var(--teal-line);
+  background: var(--teal-soft);
+  color: var(--text);
+  text-transform: capitalize;
+}
+.filter-chip span {
+  color: var(--text-dim);
+  margin-left: 3px;
+}
+
 /* ── Overview: users row ──────────────────────────────────────────────────── */
 .users-row {
   display: flex;

@@ -5,9 +5,12 @@ import { timeAgo } from '@/lib/format';
 import { BarList } from '@/components/charts';
 import { AreaChart } from '@/components/AreaChart';
 import { RangeSelector } from '@/components/RangeSelector';
+import { FilterBar } from '@/components/FilterBar';
 
 // Read-only analytics: cache briefly so navigations don't recompute every time.
 export const revalidate = 15;
+
+const FILTER_DIMS = ['device', 'browser', 'os', 'country', 'channel'] as const;
 
 function splitPct(a: number, b: number): number {
   const total = a + b;
@@ -27,14 +30,30 @@ export default async function OverviewPage({
   searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ days?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const { projectId } = await params;
-  const days = Math.min(Math.max(Number((await searchParams).days) || 14, 1), 90);
+  const sp = await searchParams;
+  const days = Math.min(Math.max(Number(sp.days) || 14, 1), 90);
+  const filters: Record<string, string> = {};
+  const qs = new URLSearchParams({ days: String(days) });
+  for (const dim of FILTER_DIMS) {
+    if (sp[dim]) {
+      filters[dim] = sp[dim]!;
+      qs.set(dim, sp[dim]!);
+    }
+  }
   const [project, a] = await Promise.all([
     apiCached<Project>(`/api/projects/${projectId}`),
-    apiCached<Analytics>(`/api/projects/${projectId}/analytics?days=${days}`),
+    apiCached<Analytics>(`/api/projects/${projectId}/analytics?${qs.toString()}`),
   ]);
+  const options: Record<string, string[]> = {
+    device: a.device.map((r) => r.key),
+    browser: a.browser.map((r) => r.key),
+    os: a.os.map((r) => r.key),
+    country: a.countries.map((r) => r.key),
+    channel: a.channels.map((r) => r.key),
+  };
 
   const noData = a.ingest.lastSessionAt === null;
   const n = a.kpis.sessions;
@@ -58,6 +77,16 @@ export default async function OverviewPage({
         </div>
         <RangeSelector days={days} />
       </div>
+
+      {!noData && (
+        <FilterBar
+          projectId={projectId}
+          days={days}
+          filters={filters}
+          options={options}
+          segments={project.settings?.segments ?? []}
+        />
+      )}
 
       {noData ? (
         <div className="empty" style={{ marginTop: 18 }}>
@@ -86,8 +115,10 @@ export default async function OverviewPage({
               <div className="stat-value">{fmtDuration(a.kpis.avgDurationMs)}</div>
             </div>
             <div className="stat">
-              <div className="stat-label">events</div>
-              <div className="stat-value">{a.kpis.eventsTotal.toLocaleString()}</div>
+              <div className="stat-label">scroll depth</div>
+              <div className="stat-value">
+                {a.kpis.avgScrollPct != null ? `${a.kpis.avgScrollPct}%` : '—'}
+              </div>
             </div>
           </div>
 
@@ -157,6 +188,10 @@ export default async function OverviewPage({
               <BarList rows={a.countries} total={n} empty="No geo data yet." />
             </div>
             <div className="card">
+              <h2 style={{ marginTop: 0 }}>Channels</h2>
+              <BarList rows={a.channels} total={n} empty="No traffic yet." />
+            </div>
+            <div className="card">
               <h2 style={{ marginTop: 0 }}>Referrers</h2>
               <BarList rows={a.referrers} total={n} empty="Direct / none." />
             </div>
@@ -167,6 +202,19 @@ export default async function OverviewPage({
             <div className="card">
               <h2 style={{ marginTop: 0 }}>Exit pages</h2>
               <BarList rows={a.exitPages} empty="No page data." />
+            </div>
+            <div className="card">
+              <h2 style={{ marginTop: 0 }}>Smart events</h2>
+              {a.smartEvents.length === 0 ? (
+                <p className="muted" style={{ fontSize: 12.5 }}>
+                  Track key actions by calling <code>Snag.event(&quot;name&quot;)</code> in your app.
+                </p>
+              ) : (
+                <BarList
+                  rows={a.smartEvents.map((e) => ({ key: e.name, count: e.sessions }))}
+                  total={n}
+                />
+              )}
             </div>
           </div>
 

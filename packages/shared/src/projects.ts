@@ -25,6 +25,15 @@ export interface ProjectSettings {
   };
   /** User-defined conversion funnels (ordered page-path steps). */
   funnels?: FunnelDef[];
+  /** Saved analytics filters (segments). */
+  segments?: Segment[];
+}
+
+export interface Segment {
+  id: string;
+  name: string;
+  /** Dimension → value, e.g. { device: 'mobile', country: 'US' }. */
+  filters: Record<string, string>;
 }
 
 export interface FunnelDef {
@@ -77,4 +86,5 @@ export interface Session {
   /** Precomputed at seal so heatmaps/funnels don't re-scan raw events. */
   clickPoints?: { page: string; x: number; y: number }[] | null;
   paths?: string[] | null;
+  customEvents?: { name: string; count: number }[] | null;
 }

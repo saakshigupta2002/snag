@@ -42,7 +42,8 @@ export type SnagPayload =
   | NavigationPayload
   | FormPayload
   | PageHidePayload
-  | VitalsPayload;
+  | VitalsPayload
+  | CustomEventPayload;
 
 export interface ClickPayload {
   kind: 'click';
@@ -110,6 +111,14 @@ export interface VitalsPayload {
   inpMs?: number;
   /** Cumulative Layout Shift, unitless score. */
   cls?: number;
+  /** Deepest scroll reached, 0–100% of scrollable height. */
+  scrollPct?: number;
+}
+
+/** A user-defined "smart event", fired via Snag.event(name). */
+export interface CustomEventPayload {
+  kind: 'event';
+  name: string;
 }
 
 /** Shape of an rrweb custom event carrying a Snag payload. */

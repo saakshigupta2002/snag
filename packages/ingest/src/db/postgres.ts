@@ -56,7 +56,7 @@ function projectFromRow(r: Row): Project {
 const SESSION_COLS =
   'id, project_id, started_at, ended_at, last_seen_at, user_agent, url_first, device, status, ' +
   'event_count, referrer, pageviews, entry_page, exit_page, js_errors, max_scroll_pct, ' +
-  'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country';
+  'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country, custom_events';
 
 function sessionFromRow(r: Row): Session {
   const numOrNull = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
@@ -87,6 +87,7 @@ function sessionFromRow(r: Row): Session {
     country: (r.country as string | null) ?? null,
     clickPoints: (r.click_points as { page: string; x: number; y: number }[] | null) ?? null,
     paths: (r.paths as string[] | null) ?? null,
+    customEvents: (r.custom_events as { name: string; count: number }[] | null) ?? null,
   };
 }
 
@@ -278,6 +279,15 @@ export class PostgresStore implements Store {
     return res.rows.map(sessionFromRow);
   }
 
+  async countLiveVisitors(projectId: string, withinMs: number): Promise<number> {
+    const res = await this.pool.query(
+      `SELECT COUNT(DISTINCT COALESCE(visitor_id, id)) AS c FROM sessions
+       WHERE project_id = $1 AND status = 'active' AND last_seen_at >= $2`,
+      [projectId, new Date(Date.now() - withinMs).toISOString()],
+    );
+    return Number(res.rows[0]?.c ?? 0);
+  }
+
   async visitorFirstSeen(projectId: string): Promise<Map<string, number>> {
     const res = await this.pool.query(
       `SELECT visitor_id, MIN(started_at) AS first FROM sessions
@@ -289,12 +299,16 @@ export class PostgresStore implements Store {
     return m;
   }
 
-  async listSessionActivity(projectId: string, limit = 2000): Promise<SessionActivity[]> {
+  async listSessionActivity(
+    projectId: string,
+    limit = 2000,
+    sinceMs = 0,
+  ): Promise<SessionActivity[]> {
     const res = await this.pool.query(
       `SELECT id, is_bot, click_points, paths FROM sessions
-       WHERE project_id = $1 AND status = 'processed'
-       ORDER BY started_at DESC LIMIT $2`,
-      [projectId, limit],
+       WHERE project_id = $1 AND status = 'processed' AND started_at >= $2
+       ORDER BY started_at DESC LIMIT $3`,
+      [projectId, new Date(sinceMs).toISOString(), limit],
     );
     return res.rows.map((r) => ({
       id: String(r.id),
@@ -361,7 +375,7 @@ export class PostgresStore implements Store {
          pageviews = $2, entry_page = $3, exit_page = $4, js_errors = $5,
          max_scroll_pct = $6, duration_ms = $7, browser = $8, os = $9,
          is_bot = $10, lcp_ms = $11, inp_ms = $12, cls = $13,
-         click_points = $14, paths = $15
+         click_points = $14, paths = $15, custom_events = $16
        WHERE id = $1`,
       [
         sessionId,
@@ -379,6 +393,7 @@ export class PostgresStore implements Store {
         agg.cls,
         JSON.stringify(agg.clickPoints),
         JSON.stringify(agg.paths),
+        JSON.stringify(agg.customEvents),
       ],
     );
   }

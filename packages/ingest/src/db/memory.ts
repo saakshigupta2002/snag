@@ -140,6 +140,16 @@ export class MemoryStore implements Store {
       .map(({ lastSeenAt: _drop, clickPoints: _cp, paths: _p, ...s }) => s);
   }
 
+  async countLiveVisitors(projectId: string, withinMs: number): Promise<number> {
+    const cutoff = Date.now() - withinMs;
+    const live = new Set<string>();
+    for (const s of this.sessions.values()) {
+      if (s.projectId !== projectId || s.status !== 'active') continue;
+      if (Date.parse(s.lastSeenAt) >= cutoff) live.add(s.visitorId ?? s.id);
+    }
+    return live.size;
+  }
+
   async visitorFirstSeen(projectId: string): Promise<Map<string, number>> {
     const m = new Map<string, number>();
     for (const s of this.sessions.values()) {
@@ -151,9 +161,18 @@ export class MemoryStore implements Store {
     return m;
   }
 
-  async listSessionActivity(projectId: string, limit = 2000): Promise<SessionActivity[]> {
+  async listSessionActivity(
+    projectId: string,
+    limit = 2000,
+    sinceMs = 0,
+  ): Promise<SessionActivity[]> {
     return [...this.sessions.values()]
-      .filter((s) => s.projectId === projectId && s.status === 'processed')
+      .filter(
+        (s) =>
+          s.projectId === projectId &&
+          s.status === 'processed' &&
+          Date.parse(s.startedAt) >= sinceMs,
+      )
       .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
       .slice(0, limit)
       .map((s) => ({

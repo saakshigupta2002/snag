@@ -74,6 +74,8 @@ export interface Analytics {
   entryPages: CountRow[];
   exitPages: CountRow[];
   referrers: CountRow[];
+  channels: CountRow[];
+  smartEvents: { name: string; sessions: number; count: number }[];
   jsErrors: { total: number; sessionsWith: number; pct: number };
   bots: { sessions: number; pct: number };
   performance: VitalStat;

@@ -223,15 +223,30 @@ export function installEmitters(emit: Emit): () => void {
       }
     }
   });
+  // Deepest scroll reached, as % of scrollable height.
+  let maxScroll = 0;
+  const onScroll = () => {
+    try {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = scrollable > 8 ? Math.round((window.scrollY / scrollable) * 100) : 100;
+      if (pct > maxScroll) maxScroll = Math.min(pct, 100);
+    } catch {
+      // ignore
+    }
+  };
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+  cleanups.push(() => removeEventListener('scroll', onScroll));
   const flushVitals = () => {
     if (vitalsSent) return;
     vitalsSent = true;
-    if (lcpMs === undefined && cls === 0 && inpMs === 0) return;
+    if (lcpMs === undefined && cls === 0 && inpMs === 0 && maxScroll === 0) return;
     emit({
       kind: 'vitals',
       lcpMs,
       cls: cls > 0 ? Math.round(cls * 1000) / 1000 : undefined,
       inpMs: inpMs > 0 ? Math.round(inpMs) : undefined,
+      scrollPct: maxScroll,
     });
   };
 

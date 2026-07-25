@@ -4,6 +4,7 @@ import type { IngestPayload, IssueStatus, ProjectSettings, Severity } from '@sna
 import { registry } from '@snag/detectors';
 import type { Config } from './config.js';
 import {
+  channelOf,
   computeAnalytics,
   computeDetectorStats,
   computeFunnel,
@@ -205,15 +206,35 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
 
   app.get('/api/projects/:id/analytics', async (req) => {
     const { id } = req.params as { id: string };
-    const q = req.query as { days?: string };
+    const q = req.query as {
+      days?: string;
+      device?: string;
+      browser?: string;
+      os?: string;
+      country?: string;
+      channel?: string;
+    };
     const days = Math.min(Math.max(Number(q.days) || 14, 1), 90);
     const sinceMs = Date.now() - days * 86_400_000;
-    const [issues, sessions, firstSeen] = await Promise.all([
+    const [issues, sessions, firstSeen, live] = await Promise.all([
       store.listIssues(id),
       store.listSessionsSince(id, sinceMs, 20000),
       store.visitorFirstSeen(id),
+      store.countLiveVisitors(id, 30_000),
     ]);
-    return computeAnalytics(issues, sessions, firstSeen, days);
+    // Segment filters: narrow the sessions before rollup so every card reflects
+    // the selected slice.
+    let filtered = sessions;
+    if (q.device) filtered = filtered.filter((s) => s.device === q.device);
+    if (q.browser) filtered = filtered.filter((s) => s.browser === q.browser);
+    if (q.os) filtered = filtered.filter((s) => s.os === q.os);
+    if (q.country) filtered = filtered.filter((s) => s.country === q.country);
+    if (q.channel) filtered = filtered.filter((s) => channelOf(s.referrer) === q.channel);
+    const analytics = computeAnalytics(issues, filtered, firstSeen, days);
+    if (!q.device && !q.browser && !q.os && !q.country && !q.channel) {
+      analytics.users.live = live; // real presence for the unfiltered view
+    }
+    return analytics;
   });
 
   app.get('/api/projects/:id/detector-stats', async (req) => {
@@ -226,8 +247,10 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     const project = await store.getProject(id);
     const funnels = project?.settings?.funnels ?? [];
     if (!funnels.length) return { funnels: [], results: [] };
-    const sessions = (await store.listSessionActivity(id, 5000)).filter((s) => !s.isBot);
-    return { funnels, results: funnels.map((f) => computeFunnel(f, sessions)) };
+    const days = Math.min(Math.max(Number((req.query as { days?: string }).days) || 30, 1), 90);
+    const sinceMs = Date.now() - days * 86_400_000;
+    const sessions = (await store.listSessionActivity(id, 10000, sinceMs)).filter((s) => !s.isBot);
+    return { funnels, days, results: funnels.map((f) => computeFunnel(f, sessions)) };
   });
 
   app.get('/api/projects/:id/heatmap', async (req) => {

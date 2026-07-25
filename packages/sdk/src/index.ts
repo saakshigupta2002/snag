@@ -54,6 +54,11 @@ export const Snag = {
     active?.flush();
   },
 
+  /** Record a named "smart event" (e.g. Snag.event('signup')). */
+  event(name: string): void {
+    active?.event?.(name);
+  },
+
   get isRecording(): boolean {
     return active !== null;
   },
@@ -107,6 +112,9 @@ function start(options: SnagOptions): SnagHandle {
   const handle: SnagHandle = {
     sessionId,
     flush: () => transport.flush(),
+    event: (name: string) => {
+      if (typeof name === 'string' && name) emitCustom({ kind: 'event', name: name.slice(0, 80) });
+    },
     stop: () => {
       try {
         stopRecord?.();

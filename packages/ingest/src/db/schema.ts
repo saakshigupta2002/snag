@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   visitor_id TEXT,
   country TEXT,
   click_points JSONB,
-  paths JSONB
+  paths JSONB,
+  custom_events JSONB
 );
 CREATE INDEX IF NOT EXISTS sessions_project_idx ON sessions (project_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS sessions_status_idx ON sessions (status, last_seen_at);
@@ -61,6 +62,7 @@ ALTER TABLE sessions ADD COLUMN IF NOT EXISTS visitor_id TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS country TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS click_points JSONB;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS paths JSONB;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS custom_events JSONB;
 CREATE INDEX IF NOT EXISTS sessions_visitor_idx ON sessions (project_id, visitor_id);
 -- Allow the transient 'processing' status used for atomic worker claims.
 ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_status_check;

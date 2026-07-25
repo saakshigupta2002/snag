@@ -96,11 +96,13 @@ export interface Store {
   appendChunk(chunk: ChunkAppend): Promise<void>;
   listSessions(projectId: string, limit?: number): Promise<Session[]>;
   /** Lean per-session heatmap/funnel data (processed sessions only). */
-  listSessionActivity(projectId: string, limit?: number): Promise<SessionActivity[]>;
+  listSessionActivity(projectId: string, limit?: number, sinceMs?: number): Promise<SessionActivity[]>;
   /** Sessions started on/after `sinceMs` (for range-scoped analytics). */
   listSessionsSince(projectId: string, sinceMs: number, limit?: number): Promise<Session[]>;
   /** visitorId → epoch-ms of that visitor's first-ever session. */
   visitorFirstSeen(projectId: string): Promise<Map<string, number>>;
+  /** Distinct visitors with an active session seen in the last `withinMs`. */
+  countLiveVisitors(projectId: string, withinMs: number): Promise<number>;
   getSession(sessionId: string): Promise<Session | undefined>;
   getSessionEvents(sessionId: string): Promise<RawEvent[]>;
   sealIdleSessions(idleMs: number, now?: number): Promise<number>;
@@ -264,6 +266,16 @@ function bump(m: Map<string, number>, key: string | null | undefined): void {
   if (!key) return;
   m.set(key, (m.get(key) ?? 0) + 1);
 }
+
+/** Group a referrer host into an acquisition channel (Clarity-style). */
+export function channelOf(referrer: string | null | undefined): string {
+  if (!referrer) return 'Direct';
+  const h = referrer.toLowerCase();
+  if (/(google|bing|duckduckgo|yahoo|yandex|baidu|ecosia|brave)\./.test(h)) return 'Organic search';
+  if (/(twitter|x\.com|t\.co|facebook|fb\.com|linkedin|lnkd\.in|reddit|instagram|youtube|youtu\.be|pinterest|tiktok|mastodon|threads)\./.test(h))
+    return 'Social';
+  return 'Referral';
+}
 function topCounts(m: Map<string, number>, k = 6): CountRow[] {
   return [...m.entries()]
     .sort((a, b) => b[1] - a[1])
@@ -299,8 +311,12 @@ export function computeAnalytics(
 ): Analytics {
   const cutoff = now - days * DAY_MS;
   const recent = sessions.filter((s) => Date.parse(s.startedAt) >= cutoff);
-  const ov = computeOverview(issues, recent, days, now);
-  const n = recent.length;
+  // Headline metrics exclude bots (like Clarity); bot traffic gets its own card.
+  const humans = recent.filter((s) => !s.isBot);
+  const humanIds = new Set(humans.map((s) => s.id));
+  const botCount = recent.length - humans.length;
+  const ov = computeOverview(issues, humans, days, now);
+  const n = humans.length;
 
   let totalPages = 0;
   let durSum = 0;
@@ -310,7 +326,6 @@ export function computeAnalytics(
   let eventsTotal = 0;
   let jsErrTotal = 0;
   let sessWithErr = 0;
-  let botCount = 0;
   let lcpSum = 0,
     lcpN = 0,
     inpSum = 0,
@@ -328,10 +343,19 @@ export function computeAnalytics(
   const exit = new Map<string, number>();
   const ref = new Map<string, number>();
   const country = new Map<string, number>();
+  const channel = new Map<string, number>();
+  const events = new Map<string, { sessions: number; count: number }>();
 
-  for (const s of recent) {
+  for (const s of humans) {
+    for (const ce of s.customEvents ?? []) {
+      const cur = events.get(ce.name) ?? { sessions: 0, count: 0 };
+      cur.sessions++;
+      cur.count += ce.count;
+      events.set(ce.name, cur);
+    }
     eventsTotal += s.eventCount;
     bump(country, s.country);
+    bump(channel, channelOf(s.referrer));
     totalPages += s.pageviews ?? 1;
     if (s.durationMs != null) {
       durSum += s.durationMs;
@@ -351,7 +375,6 @@ export function computeAnalytics(
       jsErrTotal += s.jsErrors;
       if (s.jsErrors > 0) sessWithErr++;
     }
-    if (s.isBot) botCount++;
     if (s.lcpMs != null) {
       lcpSum += s.lcpMs;
       lcpN++;
@@ -373,10 +396,10 @@ export function computeAnalytics(
     }
   }
 
-  // Behaviour insights: distinct sessions per detector ÷ total sessions.
+  // Behaviour insights: distinct (human) sessions per detector ÷ total sessions.
   const byDetector = new Map<string, Set<string>>();
   for (const i of issues) {
-    if (!i.sessionId || Date.parse(i.createdAt) < cutoff) continue;
+    if (!i.sessionId || !humanIds.has(i.sessionId) || Date.parse(i.createdAt) < cutoff) continue;
     let set = byDetector.get(i.detector);
     if (!set) byDetector.set(i.detector, (set = new Set()));
     set.add(i.sessionId);
@@ -388,7 +411,7 @@ export function computeAnalytics(
 
   const sessionsOverTime = emptyDays(days, now);
   const sIdx = new Map(sessionsOverTime.map((b, i) => [b.day, i]));
-  for (const s of recent) {
+  for (const s of humans) {
     const at = sIdx.get(dayKey(s.startedAt));
     if (at !== undefined) sessionsOverTime[at]!.count++;
   }
@@ -402,7 +425,7 @@ export function computeAnalytics(
   // that visitor was seen in an earlier session.
   let newSessions = 0;
   let returningSessions = 0;
-  for (const s of recent) {
+  for (const s of humans) {
     // Sessions without a visitorId (e.g. recorded before the SDK update) are
     // treated as distinct anonymous, first-time visitors — keeps unique/new/
     // returning internally consistent instead of "0 unique · N new".
@@ -443,8 +466,17 @@ export function computeAnalytics(
     entryPages: entryRows,
     exitPages: topCounts(exit),
     referrers: topCounts(ref),
+    channels: topCounts(channel),
+    smartEvents: [...events.entries()]
+      .map(([name, v]) => ({ name, sessions: v.sessions, count: v.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10),
     jsErrors: { total: jsErrTotal, sessionsWith: sessWithErr, pct: pct(sessWithErr) },
-    bots: { sessions: botCount, pct: pct(botCount) },
+    // Bot % is over ALL traffic (humans + bots) so it reads like Clarity's.
+    bots: {
+      sessions: botCount,
+      pct: recent.length ? Math.round((botCount / recent.length) * 1000) / 10 : 0,
+    },
     performance: {
       lcpMs: lcpN ? Math.round(lcpSum / lcpN) : null,
       inpMs: inpN ? Math.round(inpSum / inpN) : null,
@@ -712,4 +744,5 @@ export interface SessionAggregates {
   cls: number | null;
   clickPoints: { page: string; x: number; y: number }[];
   paths: string[];
+  customEvents: { name: string; count: number }[];
 }

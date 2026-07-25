@@ -33,5 +33,7 @@ export interface SnagOptions {
 export interface SnagHandle {
   stop(): void;
   flush(): void;
+  /** Record a named smart event. */
+  event?(name: string): void;
   sessionId: string;
 }

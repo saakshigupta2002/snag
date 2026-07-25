@@ -36,6 +36,8 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
   const MAX_PATHS = 60;
   const clickPoints: { page: string; x: number; y: number }[] = [];
   const paths: string[] = [];
+  const customEvents = new Map<string, number>();
+  let maxScroll: number | null = null;
   let cur = entryPage ?? '/';
   const pushPath = (p: string | null) => {
     if (p && p !== paths[paths.length - 1] && paths.length < MAX_PATHS) paths.push(p);
@@ -57,10 +59,13 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
       if (clickPoints.length < MAX_CLICKS) clickPoints.push({ page: cur, x: p.x, y: p.y });
     } else if (p.kind === 'error' || (p.kind === 'console' && p.level === 'error')) {
       jsErrors++;
+    } else if (p.kind === 'event') {
+      customEvents.set(p.name, (customEvents.get(p.name) ?? 0) + 1);
     } else if (p.kind === 'vitals') {
       if (p.lcpMs != null) lcpMs = p.lcpMs;
       if (p.inpMs != null) inpMs = p.inpMs;
       if (p.cls != null) cls = p.cls;
+      if (p.scrollPct != null) maxScroll = p.scrollPct;
     }
   }
   // Duration comes from the event timestamps (real elapsed time) — the session
@@ -78,7 +83,7 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
     entryPage,
     exitPage,
     jsErrors,
-    maxScrollPct: null, // deferred — rrweb scroll depth is only approximate
+    maxScrollPct: maxScroll,
     durationMs: dur != null && dur >= 0 ? dur : null,
     browser: browserFromUA(session.userAgent),
     os: osFromUA(session.userAgent),
@@ -88,6 +93,7 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
     cls,
     clickPoints,
     paths,
+    customEvents: [...customEvents].map(([name, count]) => ({ name, count })),
   };
 }
 
