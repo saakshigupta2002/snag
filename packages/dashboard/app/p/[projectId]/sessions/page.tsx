@@ -19,6 +19,13 @@ const FILTER_KEYS = [
   'to',
 ] as const;
 
+function fmtDur(ms: number): string {
+  if (!ms) return '—';
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  return `${Math.floor(s / 60)}m ${s % 60}s`;
+}
+
 /** Turn the raw query params into human-readable chips for the filter bar. */
 function chipsFor(sp: Record<string, string | undefined>): FilterChip[] {
   const chips: FilterChip[] = [];
@@ -60,18 +67,37 @@ export default async function SessionsPage({
     `/api/projects/${projectId}/sessions${query ? `?${query}` : ''}`,
   );
 
+  // Slim, data-face summary of the (possibly filtered) result set.
+  const durs = sessions.map((s) => s.durationMs).filter((d): d is number => d != null && d > 0);
+  const avgDur = durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : 0;
+  const withErr = sessions.filter((s) => (s.jsErrors ?? 0) > 0).length;
+  const errPct = sessions.length ? Math.round((withErr / sessions.length) * 100) : 0;
+
   return (
     <>
       <div className="section-head" style={{ alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ marginBottom: 4 }}>Sessions</h1>
-          <p className="subtitle" style={{ margin: 0 }}>
-            {chips.length
-              ? `${sessions.length} session${sessions.length === 1 ? '' : 's'} matching the filter.`
-              : 'Recorded sessions, newest first. Issues link to the exact moment.'}
-          </p>
+          <h1 style={{ marginBottom: 9 }}>Sessions</h1>
+          <div className="summary-strip">
+            <span>
+              <b>{sessions.length}</b> {chips.length ? 'matching' : 'recorded'}
+            </span>
+            <span className="ss-sep" />
+            <span>
+              avg <b>{fmtDur(avgDur)}</b>
+            </span>
+            <span className="ss-sep" />
+            <span className={errPct ? 'ss-alert' : ''}>
+              <b>{errPct}%</b> with errors
+            </span>
+          </div>
         </div>
       </div>
+      <p className="subtitle" style={{ marginTop: 6 }}>
+        {chips.length
+          ? 'Filtered from the overview. Clear a chip to widen the set.'
+          : 'Recorded sessions, newest first. Open one to watch the replay.'}
+      </p>
 
       {chips.length > 0 && (
         <ActiveFilters
@@ -99,31 +125,35 @@ export default async function SessionsPage({
         </div>
       ) : (
         <div className="table-wrap">
-          <table>
+          <table className="sessions-table">
             <thead>
               <tr>
                 <th>Started</th>
                 <th>Entry page</th>
-                <th>Duration</th>
-                <th>Events</th>
-                <th>Device</th>
-                <th>Status</th>
-                <th style={{ width: 70 }}></th>
+                <th style={{ width: 92 }}>Duration</th>
+                <th style={{ width: 78 }}>Events</th>
+                <th style={{ width: 120 }}>Device</th>
+                <th style={{ width: 120 }}>Browser</th>
+                <th style={{ width: 96 }}>Status</th>
+                <th style={{ width: 64 }}></th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((s) => (
                 <tr key={s.id}>
-                  <td>{timeAgo(s.startedAt)}</td>
+                  <td className="muted">{timeAgo(s.startedAt)}</td>
                   <td className="mono">{pathOfUrl(s.urlFirst)}</td>
-                  <td className="muted">{duration(s.startedAt, s.endedAt)}</td>
-                  <td>{s.eventCount}</td>
+                  <td className="mono num">{duration(s.startedAt, s.endedAt)}</td>
+                  <td className="mono num">{s.eventCount}</td>
                   <td className="muted">{s.device ?? '—'}</td>
+                  <td className="muted">{s.browser ?? '—'}</td>
                   <td>
-                    <span className="chip">{s.status}</span>
+                    <span className={`st ${s.status}`}>{s.status}</span>
                   </td>
                   <td>
-                    <Link href={`/p/${projectId}/sessions/${encodeURIComponent(s.id)}`}>watch</Link>
+                    <Link className="watch-link" href={`/p/${projectId}/sessions/${encodeURIComponent(s.id)}`}>
+                      watch →
+                    </Link>
                   </td>
                 </tr>
               ))}

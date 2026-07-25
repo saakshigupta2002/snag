@@ -27,31 +27,35 @@ export default async function DemoSessions({
         <div className="empty">No sessions recorded yet.</div>
       ) : (
         <div className="table-wrap">
-          <table>
+          <table className="sessions-table">
             <thead>
               <tr>
                 <th>Started</th>
                 <th>Entry page</th>
-                <th>Duration</th>
-                <th>Events</th>
-                <th>Device</th>
-                <th>Status</th>
-                <th style={{ width: 70 }}></th>
+                <th style={{ width: 92 }}>Duration</th>
+                <th style={{ width: 78 }}>Events</th>
+                <th style={{ width: 120 }}>Device</th>
+                <th style={{ width: 120 }}>Browser</th>
+                <th style={{ width: 96 }}>Status</th>
+                <th style={{ width: 64 }}></th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((s) => (
                 <tr key={s.id}>
-                  <td>{timeAgo(s.startedAt)}</td>
+                  <td className="muted">{timeAgo(s.startedAt)}</td>
                   <td className="mono">{pathOfUrl(s.urlFirst)}</td>
-                  <td className="muted">{duration(s.startedAt, s.endedAt)}</td>
-                  <td>{s.eventCount}</td>
+                  <td className="mono num">{duration(s.startedAt, s.endedAt)}</td>
+                  <td className="mono num">{s.eventCount}</td>
                   <td className="muted">{s.device ?? '—'}</td>
+                  <td className="muted">{s.browser ?? '—'}</td>
                   <td>
-                    <span className="chip">{s.status}</span>
+                    <span className={`st ${s.status}`}>{s.status}</span>
                   </td>
                   <td>
-                    <Link href={`/demo/${publicId}/sessions/${encodeURIComponent(s.id)}`}>watch</Link>
+                    <Link className="watch-link" href={`/demo/${publicId}/sessions/${encodeURIComponent(s.id)}`}>
+                      watch →
+                    </Link>
                   </td>
                 </tr>
               ))}
