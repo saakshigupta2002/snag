@@ -1,9 +1,8 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Session } from '@snag/shared';
 import { api } from '@/lib/api';
 import { resolveDemo } from '@/lib/demo';
-import { duration, pathOfUrl, timeAgo } from '@/lib/format';
+import { SessionsTable, isLowSignal, byActivity } from '@/components/SessionsTable';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,51 +16,38 @@ export default async function DemoSessions({
   if (!project) notFound();
 
   const sessions = await api<Session[]>(`/api/projects/${project.id}/sessions`);
+  const active = sessions.filter((s) => !isLowSignal(s)).sort(byActivity);
+  const lowSignal = sessions.filter(isLowSignal).sort(byActivity);
+  const basePath = `/demo/${publicId}/sessions`;
 
   return (
     <>
       <h1>Sessions</h1>
-      <p className="subtitle">Recorded sessions, newest first. Open one to watch the replay.</p>
+      <p className="subtitle">Sessions with real activity first. Open one to watch the replay.</p>
 
       {sessions.length === 0 ? (
         <div className="empty">No sessions recorded yet.</div>
       ) : (
-        <div className="table-wrap">
-          <table className="sessions-table">
-            <thead>
-              <tr>
-                <th>Started</th>
-                <th>Entry page</th>
-                <th style={{ width: 92 }}>Duration</th>
-                <th style={{ width: 78 }}>Events</th>
-                <th style={{ width: 120 }}>Device</th>
-                <th style={{ width: 120 }}>Browser</th>
-                <th style={{ width: 96 }}>Status</th>
-                <th style={{ width: 64 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((s) => (
-                <tr key={s.id}>
-                  <td className="muted">{timeAgo(s.startedAt)}</td>
-                  <td className="mono">{pathOfUrl(s.urlFirst)}</td>
-                  <td className="mono num">{duration(s.startedAt, s.endedAt)}</td>
-                  <td className="mono num">{s.eventCount}</td>
-                  <td className="muted">{s.device ?? '—'}</td>
-                  <td className="muted">{s.browser ?? '—'}</td>
-                  <td>
-                    <span className={`st ${s.status}`}>{s.status}</span>
-                  </td>
-                  <td>
-                    <Link className="watch-link" href={`/demo/${publicId}/sessions/${encodeURIComponent(s.id)}`}>
-                      watch →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {active.length > 0 ? (
+            <SessionsTable sessions={active} basePath={basePath} />
+          ) : (
+            <div className="empty">No sessions with activity yet — only idle visits (below).</div>
+          )}
+
+          {lowSignal.length > 0 && (
+            <details className="lowsignal">
+              <summary>
+                <span className="ls-caret" aria-hidden>
+                  ▸
+                </span>
+                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'} —
+                no clicks or interactions
+              </summary>
+              <SessionsTable sessions={lowSignal} basePath={basePath} />
+            </details>
+          )}
+        </>
       )}
     </>
   );

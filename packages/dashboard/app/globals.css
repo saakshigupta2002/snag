@@ -1184,6 +1184,25 @@ pre.snippet {
 .rc-track:hover .rc-handle {
   opacity: 1;
 }
+/* Activity ticks — subtle marks where the user clicked / navigated / typed,
+   so the empty (idle) stretches are visually obvious. */
+.rc-activity {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.rc-tick {
+  position: absolute;
+  top: 50%;
+  width: 1.5px;
+  height: 7px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 1px;
+}
 .rc-markers {
   position: absolute;
   left: 0;
@@ -2794,4 +2813,90 @@ tbody tr {
 }
 .watch-link:hover {
   color: var(--text);
+}
+
+/* ── Sessions: watch button, activity, low-signal section ────────────────── */
+.watch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  font-family: var(--data);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.watch-btn:hover {
+  background: var(--hover);
+  border-color: var(--teal-line);
+  color: var(--text);
+}
+.watch-btn:active {
+  transform: scale(0.95);
+}
+.sessions-table td .dur-total {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.sessions-table td .act-count {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Low-signal (idle/bounce) sessions, folded away below the real ones. */
+.lowsignal {
+  margin-top: 22px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.lowsignal > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--data);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  padding: 6px 2px;
+  transition: color var(--t-fast) var(--ease);
+}
+.lowsignal > summary::-webkit-details-marker {
+  display: none;
+}
+.lowsignal > summary:hover {
+  color: var(--text);
+}
+.lowsignal > summary b {
+  color: var(--text);
+  font-weight: 500;
+}
+.lowsignal .ls-caret {
+  display: inline-block;
+  transition: transform var(--t-fast) var(--ease);
+  color: var(--text-faint);
+}
+.lowsignal[open] .ls-caret {
+  transform: rotate(90deg);
+}
+.lowsignal .ls-note {
+  font-size: 12px;
+  margin: 4px 0 12px;
+  max-width: 60ch;
+}
+.lowsignal .table-wrap {
+  opacity: 0.72;
+}
+@media (prefers-reduced-motion: reduce) {
+  .watch-btn:active {
+    transform: none;
+  }
 }

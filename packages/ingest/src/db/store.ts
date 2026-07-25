@@ -748,6 +748,8 @@ export interface SessionAggregates {
   entryPage: string | null;
   exitPage: string | null;
   jsErrors: number;
+  interactions: number;
+  activeMs: number;
   maxScrollPct: number | null;
   durationMs: number | null;
   browser: string | null;

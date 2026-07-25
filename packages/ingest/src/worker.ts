@@ -38,6 +38,9 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
   const paths: string[] = [];
   const customEvents = new Map<string, number>();
   let maxScroll: number | null = null;
+  // Meaningful user actions (clicks, navigations beyond entry, form submits,
+  // errors) — the basis for ranking real sessions above idle/bounce noise.
+  let interactions = 0;
   let cur = entryPage ?? '/';
   const pushPath = (p: string | null) => {
     if (p && p !== paths[paths.length - 1] && paths.length < MAX_PATHS) paths.push(p);
@@ -48,6 +51,7 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
     const p = e.data.payload;
     if (p.kind === 'navigation') {
       pageviews++;
+      if (p.trigger !== 'initial') interactions++;
       const path = pathOf(p.url);
       if (path) {
         exitPage = path;
@@ -55,11 +59,18 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
         pushPath(path);
         if (!entryPage) entryPage = path;
       }
-    } else if (p.kind === 'click' && typeof p.x === 'number' && typeof p.y === 'number') {
-      if (clickPoints.length < MAX_CLICKS) clickPoints.push({ page: cur, x: p.x, y: p.y });
+    } else if (p.kind === 'click') {
+      interactions++;
+      if (typeof p.x === 'number' && typeof p.y === 'number' && clickPoints.length < MAX_CLICKS) {
+        clickPoints.push({ page: cur, x: p.x, y: p.y });
+      }
+    } else if (p.kind === 'form') {
+      interactions++;
     } else if (p.kind === 'error' || (p.kind === 'console' && p.level === 'error')) {
       jsErrors++;
+      interactions++;
     } else if (p.kind === 'event') {
+      interactions++;
       customEvents.set(p.name, (customEvents.get(p.name) ?? 0) + 1);
     } else if (p.kind === 'vitals') {
       if (p.lcpMs != null) lcpMs = p.lcpMs;
@@ -78,11 +89,22 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
       ? Date.parse(session.endedAt) - Date.parse(session.startedAt)
       : null;
   const dur = durFromEvents != null && durFromEvents > 0 ? durFromEvents : durFromRow;
+  // Active (engaged) time: sum only the gaps between consecutive events that are
+  // short enough to be continuous attention. Long idle stretches — the reason a
+  // 3-second glance becomes a 20-minute recording — are excluded.
+  const ACTIVE_GAP_MS = 8_000;
+  let activeMs = 0;
+  for (let i = 1; i < events.length; i++) {
+    const gap = events[i]!.timestamp - events[i - 1]!.timestamp;
+    if (gap > 0 && gap <= ACTIVE_GAP_MS) activeMs += gap;
+  }
   return {
     pageviews: Math.max(pageviews, 1),
     entryPage,
     exitPage,
     jsErrors,
+    interactions,
+    activeMs: events.length > 1 ? activeMs : 0,
     maxScrollPct: maxScroll,
     durationMs: dur != null && dur >= 0 ? dur : null,
     browser: browserFromUA(session.userAgent),

@@ -75,6 +75,10 @@ export interface Session {
   entryPage?: string | null;
   exitPage?: string | null;
   jsErrors?: number | null;
+  /** Meaningful user actions (clicks, navigations, forms, errors) in the session. */
+  interactions?: number | null;
+  /** Engaged time in ms — elapsed minus long idle gaps. */
+  activeMs?: number | null;
   maxScrollPct?: number | null;
   durationMs?: number | null;
   browser?: string | null;

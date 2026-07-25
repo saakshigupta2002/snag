@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { Session } from '@snag/shared';
 import { api } from '@/lib/api';
-import { duration, pathOfUrl, timeAgo } from '@/lib/format';
 import { ActiveFilters, type FilterChip } from '@/components/ActiveFilters';
+import { SessionsTable, isLowSignal, byActivity } from '@/components/SessionsTable';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,8 +67,14 @@ export default async function SessionsPage({
     `/api/projects/${projectId}/sessions${query ? `?${query}` : ''}`,
   );
 
+  // Split real sessions from idle/bounce noise, and rank the real ones so the
+  // sessions worth watching sit on top.
+  const active = sessions.filter((s) => !isLowSignal(s)).sort(byActivity);
+  const lowSignal = sessions.filter(isLowSignal).sort(byActivity);
+  const basePath = `/p/${projectId}/sessions`;
+
   // Slim, data-face summary of the (possibly filtered) result set.
-  const durs = sessions.map((s) => s.durationMs).filter((d): d is number => d != null && d > 0);
+  const durs = active.map((s) => s.activeMs ?? s.durationMs).filter((d): d is number => d != null && d > 0);
   const avgDur = durs.length ? Math.round(durs.reduce((a, b) => a + b, 0) / durs.length) : 0;
   const withErr = sessions.filter((s) => (s.jsErrors ?? 0) > 0).length;
   const errPct = sessions.length ? Math.round((withErr / sessions.length) * 100) : 0;
@@ -80,11 +86,11 @@ export default async function SessionsPage({
           <h1 style={{ marginBottom: 9 }}>Sessions</h1>
           <div className="summary-strip">
             <span>
-              <b>{sessions.length}</b> {chips.length ? 'matching' : 'recorded'}
+              <b>{active.length}</b> active
             </span>
             <span className="ss-sep" />
             <span>
-              avg <b>{fmtDur(avgDur)}</b>
+              avg <b>{fmtDur(avgDur)}</b> engaged
             </span>
             <span className="ss-sep" />
             <span className={errPct ? 'ss-alert' : ''}>
@@ -95,14 +101,14 @@ export default async function SessionsPage({
       </div>
       <p className="subtitle" style={{ marginTop: 6 }}>
         {chips.length
-          ? 'Filtered from the overview. Clear a chip to widen the set.'
-          : 'Recorded sessions, newest first. Open one to watch the replay.'}
+          ? 'Filtered from the overview. Sessions with real activity first.'
+          : 'Sessions with real activity first. Idle and bounce sessions are tucked below.'}
       </p>
 
       {chips.length > 0 && (
         <ActiveFilters
           chips={chips}
-          basePath={`/p/${projectId}/sessions`}
+          basePath={basePath}
           sp={sp}
           filterKeys={[...FILTER_KEYS]}
         />
@@ -113,7 +119,7 @@ export default async function SessionsPage({
           {chips.length ? (
             <>
               No sessions match this filter.{' '}
-              <Link href={`/p/${projectId}/sessions`}>Clear filters</Link> to see all sessions.
+              <Link href={basePath}>Clear filters</Link> to see all sessions.
             </>
           ) : (
             <>
@@ -124,42 +130,32 @@ export default async function SessionsPage({
           )}
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="sessions-table">
-            <thead>
-              <tr>
-                <th>Started</th>
-                <th>Entry page</th>
-                <th style={{ width: 92 }}>Duration</th>
-                <th style={{ width: 78 }}>Events</th>
-                <th style={{ width: 120 }}>Device</th>
-                <th style={{ width: 120 }}>Browser</th>
-                <th style={{ width: 96 }}>Status</th>
-                <th style={{ width: 64 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((s) => (
-                <tr key={s.id}>
-                  <td className="muted">{timeAgo(s.startedAt)}</td>
-                  <td className="mono">{pathOfUrl(s.urlFirst)}</td>
-                  <td className="mono num">{duration(s.startedAt, s.endedAt)}</td>
-                  <td className="mono num">{s.eventCount}</td>
-                  <td className="muted">{s.device ?? '—'}</td>
-                  <td className="muted">{s.browser ?? '—'}</td>
-                  <td>
-                    <span className={`st ${s.status}`}>{s.status}</span>
-                  </td>
-                  <td>
-                    <Link className="watch-link" href={`/p/${projectId}/sessions/${encodeURIComponent(s.id)}`}>
-                      watch →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {active.length > 0 ? (
+            <SessionsTable sessions={active} basePath={basePath} />
+          ) : (
+            <div className="empty">
+              No sessions with activity in this set — only idle/bounce visits (below).
+            </div>
+          )}
+
+          {lowSignal.length > 0 && (
+            <details className="lowsignal">
+              <summary>
+                <span className="ls-caret" aria-hidden>
+                  ▸
+                </span>
+                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'} —
+                no clicks or interactions
+              </summary>
+              <p className="ls-note muted">
+                A visitor opened a page and left without interacting. Kept for completeness; they
+                rarely tell you anything.
+              </p>
+              <SessionsTable sessions={lowSignal} basePath={basePath} />
+            </details>
+          )}
+        </>
       )}
     </>
   );

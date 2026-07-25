@@ -508,6 +508,19 @@ export function SessionReplay({
                 title="Flagged moment"
               />
             )}
+            {/* Activity ticks: where the user actually did something, so the
+                empty stretches read as dead air you can skip past. */}
+            <div className="rc-activity">
+              {evidence.map((e, i) =>
+                e.kind === 'click' || e.kind === 'navigation' || e.kind === 'form' ? (
+                  <span
+                    key={i}
+                    className="rc-tick"
+                    style={{ left: `${totalMs ? (e.offset / totalMs) * 100 : 0}%` }}
+                  />
+                ) : null,
+              )}
+            </div>
             <div className="rc-played" style={{ width: `${pct}%` }} />
             <div className="rc-handle" style={{ left: `${pct}%` }} />
             <div className="rc-markers">

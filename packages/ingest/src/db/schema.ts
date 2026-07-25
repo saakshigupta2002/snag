@@ -63,6 +63,8 @@ ALTER TABLE sessions ADD COLUMN IF NOT EXISTS country TEXT;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS click_points JSONB;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS paths JSONB;
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS custom_events JSONB;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS interactions INTEGER;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS active_ms INTEGER;
 CREATE INDEX IF NOT EXISTS sessions_visitor_idx ON sessions (project_id, visitor_id);
 -- Allow the transient 'processing' status used for atomic worker claims.
 ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_status_check;

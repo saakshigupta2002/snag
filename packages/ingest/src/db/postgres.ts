@@ -56,7 +56,8 @@ function projectFromRow(r: Row): Project {
 const SESSION_COLS =
   'id, project_id, started_at, ended_at, last_seen_at, user_agent, url_first, device, status, ' +
   'event_count, referrer, pageviews, entry_page, exit_page, js_errors, max_scroll_pct, ' +
-  'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country, custom_events';
+  'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country, custom_events, ' +
+  'interactions, active_ms';
 
 function sessionFromRow(r: Row): Session {
   const numOrNull = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
@@ -75,6 +76,8 @@ function sessionFromRow(r: Row): Session {
     entryPage: (r.entry_page as string | null) ?? null,
     exitPage: (r.exit_page as string | null) ?? null,
     jsErrors: numOrNull(r.js_errors),
+    interactions: numOrNull(r.interactions),
+    activeMs: numOrNull(r.active_ms),
     maxScrollPct: numOrNull(r.max_scroll_pct),
     durationMs: numOrNull(r.duration_ms),
     browser: (r.browser as string | null) ?? null,
@@ -375,7 +378,8 @@ export class PostgresStore implements Store {
          pageviews = $2, entry_page = $3, exit_page = $4, js_errors = $5,
          max_scroll_pct = $6, duration_ms = $7, browser = $8, os = $9,
          is_bot = $10, lcp_ms = $11, inp_ms = $12, cls = $13,
-         click_points = $14, paths = $15, custom_events = $16
+         click_points = $14, paths = $15, custom_events = $16,
+         interactions = $17, active_ms = $18
        WHERE id = $1`,
       [
         sessionId,
@@ -394,6 +398,8 @@ export class PostgresStore implements Store {
         JSON.stringify(agg.clickPoints),
         JSON.stringify(agg.paths),
         JSON.stringify(agg.customEvents),
+        agg.interactions,
+        agg.activeMs,
       ],
     );
   }
