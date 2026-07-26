@@ -11,6 +11,7 @@ import {
   computeHeatmap,
   computeOverview,
   computeTrend,
+  funnelReached,
   groupIssues,
   sessionDbId,
   type Store,
@@ -196,11 +197,15 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
       bot?: string;
       from?: string;
       to?: string;
+      funnel?: string;
+      drop?: string;
+      reach?: string;
     };
     const limit = Math.min(Number(q.limit) || 100, 500);
+    const funnelDrill = q.funnel && (q.drop != null || q.reach != null);
     const hasFilter =
       q.device || q.browser || q.os || q.country || q.channel || q.detector ||
-      q.errors || q.bot != null || q.from || q.to;
+      q.errors || q.bot != null || q.from || q.to || funnelDrill;
     // Only over-fetch when we actually need to filter a superset down.
     let sessions = await store.listSessions(id, hasFilter ? 2000 : limit);
 
@@ -227,6 +232,25 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
         issues.filter((i) => i.detector === q.detector && i.sessionId).map((i) => i.sessionId),
       );
       sessions = sessions.filter((s) => withDetector.has(s.id));
+    }
+    // Funnel drill: the sessions that dropped entering a step (`drop=i`, reached
+    // exactly i steps) or that reached a step (`reach=i`, completed step i).
+    if (funnelDrill) {
+      const project = await store.getProject(id);
+      const def = project?.settings?.funnels?.find((f) => f.id === q.funnel);
+      if (def) {
+        const activity = (await store.listSessionActivity(id, 20000)).filter((s) => !s.isBot);
+        const want = new Set<string>();
+        for (const a of activity) {
+          const reached = funnelReached(def, a.paths ?? []);
+          if (q.drop != null ? reached === Number(q.drop) : reached > Number(q.reach)) {
+            want.add(a.id);
+          }
+        }
+        sessions = sessions.filter((s) => want.has(s.id));
+      } else {
+        sessions = [];
+      }
     }
     return sessions.slice(0, limit);
   });

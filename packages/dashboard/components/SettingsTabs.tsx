@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { DetectorStat, FlagRule, Project, ProjectSettings } from '@snag/shared';
+import type {
+  DetectorStat,
+  FlagRule,
+  FunnelDef,
+  FunnelResult,
+  Project,
+  ProjectSettings,
+} from '@snag/shared';
 import { CopyButton } from './CopyButton';
 import { ProjectSettingsForm } from './ProjectSettingsForm';
 import { DetectorTuner, type BuiltinFlag } from './DetectorTuner';
@@ -9,13 +16,15 @@ import { AlertsForm } from './AlertsForm';
 import { ShareForm } from './ShareForm';
 import { CustomFlagBuilder } from './CustomFlagBuilder';
 import { CustomFlagList } from './CustomFlagList';
+import { FunnelManager } from './FunnelManager';
 
-type TabId = 'general' | 'detectors' | 'flags' | 'alerts' | 'sharing';
+type TabId = 'general' | 'detectors' | 'flags' | 'funnels' | 'alerts' | 'sharing';
 
 const TABS: { id: TabId; label: string; blurb: string }[] = [
   { id: 'general', label: 'General', blurb: 'Project name, retention, and the SDK install snippet.' },
   { id: 'detectors', label: 'Detectors', blurb: 'Toggle and tune what gets flagged, per project.' },
   { id: 'flags', label: 'Custom flags', blurb: 'Your own rules on top of the built-in detectors.' },
+  { id: 'funnels', label: 'Funnels', blurb: 'Track a flow and watch the sessions behind each drop-off.' },
   { id: 'alerts', label: 'Alerts', blurb: 'Where new issues get delivered.' },
   { id: 'sharing', label: 'Sharing', blurb: 'A read-only public link to this project.' },
 ];
@@ -24,14 +33,18 @@ export function SettingsTabs({
   project,
   flags,
   detectorStats,
+  funnels,
   snippet,
+  initialTab = 'general',
 }: {
   project: Project;
   flags: { builtins: BuiltinFlag[]; custom: FlagRule[] };
   detectorStats: DetectorStat[];
+  funnels: { funnels: FunnelDef[]; results: FunnelResult[] };
   snippet: string;
+  initialTab?: TabId;
 }) {
-  const [tab, setTab] = useState<TabId>('general');
+  const [tab, setTab] = useState<TabId>(initialTab);
   const active = TABS.find((t) => t.id === tab)!;
   const settings = project.settings as ProjectSettings;
 
@@ -90,6 +103,14 @@ export function SettingsTabs({
             <div style={{ height: 12 }} />
             <CustomFlagBuilder projectId={project.id} />
           </>
+        )}
+
+        {tab === 'funnels' && (
+          <FunnelManager
+            projectId={project.id}
+            funnels={funnels.funnels}
+            results={funnels.results}
+          />
         )}
 
         {tab === 'alerts' && <AlertsForm projectId={project.id} settings={settings} />}

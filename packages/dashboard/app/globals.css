@@ -987,6 +987,24 @@ pre.snippet {
   font-size: 11.5px;
   margin-top: 5px;
 }
+/* Clickable funnel steps: each drills into the sessions behind it. */
+a.funnel-link {
+  text-decoration: none;
+  color: var(--text-dim);
+  transition: color var(--t-fast) var(--ease);
+}
+a.funnel-link:hover {
+  color: var(--text);
+}
+a.funnel-drop-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--text-faint);
+  transition: color var(--t-fast) var(--ease);
+}
+a.funnel-drop-link:hover {
+  color: var(--high);
+}
 
 /* ── Heatmaps page ────────────────────────────────────────────────────────── */
 .heatmap-layout {

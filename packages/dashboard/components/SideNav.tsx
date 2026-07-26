@@ -11,7 +11,6 @@ export function SideNav({ projectId }: { projectId: string }) {
     { href: `${base}/issues`, label: 'issues', active: !!pathname?.includes('/issues') },
     { href: `${base}/sessions`, label: 'sessions', active: !!pathname?.includes('/sessions') },
     { href: `${base}/heatmap`, label: 'heatmaps', active: !!pathname?.includes('/heatmap') },
-    { href: `${base}/funnels`, label: 'funnels', active: !!pathname?.includes('/funnels') },
     { href: `${base}/settings`, label: 'settings', active: !!pathname?.includes('/settings') },
   ];
   return (

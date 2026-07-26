@@ -112,9 +112,6 @@ export default async function OverviewPage({
             <Link className="btn" href={`/p/${projectId}/heatmap`}>
               Heatmaps →
             </Link>
-            <Link className="btn" href={`/p/${projectId}/funnels`}>
-              Funnels →
-            </Link>
           </div>
         </>
       )}

@@ -578,6 +578,19 @@ export function computeFunnel(def: FunnelDef, sessions: SessionActivity[]): Funn
   return { id: def.id, name: def.name, steps, entered: counts[0] ?? 0 };
 }
 
+/**
+ * How many ordered steps a single session completed (0..def.steps.length).
+ * Used to drill a funnel step into the sessions behind it: a session "dropped
+ * entering step i" when it completed exactly `i` steps.
+ */
+export function funnelReached(def: FunnelDef, paths: string[]): number {
+  let idx = 0;
+  for (const path of paths) {
+    if (idx < def.steps.length && stepMatches(path, def.steps[idx]!)) idx++;
+  }
+  return idx;
+}
+
 /** Per-day occurrence trend for one issue group (its own created_at buckets). */
 export function computeTrend(issues: Issue[], groupKey: string, days = 14, now = Date.now()): TrendPoint[] {
   const buckets = emptyDays(days, now);

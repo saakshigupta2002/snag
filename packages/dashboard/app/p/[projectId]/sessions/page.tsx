@@ -17,6 +17,9 @@ const FILTER_KEYS = [
   'bot',
   'from',
   'to',
+  'funnel',
+  'drop',
+  'reach',
 ] as const;
 
 function fmtDur(ms: number): string {
@@ -45,6 +48,12 @@ function chipsFor(sp: Record<string, string | undefined>): FilterChip[] {
   if (sp.bot === '0') chips.push({ key: 'bot', label: 'Humans only' });
   if (sp.from && sp.to && sp.from !== sp.to) chips.push({ key: 'range', label: `${sp.from} → ${sp.to}` });
   else if (sp.from) chips.push({ key: 'from', label: `On ${sp.from}` });
+  const fname = sp.fname || 'Funnel';
+  if (sp.funnel && sp.drop != null) {
+    chips.push({ key: 'funnel', label: `${fname}: dropped before step ${Number(sp.drop) + 1}` });
+  } else if (sp.funnel && sp.reach != null) {
+    chips.push({ key: 'funnel', label: `${fname}: reached step ${Number(sp.reach) + 1}` });
+  }
   return chips;
 }
 

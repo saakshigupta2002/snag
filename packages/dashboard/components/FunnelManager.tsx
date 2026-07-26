@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FunnelDef, FunnelResult } from '@snag/shared';
 import { useToast } from './Toast';
@@ -64,6 +65,8 @@ export function FunnelManager({
       ) : (
         results.map((f) => {
           const entered = f.entered || 1;
+          const drill = (params: Record<string, string>) =>
+            `/p/${projectId}/sessions?${new URLSearchParams({ funnel: f.id, fname: f.name, ...params }).toString()}`;
           return (
             <div className="card" key={f.id}>
               <div className="section-head">
@@ -72,25 +75,36 @@ export function FunnelManager({
                   ✕
                 </button>
               </div>
+              <p className="muted" style={{ fontSize: 12.5, marginTop: 0 }}>
+                Click a step to watch the sessions behind it, or a drop to see who left there.
+              </p>
               <div className="funnel">
                 {f.steps.map((s, i) => {
                   const pct = (s.count / entered) * 100;
                   const prev = i > 0 ? f.steps[i - 1]!.count : s.count;
-                  const drop = prev > 0 ? Math.round(((prev - s.count) / prev) * 100) : 0;
+                  const droppedN = Math.max(prev - s.count, 0);
+                  const drop = prev > 0 ? Math.round((droppedN / prev) * 100) : 0;
                   return (
                     <div className="funnel-step" key={i}>
                       <div className="funnel-head">
                         <span className="funnel-idx mono">{i + 1}</span>
                         <span className="funnel-path mono">{s.step}</span>
-                        <span className="funnel-count">
-                          {s.count} · {Math.round(pct)}%
-                        </span>
+                        <Link
+                          className="funnel-count funnel-link"
+                          href={drill({ reach: String(i) })}
+                          title={`Watch the ${s.count} sessions that reached this step`}
+                        >
+                          {s.count} · {Math.round(pct)}% →
+                        </Link>
                       </div>
                       <div className="funnel-bar">
                         <div className="funnel-fill" style={{ width: `${pct}%` }} />
                       </div>
-                      {i > 0 && drop > 0 && (
-                        <div className="funnel-drop muted">−{drop}% dropped from previous step</div>
+                      {i > 0 && droppedN > 0 && (
+                        <Link className="funnel-drop funnel-drop-link" href={drill({ drop: String(i) })}
+                          title={`Watch the ${droppedN} sessions that dropped here`}>
+                          −{drop}% · {droppedN} dropped from previous step →
+                        </Link>
                       )}
                     </div>
                   );

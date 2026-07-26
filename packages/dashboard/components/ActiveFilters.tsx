@@ -23,7 +23,12 @@ export function ActiveFilters({
   filterKeys: string[];
 }) {
   const hrefWithout = (chipKey: string): string => {
-    const drop = chipKey === 'range' ? ['from', 'to'] : chipKey === 'from' ? ['from', 'to'] : [chipKey];
+    const drop =
+      chipKey === 'range' || chipKey === 'from'
+        ? ['from', 'to']
+        : chipKey === 'funnel'
+          ? ['funnel', 'drop', 'reach', 'fname']
+          : [chipKey];
     const p = new URLSearchParams();
     for (const k of filterKeys) {
       if (drop.includes(k)) continue;
