@@ -37,7 +37,8 @@ var valued = map[string]bool{
 	"--status": true, "--severity": true, "--detector": true, "--max": true,
 	"--days": true, "--url": true, "--missions": true, "--workers": true,
 	"--note": true, "--method": true, "--field": true, "--device": true,
-	"--browser": true, "--since": true, "--dir": true,
+	"--browser": true, "--since": true, "--dir": true, "--title": true,
+	"--session": true,
 }
 
 func parse(argv []string) parsed {
@@ -172,6 +173,8 @@ func dispatch(resource, verb string, p parsed) (int, error) {
 			return issueView(p)
 		case "resolve":
 			return issueResolve(p)
+		case "create":
+			return issueCreate(p)
 		default:
 			return issueList(p)
 		}
@@ -340,6 +343,41 @@ func issueView(p parsed) (int, error) {
 	if s := str(m["aiSummary"]); s != "" {
 		fmt.Println("\n" + s)
 	}
+	return exitOK, nil
+}
+
+func issueCreate(p parsed) (int, error) {
+	title, severity := p.str["--title"], p.str["--severity"]
+	if title == "" || (severity != "low" && severity != "medium" && severity != "high") {
+		return 0, &apiError{msg: "--title and --severity {low|medium|high} are required", status: 2}
+	}
+	if p.bools["--dry-run"] {
+		fmt.Println(dim("would file AI issue [" + severity + "] " + title))
+		return exitOK, nil
+	}
+	cl, pid, err := clientProject(true)
+	if err != nil {
+		return 0, err
+	}
+	body := map[string]any{"title": title, "severity": severity}
+	if v := p.str["--session"]; v != "" {
+		body["sessionId"] = v
+	}
+	if v := p.str["--detector"]; v != "" {
+		body["detector"] = v
+	}
+	if v := p.str["--note"]; v != "" {
+		body["note"] = v
+	}
+	res, err := cl.request("/api/projects/"+pid+"/issues", "POST", body, nil)
+	if err != nil {
+		return 0, err
+	}
+	if flagJSON {
+		emitJSON(res, p.fieldList())
+		return exitOK, nil
+	}
+	fmt.Println(green("filed") + " AI issue: " + str(asMap(res)["groupKey"]))
 	return exitOK, nil
 }
 
@@ -663,7 +701,7 @@ Usage: snag <resource> <verb> [args] [flags]
 
   auth      login | status
   project   list | view [<id>]
-  issue     list | view <groupKey> | resolve <groupKey> confirm|dismiss
+  issue     list | view <groupKey> | resolve <groupKey> confirm|dismiss | create
   session   list | view <id> | evidence <id>
   analytics show | funnels | report
   explore   run | scaffold

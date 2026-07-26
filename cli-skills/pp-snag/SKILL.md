@@ -82,6 +82,19 @@ do, and where did it go wrong?
 Present the findings: for each real bug, a one-line summary, the evidence, the likely cause and a
 suggested fix. Then **stop and ask the user which ones to fix.** Do not continue on your own.
 
+### File the findings into Snag (durable, opt-in)
+
+So a finding does not vanish when the chat ends, you can file each judged bug back into Snag as an
+**AI-flagged issue**, linked to the session's clip. It lands in the Issues list next to the
+auto-detected ones, tagged "AI", as a normal open issue the user triages (confirm or dismiss). This
+records a finding; it never fixes code. Only file bugs that passed the judge gate, and tell the
+user you are doing it.
+
+```bash
+snag issue create --title "Place order does nothing" --severity high \
+  --session <sessionId> --detector checkout --note "clicked 3x, no request fired"
+```
+
 ## Change phase (only after the user approves)
 
 ### 4. fix: find the code, change it

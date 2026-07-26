@@ -54,6 +54,12 @@ TOOLS: List[Dict[str, Any]] = [
     {"name": "snag_get_status",
      "description": "Ingest health: last session, sessions today, open/high issue counts.",
      "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "snag_file_issue",
+     "description": "File an AI-flagged issue (a bug you judged real) into Snag, linked to a session's clip. Records a finding for the human to triage; does not fix anything. Only file issues that pass the judge gate.",
+     "inputSchema": {"type": "object", "properties": {
+         "title": {"type": "string"}, "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+         "session_id": {"type": "string"}, "detector": {"type": "string"}, "note": {"type": "string"}},
+         "required": ["title", "severity"]}},
 ]
 
 
@@ -90,6 +96,13 @@ def _call(name: str, args: Dict[str, Any]) -> Any:
         groups = client.issues(_project(client), status="open") or []
         return {"ingest": a.get("ingest"), "openIssues": len(groups),
                 "highSeverity": sum(1 for g in groups if g.get("severity") == "high")}
+    if name == "snag_file_issue":
+        title, severity = args.get("title"), args.get("severity")
+        if not title or severity not in ("low", "medium", "high"):
+            raise ApiError("title and a valid severity are required")
+        body = {"title": title, "severity": severity, "sessionId": args.get("session_id"),
+                "detector": args.get("detector"), "note": args.get("note")}
+        return client.create_issue(_project(client), {k: v for k, v in body.items() if v})
     raise ApiError(f"unknown tool {name}")
 
 

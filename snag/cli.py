@@ -130,6 +130,23 @@ def cmd_issue_view(args) -> int:
     return out.EXIT_OK
 
 
+def cmd_issue_create(args) -> int:
+    client, pid = _client(args)
+    if not args.title or args.severity not in ("low", "medium", "high"):
+        raise Usage("--title and --severity {low|medium|high} are required")
+    if args.dry_run:
+        print(out.dim(f"would file AI issue [{args.severity}] {args.title}"))
+        return out.EXIT_OK
+    body = {"title": args.title, "severity": args.severity,
+            "sessionId": args.session, "detector": args.detector, "note": args.note}
+    res = client.create_issue(pid, {k: v for k, v in body.items() if v is not None})
+    if args.json:
+        out.emit_json(res, _fields(args))
+        return out.EXIT_OK
+    print(f"{out.green('filed')} AI issue: {res.get('groupKey')}")
+    return out.EXIT_OK
+
+
 def cmd_issue_resolve(args) -> int:
     client, pid = _client(args)
     status = "confirmed" if args.verdict == "confirm" else "dismissed"
@@ -346,6 +363,14 @@ def build_parser() -> argparse.ArgumentParser:
     ir.add_argument("group_key"); ir.add_argument("verdict", choices=["confirm", "dismiss"])
     ir.add_argument("--note"); ir.add_argument("-n", "--dry-run", action="store_true")
     ir.set_defaults(func=cmd_issue_resolve)
+    ic = iss.add_parser("create", help="file an AI-flagged issue (with a clip)")
+    ic.add_argument("--title", required=True)
+    ic.add_argument("--severity", choices=["low", "medium", "high"], required=True)
+    ic.add_argument("--session", help="session id for the replay clip")
+    ic.add_argument("--detector", help="short label, e.g. the flow (default: agent)")
+    ic.add_argument("--note", help="your reasoning / evidence")
+    ic.add_argument("-n", "--dry-run", action="store_true")
+    ic.set_defaults(func=cmd_issue_create)
 
     # session
     se = verbs("session", "recorded sessions")

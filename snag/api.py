@@ -94,6 +94,9 @@ class Client:
         return self.request(f"/api/projects/{pid}/issues/{gk}/status", method="POST",
                             body={"status": status, "note": note})
 
+    def create_issue(self, pid: str, body: Dict[str, Any]) -> Any:
+        return self.request(f"/api/projects/{pid}/issues", method="POST", body=body)
+
     def sessions(self, pid: str, **filters: Any) -> Any:
         return self.request(f"/api/projects/{pid}/sessions", query=filters)
 

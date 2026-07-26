@@ -32,6 +32,9 @@ func mcpTools() []map[string]any {
 			"inputSchema": obj(map[string]any{"days": map[string]any{"type": "integer"}})},
 		{"name": "snag_get_status", "description": "Ingest health and open/high issue counts.",
 			"inputSchema": obj(map[string]any{})},
+		{"name": "snag_file_issue",
+			"description": "File an AI-flagged issue (a bug you judged real) into Snag, linked to a session's clip. Records a finding for the human to triage; does not fix anything.",
+			"inputSchema": obj(map[string]any{"title": s, "severity": s, "session_id": s, "detector": s, "note": s}, "title", "severity")},
 	}
 }
 
@@ -89,6 +92,22 @@ func mcpCall(name string, args map[string]any) (any, error) {
 			}
 		}
 		return map[string]any{"ingest": a["ingest"], "openIssues": len(groups), "highSeverity": high}, nil
+	case "snag_file_issue":
+		title, severity := sarg("title"), sarg("severity")
+		if title == "" || (severity != "low" && severity != "medium" && severity != "high") {
+			return nil, &apiError{msg: "title and a valid severity are required"}
+		}
+		body := map[string]any{"title": title, "severity": severity}
+		for _, k := range []string{"session_id", "detector", "note"} {
+			if v := sarg(k); v != "" {
+				key := k
+				if k == "session_id" {
+					key = "sessionId"
+				}
+				body[key] = v
+			}
+		}
+		return cl.request("/api/projects/"+pid+"/issues", "POST", body, nil)
 	}
 	return nil, &apiError{msg: "unknown tool " + name}
 }
