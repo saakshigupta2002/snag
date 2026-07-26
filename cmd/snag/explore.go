@@ -6,8 +6,23 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+var slugRe = regexp.MustCompile(`[^A-Za-z0-9_-]+`)
+
+// safeName keeps a mission's spec filename inside the temp dir.
+func safeName(name string, i int) string {
+	s := strings.Trim(slugRe.ReplaceAllString(name, "-"), "-")
+	if len(s) > 48 {
+		s = s[:48]
+	}
+	if s == "" {
+		return fmt.Sprintf("mission-%d", i)
+	}
+	return s
+}
 
 var riskyHosts = []string{
 	"api.stripe.com", "checkout.stripe.com", "paypal.com", "api.paypal.com",
@@ -141,12 +156,14 @@ func exploreRun(p parsed) (int, error) {
 		return 0, err
 	}
 	dj, _ := json.Marshal(destructive)
-	for _, m := range missions {
-		name := str(m["name"])
+	for i, m := range missions {
+		file := safeName(str(m["name"]), i)
 		start, _ := json.Marshal(strDefault(str(m["url"]), url))
-		nm, _ := json.Marshal(name)
+		// The display title keeps the original name; json.Marshal makes it a safe
+		// JS string. Only the filename is sanitized.
+		nm, _ := json.Marshal(strDefault(str(m["name"]), file))
 		spec := fmt.Sprintf(specJS, start, dj, "true", nm)
-		_ = os.WriteFile(filepath.Join(work, name+".spec.js"), []byte(spec), 0o644)
+		_ = os.WriteFile(filepath.Join(work, file+".spec.js"), []byte(spec), 0o644)
 	}
 	cmd := exec.Command("npx", "playwright", "test", fmt.Sprintf("--workers=%d", workers))
 	cmd.Dir = work

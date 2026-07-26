@@ -39,6 +39,17 @@ func green(s string) string { return c("32", s) }
 func errorln(msg string) { fmt.Fprintln(os.Stderr, red("error")+": "+msg) }
 func hintln(msg string)  { fmt.Fprintln(os.Stderr, dim(msg)) }
 
+// scrub strips terminal control characters from untrusted recorded content
+// before it reaches a TTY, so a malicious page can't inject ANSI escapes.
+func scrub(s string) string {
+	return strings.Map(func(r rune) rune {
+		if (r < 0x20 && r != '\t') || (r >= 0x7f && r <= 0x9f) {
+			return -1
+		}
+		return r
+	}, s)
+}
+
 // selectFields keeps only the requested keys from a map (or each map in a slice).
 func selectFields(obj any, fields []string) any {
 	if len(fields) == 0 {
@@ -74,7 +85,7 @@ func kv(rows [][2]string) {
 		}
 	}
 	for _, r := range rows {
-		fmt.Printf("%s  %s\n", dim(pad(r[0], width)), r[1])
+		fmt.Printf("%s  %s\n", dim(pad(r[0], width)), scrub(r[1]))
 	}
 }
 
@@ -101,7 +112,7 @@ func table(headers []string, rows [][]string) {
 	for _, row := range rows {
 		cp := make([]string, len(row))
 		for i, cell := range row {
-			cp[i] = pad(cell, widths[i])
+			cp[i] = pad(scrub(cell), widths[i])
 		}
 		fmt.Println(strings.Join(cp, "  "))
 	}

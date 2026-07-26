@@ -7,8 +7,18 @@ agents spend fewer tokens.
 
 import json
 import os
+import re
 import sys
 from typing import Any, Iterable, Optional, Sequence
+
+# Strip terminal control characters from untrusted, recorded content before it
+# reaches a TTY, so a malicious page can't inject ANSI escapes. JSON output is
+# already safe (json escapes control chars).
+_CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+
+
+def scrub(s: str) -> str:
+    return _CTRL.sub("", s)
 
 # Exit codes — scripts and agents branch on these.
 EXIT_OK = 0
@@ -78,7 +88,7 @@ def emit_json(obj: Any, fields: Optional[Sequence[str]] = None) -> None:
 
 def kv(rows: Iterable[Sequence[str]], gap: int = 2) -> None:
     """Print aligned ``label  value`` pairs (a details view)."""
-    rows = [(str(a), str(b)) for a, b in rows]
+    rows = [(scrub(str(a)), scrub(str(b))) for a, b in rows]
     width = max((len(a) for a, _ in rows), default=0)
     for label, value in rows:
         print(f"{dim(label.ljust(width))}{' ' * gap}{value}")
@@ -88,7 +98,7 @@ def table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> None:
     """A compact, left-aligned table sized to its content."""
     if not rows:
         return
-    cells = [[("" if c is None else str(c)) for c in row] for row in rows]
+    cells = [[("" if c is None else scrub(str(c))) for c in row] for row in rows]
     widths = [len(h) for h in headers]
     for row in cells:
         for i, c in enumerate(row):

@@ -53,16 +53,16 @@ class Client:
             with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
                 raw = resp.read().decode("utf-8")
         except urllib.error.HTTPError as exc:
-            detail = ""
+            server_msg = ""
             try:
-                detail = ": " + json.loads(exc.read().decode("utf-8")).get("error", "")
+                server_msg = json.loads(exc.read().decode("utf-8")).get("error", "") or ""
             except Exception:
                 pass
             if exc.code == 404:
-                raise NotFound(f"not found{detail}", 404)
+                raise NotFound(server_msg or "not found", 404)
             if exc.code in (401, 403):
-                raise ApiError("unauthorized — check your token (`snag auth login`)", exc.code)
-            raise ApiError(f"HTTP {exc.code}{detail}", exc.code)
+                raise ApiError("unauthorized: check your token (`snag auth login`)", exc.code)
+            raise ApiError(f"HTTP {exc.code}" + (f": {server_msg}" if server_msg else ""), exc.code)
         except (urllib.error.URLError, TimeoutError) as exc:
             raise ApiError(f"cannot reach {self.cfg.endpoint} ({exc})")
         if not raw:

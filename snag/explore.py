@@ -16,12 +16,18 @@ or extend them. `run` generates an ephemeral project and executes it.
 
 import json
 import os
+import re
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
+
+
+def _safe_name(name: Any, i: int) -> str:
+    """A filesystem-safe spec name. Never let a mission name escape the temp dir."""
+    slug = re.sub(r"[^A-Za-z0-9_-]+", "-", str(name or "")).strip("-")[:48]
+    return slug or f"mission-{i}"
 
 from . import output as out
 from .config import Config
@@ -153,10 +159,12 @@ def run(url: str, missions_path: str, workers: int, force: bool, dry: bool) -> i
     work = Path(tempfile.mkdtemp(prefix="snag-explore-"))
     try:
         _write_templates(work, workers)
-        for m in missions:
-            name = m.get("name", "mission")
+        for i, m in enumerate(missions):
+            name = _safe_name(m.get("name"), i)
+            # The display title keeps the original name (json-encoded, so it can
+            # never break out of the JS string); only the filename is sanitized.
             spec = SPEC_JS % (json.dumps(m.get("url") or url), json.dumps(DESTRUCTIVE_WORDS),
-                              json.dumps(True), json.dumps(name))
+                              json.dumps(True), json.dumps(str(m.get("name") or name)))
             (work / f"{name}.spec.js").write_text(spec, encoding="utf-8")
         env = dict(os.environ)
         proc = subprocess.run(["npx", "playwright", "test", f"--workers={workers}"],

@@ -13,7 +13,7 @@ from . import __version__, auth
 from . import output as out
 from .api import ApiError, Client, NotFound
 from .config import resolve
-from .db import connect, save_issues, save_sessions
+from .db import connect, ledger, save_issues, save_sessions
 from .evidence import summary, transcript
 
 SEV_RANK = {"high": 2, "medium": 1, "low": 0}
@@ -75,15 +75,27 @@ def cmd_project_view(args) -> int:
 # ── issue ──────────────────────────────────────────────────────────────────
 def cmd_issue_list(args) -> int:
     client, pid = _client(args)
-    groups = client.issues(pid, status=args.status, severity=args.severity, detector=args.detector) or []
+    try:
+        groups = client.issues(pid, status=args.status, severity=args.severity, detector=args.detector) or []
+        try:
+            conn = connect(); save_issues(conn, pid, groups); conn.close()
+        except Exception:
+            pass
+    except ApiError as exc:
+        # Network down: fall back to the local mirror (the durable bug ledger).
+        if exc.status is not None:
+            raise
+        try:
+            conn = connect(); groups = ledger(conn, pid); conn.close()
+        except Exception:
+            raise exc
+        if not groups:
+            raise exc
+        out.hint("offline: showing the local mirror")
     groups = sorted(groups, key=lambda g: (SEV_RANK.get(g.get("severity"), 0),
                                            g.get("lastSeen", "")), reverse=True)
     if args.max:
         groups = groups[: args.max]
-    try:
-        conn = connect(); save_issues(conn, pid, groups); conn.close()
-    except Exception:
-        pass
     if args.json:
         out.emit_json(groups, _fields(args))
         return out.EXIT_OK
@@ -181,10 +193,11 @@ def cmd_session_evidence(args) -> int:
           out.dim(f"  {info.get('browser') or ''} · {info.get('interactions')} interactions · "
                   f"{info.get('problems')} problem(s)"))
     if info.get("url"):
-        print(out.dim(info["url"]))
+        print(out.dim(out.scrub(str(info["url"]))))
     print()
     for r in rows:
-        text = out.red(r["text"]) if r["bad"] else r["text"]
+        clean = out.scrub(r["text"])
+        text = out.red(clean) if r["bad"] else clean
         print(f"{out.dim(r['t'])}  {text}")
     if not rows:
         print(out.dim("No interaction events in this recording (idle / bounce)."))

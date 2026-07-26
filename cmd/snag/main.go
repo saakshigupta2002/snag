@@ -473,11 +473,11 @@ func sessionEvidence(p parsed) (int, error) {
 	fmt.Println(boldc("session "+str(info["id"])) + dim(fmt.Sprintf("  %s · %s interactions · %s problem(s)",
 		str(info["browser"]), str(info["interactions"]), str(info["problems"]))))
 	if u := str(info["url"]); u != "" {
-		fmt.Println(dim(u))
+		fmt.Println(dim(scrub(u)))
 	}
 	fmt.Println()
 	for _, r := range rows {
-		text := r.Text
+		text := scrub(r.Text)
 		if r.Bad {
 			text = red(text)
 		}

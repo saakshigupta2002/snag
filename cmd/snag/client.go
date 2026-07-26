@@ -139,20 +139,28 @@ func (cl *Client) request(path, method string, body any, query map[string]string
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode >= 400 {
-		detail := ""
+		serverMsg := ""
 		var e map[string]any
 		if json.Unmarshal(raw, &e) == nil {
 			if s, ok := e["error"].(string); ok {
-				detail = ": " + s
+				serverMsg = s
 			}
 		}
 		switch {
 		case resp.StatusCode == 404:
-			return nil, &apiError{msg: "not found" + detail, status: 404}
+			msg := serverMsg
+			if msg == "" {
+				msg = "not found"
+			}
+			return nil, &apiError{msg: msg, status: 404}
 		case resp.StatusCode == 401 || resp.StatusCode == 403:
-			return nil, &apiError{msg: "unauthorized — check your token (`snag auth login`)", status: resp.StatusCode}
+			return nil, &apiError{msg: "unauthorized: check your token (`snag auth login`)", status: resp.StatusCode}
 		default:
-			return nil, &apiError{msg: fmt.Sprintf("HTTP %d%s", resp.StatusCode, detail), status: resp.StatusCode}
+			m := fmt.Sprintf("HTTP %d", resp.StatusCode)
+			if serverMsg != "" {
+				m += ": " + serverMsg
+			}
+			return nil, &apiError{msg: m, status: resp.StatusCode}
 		}
 	}
 	if len(raw) == 0 {

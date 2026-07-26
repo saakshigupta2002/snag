@@ -63,18 +63,28 @@ def _call(name: str, args: Dict[str, Any]) -> Any:
         return client.issues(_project(client), status=args.get("status"),
                              severity=args.get("severity"), detector=args.get("detector"))
     if name == "snag_get_issue":
-        return client.issue(_project(client), args["group_key"])
+        gk = args.get("group_key")
+        if not gk:
+            raise ApiError("group_key is required")
+        return client.issue(_project(client), gk)
     if name == "snag_list_sessions":
         return client.sessions(_project(client),
                                errors="1" if args.get("errors") else None,
                                bot="1" if args.get("bot") else None,
                                device=args.get("device"), browser=args.get("browser"))
     if name == "snag_get_session_evidence":
-        data = client.session_events(args["session_id"]) or {}
+        sid = args.get("session_id")
+        if not sid:
+            raise ApiError("session_id is required")
+        data = client.session_events(sid) or {}
         rows = transcript(data.get("events") or [])
         return {"session": summary(data.get("session") or {}, rows), "transcript": rows}
     if name == "snag_get_analytics":
-        return client.analytics(_project(client), days=int(args.get("days", 14)))
+        try:
+            days = int(args.get("days", 14))
+        except (TypeError, ValueError):
+            days = 14
+        return client.analytics(_project(client), days=days)
     if name == "snag_get_status":
         a = client.analytics(_project(client), days=1)
         groups = client.issues(_project(client), status="open") or []
@@ -96,7 +106,7 @@ def _handle(msg: Dict[str, Any]) -> Any:
             result = _call(params.get("name"), params.get("arguments") or {})
             text = json.dumps(result, ensure_ascii=False, indent=2)
             return {"content": [{"type": "text", "text": text}]}
-        except ApiError as exc:
+        except Exception as exc:  # never let one bad call kill the server loop
             return {"content": [{"type": "text", "text": f"error: {exc}"}], "isError": True}
     if method == "ping":
         return {}
