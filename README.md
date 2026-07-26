@@ -112,6 +112,9 @@ Two Claude Code skills live in [`cli-skills/`](cli-skills/):
 The judge step is what makes it trustworthy: Snag's rule-based detectors over-flag by design, and
 Claude filters the false alarms before you spend any effort.
 
+**You stay in control.** The skills report their findings and stop. They do not fix, commit or
+push anything until you say which issues to act on. "Check what's broken" means report, not repair.
+
 ## The `explore` safety model
 
 `snag explore` drives your app with the Playwright CLI while Snag records — and it's safe by
