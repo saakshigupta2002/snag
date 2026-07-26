@@ -108,6 +108,10 @@ export interface Store {
   countLiveVisitors(projectId: string, withinMs: number): Promise<number>;
   getSession(sessionId: string): Promise<Session | undefined>;
   getSessionEvents(sessionId: string): Promise<RawEvent[]>;
+  /** Delete one session and its events/issues. Returns false if it was absent. */
+  deleteSession(sessionId: string): Promise<boolean>;
+  /** Star/unstar a session; favorited sessions survive retention pruning. */
+  setSessionFavorite(sessionId: string, favorite: boolean): Promise<Session | undefined>;
   sealIdleSessions(idleMs: number, now?: number): Promise<number>;
   /** Atomically claim up to `limit` completed sessions (→ 'processing'). */
   takeCompletedSessions(limit: number): Promise<Session[]>;

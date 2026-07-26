@@ -141,7 +141,7 @@ export default async function SessionsPage({
       ) : (
         <>
           {active.length > 0 ? (
-            <SessionsTable sessions={active} basePath={basePath} />
+            <SessionsTable sessions={active} basePath={basePath} owner />
           ) : (
             <div className="empty">
               No sessions with activity in this set — only idle/bounce visits (below).
@@ -161,7 +161,7 @@ export default async function SessionsPage({
                 A visitor opened a page and left without interacting. Kept for completeness; they
                 rarely tell you anything.
               </p>
-              <SessionsTable sessions={lowSignal} basePath={basePath} />
+              <SessionsTable sessions={lowSignal} basePath={basePath} owner />
             </details>
           )}
         </>

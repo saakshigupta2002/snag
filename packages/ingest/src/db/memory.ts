@@ -306,6 +306,7 @@ export class MemoryStore implements Store {
   async pruneSessions(defaultRetentionDays: number, now = Date.now()): Promise<number> {
     let pruned = 0;
     for (const [sid, s] of this.sessions) {
+      if (s.favorite) continue; // starred sessions are kept indefinitely
       const project = this.projects.get(s.projectId);
       const days = project?.settings.retentionDays ?? defaultRetentionDays;
       if (now - Date.parse(s.lastSeenAt) < days * 86_400_000) continue;
@@ -313,13 +314,33 @@ export class MemoryStore implements Store {
       this.chunks = this.chunks.filter((c) => c.sessionId !== sid);
       for (const [id, issue] of this.issues) {
         if (issue.sessionId !== sid) continue;
-        // Confirmed issues outlive their raw session data.
-        if (issue.status === 'confirmed') issue.sessionId = null;
+        // Confirmed and AI-filed issues outlive their raw session data.
+        if (issue.status === 'confirmed' || issue.source === 'agent') issue.sessionId = null;
         else this.issues.delete(id);
       }
       pruned++;
     }
     return pruned;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    if (!this.sessions.has(sessionId)) return false;
+    this.sessions.delete(sessionId);
+    this.chunks = this.chunks.filter((c) => c.sessionId !== sessionId);
+    for (const [id, issue] of this.issues) {
+      if (issue.sessionId !== sessionId) continue;
+      if (issue.status === 'confirmed') issue.sessionId = null;
+      else this.issues.delete(id);
+    }
+    return true;
+  }
+
+  async setSessionFavorite(sessionId: string, favorite: boolean): Promise<Session | undefined> {
+    const s = this.sessions.get(sessionId);
+    if (!s) return undefined;
+    s.favorite = favorite;
+    const { lastSeenAt: _d, clickPoints: _c, paths: _p, ...rest } = s;
+    return rest;
   }
 
   async aiCallsToday(): Promise<number> {

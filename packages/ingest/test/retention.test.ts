@@ -55,6 +55,48 @@ describe('retention pruning', () => {
     expect(remaining[0]!.sessionId).toBeNull(); // survives its raw session data
   });
 
+  it('keeps favorited sessions past the retention window, deletes the rest', async () => {
+    const store = new MemoryStore();
+    const project = await store.createProject('P');
+    const mkOld = async (cid: string) => {
+      await store.appendChunk({
+        projectId: project.id,
+        clientSessionId: cid,
+        events: [],
+        seqFrom: 0,
+        seqTo: 0,
+        meta: { ts: Date.now() - 40 * 86_400_000, final: true },
+      });
+      return `${project.id}:${cid}`;
+    };
+    const keep = await mkOld('keep');
+    const drop = await mkOld('drop');
+    await store.setSessionFavorite(keep, true);
+
+    const pruned = await store.pruneSessions(30);
+    expect(pruned).toBe(1); // only the non-favorite one
+    const kept = await store.getSession(keep);
+    expect(kept?.favorite).toBe(true);
+    expect(await store.getSession(drop)).toBeUndefined();
+  });
+
+  it('deleteSession removes a session and reports absence', async () => {
+    const store = new MemoryStore();
+    const project = await store.createProject('P');
+    await store.appendChunk({
+      projectId: project.id,
+      clientSessionId: 's',
+      events: roughSessionEvents(),
+      seqFrom: 0,
+      seqTo: 4,
+      meta: { ts: Date.now(), final: true },
+    });
+    const sid = `${project.id}:s`;
+    expect(await store.deleteSession(sid)).toBe(true);
+    expect(await store.getSession(sid)).toBeUndefined();
+    expect(await store.deleteSession(sid)).toBe(false); // already gone
+  });
+
   it('keeps sessions inside the window', async () => {
     const store = new MemoryStore();
     const project = await store.createProject('P');

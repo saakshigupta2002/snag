@@ -91,4 +91,6 @@ export interface Session {
   clickPoints?: { page: string; x: number; y: number }[] | null;
   paths?: string[] | null;
   customEvents?: { name: string; count: number }[] | null;
+  /** Starred by the owner. Favorited sessions are kept past the retention window. */
+  favorite?: boolean;
 }

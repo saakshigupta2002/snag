@@ -263,6 +263,23 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     return { session, events };
   });
 
+  // Delete one recording the owner does not want to keep.
+  app.delete('/api/sessions/:sid', async (req, reply) => {
+    const { sid } = req.params as { sid: string };
+    const ok = await store.deleteSession(sid);
+    if (!ok) return reply.code(404).send({ error: 'not found' });
+    return { ok: true };
+  });
+
+  // Star/unstar a recording. Favorited sessions are kept past the retention window.
+  app.post('/api/sessions/:sid/favorite', async (req, reply) => {
+    const { sid } = req.params as { sid: string };
+    const body = (req.body ?? {}) as { favorite?: boolean };
+    const session = await store.setSessionFavorite(sid, body.favorite !== false);
+    if (!session) return reply.code(404).send({ error: 'not found' });
+    return { ok: true, favorite: session.favorite === true };
+  });
+
   // ── Overview / analytics ──────────────────────────────────────────────────
   app.get('/api/projects/:id/overview', async (req) => {
     const { id } = req.params as { id: string };

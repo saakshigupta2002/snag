@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Session } from '@snag/shared';
 import { duration, pathOfUrl, timeAgo } from '@/lib/format';
+import { SessionActions } from './SessionActions';
 
 function fmtMs(ms: number | null | undefined): string {
   if (ms == null || ms <= 0) return '—';
@@ -27,7 +28,15 @@ export function byActivity(a: Session, b: Session): number {
  * wall-clock total on hover, so an idle-inflated recording reads honestly. The
  * activity count is what ranks and segments the list.
  */
-export function SessionsTable({ sessions, basePath }: { sessions: Session[]; basePath: string }) {
+export function SessionsTable({
+  sessions,
+  basePath,
+  owner = false,
+}: {
+  sessions: Session[];
+  basePath: string;
+  owner?: boolean;
+}) {
   return (
     <div className="table-wrap">
       <table className="sessions-table">
@@ -41,6 +50,7 @@ export function SessionsTable({ sessions, basePath }: { sessions: Session[]; bas
             <th style={{ width: 110 }}>Browser</th>
             <th style={{ width: 96 }}>Status</th>
             <th style={{ width: 72 }}></th>
+            {owner && <th style={{ width: 64 }}></th>}
           </tr>
         </thead>
         <tbody>
@@ -77,6 +87,11 @@ export function SessionsTable({ sessions, basePath }: { sessions: Session[]; bas
                     ▶ Watch
                   </Link>
                 </td>
+                {owner && (
+                  <td>
+                    <SessionActions sessionId={s.id} favorite={s.favorite} />
+                  </td>
+                )}
               </tr>
             );
           })}

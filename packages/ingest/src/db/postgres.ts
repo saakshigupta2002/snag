@@ -57,7 +57,7 @@ const SESSION_COLS =
   'id, project_id, started_at, ended_at, last_seen_at, user_agent, url_first, device, status, ' +
   'event_count, referrer, pageviews, entry_page, exit_page, js_errors, max_scroll_pct, ' +
   'duration_ms, browser, os, is_bot, lcp_ms, inp_ms, cls, visitor_id, country, custom_events, ' +
-  'interactions, active_ms';
+  'interactions, active_ms, favorite';
 
 function sessionFromRow(r: Row): Session {
   const numOrNull = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
@@ -78,6 +78,7 @@ function sessionFromRow(r: Row): Session {
     jsErrors: numOrNull(r.js_errors),
     interactions: numOrNull(r.interactions),
     activeMs: numOrNull(r.active_ms),
+    favorite: r.favorite === true,
     maxScrollPct: numOrNull(r.max_scroll_pct),
     durationMs: numOrNull(r.duration_ms),
     browser: (r.browser as string | null) ?? null,
@@ -493,6 +494,7 @@ export class PostgresStore implements Store {
     const res = await this.pool.query(
       `DELETE FROM sessions s USING projects p
        WHERE s.project_id = p.id
+         AND s.favorite IS NOT TRUE
          AND s.last_seen_at < to_timestamp($2::bigint / 1000.0)
              - make_interval(days => COALESCE((p.settings->>'retentionDays')::int, $1))`,
       [defaultRetentionDays, now],
@@ -500,9 +502,28 @@ export class PostgresStore implements Store {
     // Issues from pruned sessions: confirmed rows survive (FK set them NULL at
     // insert of the delete); everything else that lost its session goes too.
     await this.pool.query(
-      `DELETE FROM issues WHERE session_id IS NULL AND status <> 'confirmed'`,
+      `DELETE FROM issues WHERE session_id IS NULL AND status <> 'confirmed' AND source <> 'agent'`,
     );
     return res.rowCount ?? 0;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    // Drop this session's own non-confirmed issues; keep confirmed ones (detach).
+    await this.pool.query(
+      `DELETE FROM issues WHERE session_id = $1 AND status <> 'confirmed'`,
+      [sessionId],
+    );
+    await this.pool.query(`UPDATE issues SET session_id = NULL WHERE session_id = $1`, [sessionId]);
+    const res = await this.pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
+    return (res.rowCount ?? 0) > 0; // event_chunks cascade on the session delete
+  }
+
+  async setSessionFavorite(sessionId: string, favorite: boolean): Promise<Session | undefined> {
+    const res = await this.pool.query(
+      `UPDATE sessions SET favorite = $2 WHERE id = $1 RETURNING ${SESSION_COLS}`,
+      [sessionId, favorite],
+    );
+    return res.rows[0] ? sessionFromRow(res.rows[0] as Row) : undefined;
   }
 
   async aiCallsToday(): Promise<number> {

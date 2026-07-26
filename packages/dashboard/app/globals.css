@@ -2934,3 +2934,47 @@ tbody tr {
   background: color-mix(in srgb, #a78bfa 14%, transparent);
   color: #c4b5fd;
 }
+
+/* Per-session owner actions: favorite (star) + delete */
+.session-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sa-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-faint);
+  border-radius: var(--radius-xs);
+  transition:
+    color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.sa-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  transform: none;
+}
+.sa-btn:active {
+  transform: scale(0.9);
+}
+.sa-star:hover {
+  color: var(--medium);
+}
+.sa-star.on {
+  color: var(--medium);
+}
+.sa-del:hover {
+  color: var(--high);
+  border-color: color-mix(in srgb, var(--high) 45%, transparent);
+}
