@@ -2,6 +2,13 @@ export type Severity = 'low' | 'medium' | 'high';
 
 export type IssueStatus = 'open' | 'confirmed' | 'dismissed';
 
+/**
+ * Who found this issue. `detector` is the built-in rule-based engine (the
+ * default, zero-cost path); `agent` is a Claude Code agent that judged it a real
+ * bug (e.g. during an explore sweep) and filed it via the CLI.
+ */
+export type IssueSource = 'detector' | 'agent';
+
 /** What a detector emits: zero or more candidates per session. */
 export interface IssueCandidate {
   detector: string;
@@ -25,6 +32,8 @@ export interface Issue extends IssueCandidate {
   sessionId: string | null;
   projectId: string;
   status: IssueStatus;
+  /** Provenance. Absent on older rows, treat as 'detector'. */
+  source?: IssueSource;
   note?: string;
   createdAt: string;
 }
@@ -36,6 +45,8 @@ export interface IssueGroup {
   severity: Severity;
   title: string;
   status: IssueStatus;
+  /** Where the group came from: the rule engine or an AI agent. */
+  source: IssueSource;
   occurrences: number;
   sessionCount: number;
   firstSeen: string;

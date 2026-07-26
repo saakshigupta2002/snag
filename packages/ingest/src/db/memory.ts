@@ -237,7 +237,12 @@ export class MemoryStore implements Store {
 
   async insertIssues(newIssues: NewIssue[]): Promise<void> {
     for (const n of newIssues) {
-      const issue: Issue = { ...n, id: randomUUID(), createdAt: new Date().toISOString() };
+      const issue: Issue = {
+        ...n,
+        source: n.source ?? 'detector',
+        id: randomUUID(),
+        createdAt: new Date().toISOString(),
+      };
       this.issues.set(issue.id, issue);
     }
   }

@@ -2918,3 +2918,19 @@ tbody tr {
     transform: none;
   }
 }
+
+/* AI-flagged issue tag: distinguishes agent-found issues from auto-detected. */
+.src-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  padding: 1px 5px;
+  font-family: var(--data);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-xs);
+  border: 1px solid color-mix(in srgb, #a78bfa 45%, transparent);
+  background: color-mix(in srgb, #a78bfa 14%, transparent);
+  color: #c4b5fd;
+}

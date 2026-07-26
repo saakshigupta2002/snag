@@ -27,6 +27,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
   const [status, setStatus] = useState<IssueStatus | 'all'>('open');
   const [severity, setSeverity] = useState<Severity | 'all'>('all');
   const [detector, setDetector] = useState('all');
+  const [source, setSource] = useState<'all' | 'detector' | 'agent'>('all');
   const [q, setQ] = useState('');
   const [cursor, setCursor] = useState(0);
   const [leaving, setLeaving] = useState<Set<string>>(new Set());
@@ -45,6 +46,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
       .filter((g) => (status === 'all' ? true : g.status === status))
       .filter((g) => (severity === 'all' ? true : g.severity === severity))
       .filter((g) => (detector === 'all' ? true : g.detector === detector))
+      .filter((g) => (source === 'all' ? true : (g.source ?? 'detector') === source))
       .filter((g) =>
         !query
           ? true
@@ -56,7 +58,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
         const s = SEV_RANK[b.severity] - SEV_RANK[a.severity];
         return s !== 0 ? s : a.lastSeen < b.lastSeen ? 1 : -1;
       });
-  }, [groups, status, severity, detector, q, overrides]);
+  }, [groups, status, severity, detector, source, q, overrides]);
 
   useEffect(() => {
     if (cursor >= rows.length) setCursor(Math.max(0, rows.length - 1));
@@ -173,6 +175,16 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
             </option>
           ))}
         </select>
+        <select
+          value={source}
+          onChange={(e) => setSource(e.target.value as 'all' | 'detector' | 'agent')}
+          className="mono"
+          aria-label="Source"
+        >
+          <option value="all">any source</option>
+          <option value="detector">auto-detected</option>
+          <option value="agent">AI-flagged</option>
+        </select>
       </div>
 
       <div className="filters">
@@ -227,7 +239,10 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
                     <span className={`sev ${g.severity}`}>{g.severity}</span>
                   </td>
                   <td>
-                    <span className="cell-title">{g.title}</span>
+                    <span className="cell-title">
+                      {g.source === 'agent' && <span className="src-badge" title="Flagged by an AI agent">AI</span>}
+                      {g.title}
+                    </span>
                     {g.aiSummary && <div className="cell-sub">{g.aiSummary}</div>}
                   </td>
                   <td>

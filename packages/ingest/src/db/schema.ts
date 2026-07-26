@@ -95,11 +95,13 @@ CREATE TABLE IF NOT EXISTS issues (
   title TEXT NOT NULL,
   meta JSONB NOT NULL DEFAULT '{}',
   occurrences INTEGER NOT NULL DEFAULT 1,
+  source TEXT NOT NULL DEFAULT 'detector',
   note TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS issues_project_group_idx ON issues (project_id, group_key);
 CREATE INDEX IF NOT EXISTS issues_project_status_idx ON issues (project_id, status, created_at DESC);
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'detector';
 
 CREATE TABLE IF NOT EXISTS flag_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

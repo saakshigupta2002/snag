@@ -332,7 +332,7 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   // ── Issues ────────────────────────────────────────────────────────────────
   app.get('/api/projects/:id/issues', async (req) => {
     const { id } = req.params as { id: string };
-    const q = req.query as { status?: string; severity?: string; detector?: string };
+    const q = req.query as { status?: string; severity?: string; detector?: string; source?: string };
     const [issues, summaries] = await Promise.all([
       store.listIssues(id),
       store.getAiSummaries(id),
@@ -341,7 +341,60 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     if (q.status) groups = groups.filter((g) => g.status === (q.status as IssueStatus));
     if (q.severity) groups = groups.filter((g) => g.severity === (q.severity as Severity));
     if (q.detector) groups = groups.filter((g) => g.detector === q.detector);
+    if (q.source) groups = groups.filter((g) => g.source === q.source);
     return groups;
+  });
+
+  // File an issue found by an agent (e.g. Claude via the CLI during an explore
+  // sweep). Token-gated like the rest of /api. It records a finding; it never
+  // fixes anything. Links to a recorded session so the clip shows in the replay.
+  app.post('/api/projects/:id/issues', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const b = (req.body ?? {}) as {
+      title?: string;
+      severity?: Severity;
+      sessionId?: string;
+      detector?: string;
+      groupKey?: string;
+      tsStart?: number;
+      tsEnd?: number;
+      note?: string;
+      meta?: Record<string, unknown>;
+    };
+    if (!b.title || !['low', 'medium', 'high'].includes(b.severity as string)) {
+      return reply.code(400).send({ error: 'title and a valid severity are required' });
+    }
+    const project = await store.getProject(id);
+    if (!project) return reply.code(404).send({ error: 'unknown project' });
+    // Anchor the clip: if a session is given but no timestamp, open at its start.
+    let tsStart = b.tsStart ?? 0;
+    let tsEnd = b.tsEnd ?? tsStart;
+    if (b.sessionId && b.tsStart == null) {
+      const session = await store.getSession(b.sessionId);
+      if (session) {
+        tsStart = Date.parse(session.startedAt) || 0;
+        tsEnd = tsStart;
+      }
+    }
+    const detector = b.detector || 'agent';
+    const groupKey = b.groupKey || `agent|${slugify(b.title)}`;
+    await store.insertIssues([
+      {
+        sessionId: b.sessionId ?? null,
+        projectId: id,
+        detector,
+        severity: b.severity as Severity,
+        tsStart,
+        tsEnd,
+        status: 'open',
+        groupKey,
+        title: b.title,
+        meta: { ...(b.meta ?? {}), reasoning: b.note },
+        occurrences: 1,
+        source: 'agent',
+      },
+    ]);
+    return reply.code(201).send({ ok: true, groupKey, source: 'agent' });
   });
 
   app.get('/api/projects/:id/issues/:groupKey', async (req, reply) => {

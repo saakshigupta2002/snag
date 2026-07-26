@@ -14,6 +14,7 @@ import type {
   Issue,
   IssueGroup,
   IssueNote,
+  IssueSource,
   IssueStatus,
   Overview,
   Project,
@@ -36,6 +37,8 @@ export interface NewIssue {
   title: string;
   meta: Record<string, unknown>;
   occurrences: number;
+  /** Defaults to 'detector'; set 'agent' for AI-filed issues. */
+  source?: IssueSource;
 }
 
 export interface ChunkAppend {
@@ -683,6 +686,7 @@ export function groupIssues(issues: Issue[], aiSummaries: Record<string, string>
       severity,
       title: sample.title,
       status,
+      source: rows.some((r) => r.source === 'agent') ? 'agent' : 'detector',
       occurrences: rows.reduce((n, r) => n + (r.occurrences || 1), 0),
       sessionCount: new Set(rows.map((r) => r.sessionId).filter(Boolean)).size,
       firstSeen: rows[0]!.createdAt,

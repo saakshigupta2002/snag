@@ -108,6 +108,7 @@ function issueFromRow(r: Row): Issue {
     title: String(r.title),
     meta: (r.meta ?? {}) as Record<string, unknown>,
     occurrences: Number(r.occurrences ?? 1),
+    source: ((r.source as string | null) ?? 'detector') as Issue['source'],
     note: (r.note as string | undefined) ?? undefined,
     createdAt: new Date(r.created_at as string | Date).toISOString(),
   };
@@ -407,8 +408,8 @@ export class PostgresStore implements Store {
   async insertIssues(newIssues: NewIssue[]): Promise<void> {
     for (const n of newIssues) {
       await this.pool.query(
-        `INSERT INTO issues (session_id, project_id, detector, severity, ts_start, ts_end, status, group_key, title, meta, occurrences)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        `INSERT INTO issues (session_id, project_id, detector, severity, ts_start, ts_end, status, group_key, title, meta, occurrences, source)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           n.sessionId,
           n.projectId,
@@ -421,6 +422,7 @@ export class PostgresStore implements Store {
           n.title,
           JSON.stringify(n.meta),
           n.occurrences,
+          n.source ?? 'detector',
         ],
       );
     }
