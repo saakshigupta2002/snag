@@ -1,6 +1,6 @@
 """MCP server (stdio) exposing Snag's read primitives to any MCP client.
 
-Speaks JSON-RPC 2.0 over newline-delimited stdio — no third-party dependency.
+Speaks JSON-RPC 2.0 over newline-delimited stdio: no third-party dependency.
 Agents that prefer MCP over shelling out get the same data the CLI reads:
 issues, sessions, the evidence transcript, analytics and status.
 
@@ -136,7 +136,7 @@ def serve() -> int:
         except ValueError:
             continue
         result = _handle(msg)
-        if "id" not in msg:  # a notification — never reply
+        if "id" not in msg:  # a notification: never reply
             continue
         response: Dict[str, Any] = {"jsonrpc": "2.0", "id": msg["id"]}
         if result is None:

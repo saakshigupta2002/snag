@@ -1,0 +1,50 @@
+{
+  "title": "snag · real run on the bundled demo shop, sped up",
+  "label": "Animated terminal: snag issue list shows real flagged issues worst first, including POST /api/orders failed (500). snag session evidence then turns a recording into a timestamped transcript where a click on Place order is followed by POST /api/orders returning 500.",
+  "cols": 112,
+  "rows": 21,
+  "fontSize": 13,
+  "holdMs": 6000,
+  "steps": [
+    {
+      "cmd": "snag issue list",
+      "cps": 30
+    },
+    {
+      "out": [
+        "[dim]severity  detector          count  status     issue[/]",
+        "[r]high[/]      console_error     5      open       Uncaught exception: Uncaught TypeError: discount.apply is no",
+        "[r]high[/]      network_failure   14     confirmed  POST /api/orders failed (500)",
+        "[y]medium[/]    rage_click        6      open       Rage click on “Checkout now”",
+        "[dim]low[/]       form_abandonment  4      open       Form abandoned: form#signup-form",
+        "[dim]low[/]       dead_click        4      open       Dead click on “Add to cart”"
+      ],
+      "gapMs": 90
+    },
+    {
+      "pauseMs": 1100
+    },
+    {
+      "cmd": "snag session evidence $SESSION",
+      "cps": 30
+    },
+    {
+      "out": [
+        "[b]session[/] 0a41c556…  Chrome · 11 interactions · 2 problem(s)",
+        "",
+        "   0.8s  click Add to cart",
+        "   2.1s  click Add to cart",
+        "   3.0s  click Place order",
+        "   3.1s  [r]POST /api/orders -> 500 (65ms)[/]",
+        "   4.5s  click Place order",
+        "   4.5s  [r]POST /api/orders -> 500 (12ms)[/]",
+        "   5.5s  click Checkout now",
+        "   8.2s  left the page"
+      ],
+      "gapMs": 110
+    },
+    {
+      "pauseMs": 900
+    }
+  ]
+}

@@ -20,7 +20,7 @@ _CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
 def scrub(s: str) -> str:
     return _CTRL.sub("", s)
 
-# Exit codes — scripts and agents branch on these.
+# Exit codes: scripts and agents branch on these.
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_USAGE = 2

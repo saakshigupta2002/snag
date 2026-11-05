@@ -1,6 +1,6 @@
-"""`snag auth login` / `snag auth status` — connect the CLI to your Snag.
+"""`snag auth login` / `snag auth status`: connect the CLI to your Snag.
 
-Login is interactive (never take a token as a flag — it would leak into shell
+Login is interactive (never take a token as a flag: it would leak into shell
 history and the process list). It stores the endpoint + management token in the
 XDG config, 0600. In a non-interactive context it points you at the env vars.
 """
@@ -63,7 +63,7 @@ def login(no_input: bool) -> int:
 def status() -> int:
     cfg = resolve()
     if not cfg.endpoint:
-        out.error("not configured — run `snag auth login`.")
+        out.error("not configured: run `snag auth login`.")
         return out.EXIT_USAGE
     try:
         Client(cfg).health()

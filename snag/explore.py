@@ -1,13 +1,13 @@
-"""`snag explore` — actively hunt for bugs, safely.
+"""`snag explore`: actively hunt for bugs, safely.
 
-The engine drives your app with the **Playwright CLI** (not a library binding —
+The engine drives your app with the **Playwright CLI** (not a library binding:
 we shell out to `npx playwright test`), so goal-directed "missions" click around
 the app while the Snag SDK records everything. Two safety layers are on by
 default so nothing real can happen:
 
   1. Risky calls (payments / email / SMS) are intercepted and answered with a
-     fake success — so nothing fires *and* Snag sees no false errors.
-  2. A non-production guard refuses a prod-looking URL unless you pass --force,
+     fake success: so nothing fires *and* Snag sees no false errors.
+  2. A non-production guard refuses a prod-looking URL unless you pass --force
      and missions skip anything that looks destructive (delete / pay / send).
 
 `scaffold` writes those Playwright helpers into your project so you can inspect
@@ -60,7 +60,7 @@ async function installSafetyNet(page) {
 module.exports = { installSafetyNet, RISKY_HOSTS };
 """
 
-SPEC_JS = """// Generated mission — do not edit by hand; `snag explore run` regenerates it.
+SPEC_JS = """// Generated mission: do not edit by hand; `snag explore run` regenerates it.
 const { test } = require('@playwright/test');
 const { installSafetyNet } = require('./safety-net.js');
 
@@ -122,7 +122,7 @@ def scaffold(dest_dir: str) -> int:
     print(f"{out.green('OK')} wrote Playwright safety config to {dest}/")
     out.kv([("safety-net.js", "fakes payments/email/SMS with a 200"),
             ("playwright.config.js", "headless, parallel"),
-            ("missions.json", "edit or let the pp-snag-explore skill fill it")])
+            ("missions.json", "edit or let the snag-explore skill fill it")])
     return out.EXIT_OK
 
 
@@ -135,7 +135,7 @@ def _load_missions(path: str) -> List[Dict[str, Any]]:
 
 def run(url: str, missions_path: str, workers: int, force: bool, dry: bool) -> int:
     if not url:
-        out.error("no URL — pass --url or set your app URL with `snag auth login`.")
+        out.error("no URL: pass --url or set your app URL with `snag auth login`.")
         return out.EXIT_USAGE
     if _looks_prod(url) and not force:
         out.error(f"{url} looks like production.")
@@ -148,7 +148,7 @@ def run(url: str, missions_path: str, workers: int, force: bool, dry: bool) -> i
     if dry:
         for m in missions:
             print(f"  - {m.get('name')}" + (f": {m['goal']}" if m.get("goal") else ""))
-        print(out.dim("(dry run — nothing executed)"))
+        print(out.dim("(dry run: nothing executed)"))
         return out.EXIT_OK
 
     if not shutil.which("npx"):

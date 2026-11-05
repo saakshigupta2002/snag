@@ -1,6 +1,6 @@
 ---
-name: pp-snag-explore
-description: "Actively hunt for bugs before real users hit them: drive the app with goal-directed Playwright missions while Snag records, then triage what breaks. Use when the user wants to test their app, find bugs proactively, do a pre-ship QA sweep or has no real traffic yet (cold start). Writes safe, goal-directed missions and runs them via `snag explore`, with payments/email auto-mocked and a non-production guard. Reports what it finds and hands off to pp-snag; it does not fix on its own. Runs in Claude Code, no per-API cost."
+name: snag-explore
+description: "Actively hunt for bugs before real users hit them: drive the app with goal-directed Playwright missions while Snag records, then triage what breaks. Use when the user wants to test their app, find bugs proactively, do a pre-ship QA sweep or has no real traffic yet (cold start). Writes safe, goal-directed missions and runs them via `snag explore`, with payments/email auto-mocked and a non-production guard. Reports what it finds and hands off to snag; it does not fix on its own. Runs in Claude Code, no per-API cost."
 author: "saakshigupta2002"
 license: "MIT"
 argument-hint: "run [--url <dev-url>] | scaffold"
@@ -19,15 +19,15 @@ metadata:
         module: github.com/saakshigupta2002/snag-cli/cmd/snag
 ---
 
-# pp-snag-explore
+# snag-explore
 
 Find bugs proactively, even with zero real users, then report them so the user decides what to fix.
 
 ## Explore, then report. Do not fix on your own.
 
 `explore` only tests. It never changes code. When the sweep finishes, **present the findings and
-stop.** Fixing is a separate, opt-in step handled by `pp-snag`, and only after the user says which
-issues to act on. See pp-snag's "Ask before you change anything" rule. Finding a bug is not
+stop.** Fixing is a separate, opt-in step handled by `snag` and only after the user says which
+issues to act on. See snag's "Ask before you change anything" rule. Finding a bug is not
 permission to fix it.
 
 ## Prerequisites
@@ -57,7 +57,7 @@ can watch start to finish. `snag explore run` already does this (one mission equ
 run equals one session), so **prefer it over hand-rolling scripts.** If you must drive a browser
 yourself, do NOT open and close a fresh page per click; that shatters one flow into many
 five-second clips that are noise in the dashboard. Give each mission a clear name so its session is
-easy to find, and keep missions few and purposeful rather than many and tiny.
+easy to find and keep missions few and purposeful rather than many and tiny.
 
 ## How to run a sweep
 
@@ -78,7 +78,7 @@ easy to find, and keep missions few and purposeful rather than many and tiny.
    snag explore run --url http://localhost:3000 --dry-run       # preview the plan first
    ```
 
-3. **Triage what it caught, then report.** Hand off to `pp-snag`:
+3. **Triage what it caught, then report.** Hand off to `snag`:
    ```bash
    snag --json issue list
    ```

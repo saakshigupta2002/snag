@@ -93,7 +93,7 @@ type Client struct{ cfg Config }
 
 func newClient(cfg Config) (*Client, error) {
 	if cfg.Endpoint == "" {
-		return nil, &apiError{msg: "no Snag endpoint configured — run `snag auth login`"}
+		return nil, &apiError{msg: "no Snag endpoint configured: run `snag auth login`"}
 	}
 	return &Client{cfg: cfg}, nil
 }
@@ -193,8 +193,8 @@ func (cl *Client) project() (string, error) {
 			}
 		}
 		if len(list) > 1 {
-			return "", &apiError{msg: "multiple projects — pass --project <id> or set a default with `snag auth login`", status: 2}
+			return "", &apiError{msg: "multiple projects: pass --project <id> or set a default with `snag auth login`", status: 2}
 		}
 	}
-	return "", &apiError{msg: "no project configured — run `snag auth login` or pass --project <id>", status: 2}
+	return "", &apiError{msg: "no project configured: run `snag auth login` or pass --project <id>", status: 2}
 }

@@ -1,7 +1,7 @@
 // A "mission" = a Playwright test that uses your app the way a user would, while
 // the Snag SDK records it. `snag explore run` fills the placeholders and runs
 // one of these per mission (in parallel). This template is the heuristic
-// "walk the app safely" mission; the pp-snag-explore skill can write smarter,
+// "walk the app safely" mission; the snag-explore skill can write smarter,
 // goal-directed ones (e.g. "complete signup", "try to break checkout").
 //
 // Placeholders replaced by the engine: __START__, __NAME__, __SAFE_MODE__.
@@ -15,7 +15,7 @@ const DESTRUCTIVE = ['delete', 'remove', 'pay', 'purchase', 'buy', 'charge',
   'subscribe', 'cancel', 'deactivate', 'close account', 'send'];
 
 test('__NAME__', async ({ page }) => {
-  await installSafetyNet(page);              // payments/email are faked — safe
+  await installSafetyNet(page);              // payments/email are faked: safe
   await page.goto(START, { waitUntil: 'domcontentloaded' });
 
   for (let step = 0; step < 8; step++) {

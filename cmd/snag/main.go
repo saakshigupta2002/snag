@@ -1,4 +1,4 @@
-// Command snag is an agent-native CLI for Snag — a mirror of the Python
+// Command snag is an agent-native CLI for Snag: a mirror of the Python
 // implementation with identical commands and JSON output. Standard library only.
 package main
 
@@ -155,7 +155,27 @@ func run(argv []string) int {
 	return code
 }
 
+// verbs lists what each resource accepts, so a typo fails instead of running a default.
+var verbs = map[string][]string{
+	"auth":      {"login", "status"},
+	"project":   {"list", "view"},
+	"issue":     {"list", "view", "resolve", "create"},
+	"session":   {"list", "view", "evidence"},
+	"analytics": {"show", "funnels", "report"},
+	"explore":   {"run", "scaffold"},
+}
+
 func dispatch(resource, verb string, p parsed) (int, error) {
+	if known, ok := verbs[resource]; ok {
+		if verb == "" {
+			usage()
+			return exitUsage, nil
+		}
+		if !contains(known, verb) {
+			errorln(fmt.Sprintf("unknown command %q for %q", verb, resource))
+			return exitUsage, nil
+		}
+	}
 	switch resource {
 	case "auth":
 		if verb == "login" {
@@ -598,7 +618,7 @@ func analyticsReport(p parsed) (int, error) {
 	k := asMap(a["kpis"])
 	u := asMap(a["users"])
 	je := asMap(a["jsErrors"])
-	fmt.Printf("# Snag report — last %s days\n\n", days)
+	fmt.Printf("# Snag report: last %s days\n\n", days)
 	fmt.Printf("- **%s** sessions, **%s** unique users\n", str(k["sessions"]), str(u["unique"]))
 	fmt.Printf("- **%d** open issues (**%d** high severity)\n", len(groups), high)
 	fmt.Printf("- **%s%%** of sessions hit a JS error\n", str(je["pct"]))
@@ -694,8 +714,17 @@ func strDefault(s, def string) string {
 	return s
 }
 
+func contains(list []string, item string) bool {
+	for _, v := range list {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
 func usage() {
-	fmt.Println(`snag — agent-native CLI for Snag
+	fmt.Println(`snag: agent-native CLI for Snag
 
 Usage: snag <resource> <verb> [args] [flags]
 

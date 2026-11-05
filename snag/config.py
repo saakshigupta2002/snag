@@ -67,7 +67,7 @@ class Config:
             json.dump(payload, fh, indent=2, sort_keys=True)
             fh.write("\n")
         try:
-            os.chmod(path, 0o600)  # token lives here — keep it private
+            os.chmod(path, 0o600)  # token lives here: keep it private
         except OSError:
             pass
         return path

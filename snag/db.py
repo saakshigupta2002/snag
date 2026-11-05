@@ -1,4 +1,4 @@
-"""A local SQLite mirror of what the CLI has seen — the durable "bug ledger".
+"""A local SQLite mirror of what the CLI has seen: the durable "bug ledger".
 
 Snag prunes sessions on a retention window; this keeps a local copy of the
 issues and session summaries you've pulled, so history survives and repeat
@@ -68,7 +68,7 @@ def save_sessions(conn: sqlite3.Connection, project: str, sessions: List[Dict[st
 
 
 def ledger(conn: sqlite3.Connection, project: str, limit: int = 200) -> List[Dict[str, Any]]:
-    """Every issue ever recorded locally for a project — newest first."""
+    """Every issue ever recorded locally for a project: newest first."""
     cur = conn.execute(
         "SELECT data FROM issues WHERE project = ? ORDER BY last_seen DESC LIMIT ?",
         (project, limit),

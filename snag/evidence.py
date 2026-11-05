@@ -1,8 +1,8 @@
 """Turn a recorded session into an agent-readable transcript.
 
 Claude can't watch a video, but it can read a transcript. Snag records each
-session as structured events; this collapses the meaningful ones — navigations,
-clicks, console/uncaught errors, network calls, form actions — into a compact,
+session as structured events; this collapses the meaningful ones: navigations,
+clicks, console/uncaught errors, network calls, form actions: into a compact,
 timestamped log an agent (or a human) can reason about.
 
 The event shapes mirror ``packages/shared/src/events.ts`` in the snag repo:

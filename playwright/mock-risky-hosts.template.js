@@ -1,7 +1,7 @@
 // Playwright safety net for `snag explore`.
 //
 // Intercepts calls to known payment / email / SMS providers and answers them
-// with a fake success (HTTP 200). Nothing real fires, and because the request
+// with a fake success (HTTP 200). Nothing real fires and because the request
 // "succeeds", Snag records no false network error for it.
 //
 // `snag explore run` writes an active copy of this next to the generated specs;

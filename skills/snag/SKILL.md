@@ -1,6 +1,6 @@
 ---
-name: pp-snag
-description: "Triage, judge, fix and verify the bugs your users actually hit, using Snag session recordings, from inside the repo. Use when the user asks what's broken, wants to review flagged issues, understand a session recording, find the code behind a bug, fix a bug Snag caught or confirm a fix stopped the bug. Reads issues, sessions and an agent-readable evidence transcript via the `snag` CLI, judges real bugs vs expected behavior, and only fixes with the user's go-ahead. No per-API cost: the reasoning runs in Claude Code."
+name: snag
+description: "Triage, judge, fix and verify the bugs your users actually hit, using Snag session recordings, from inside the repo. Use when the user asks what's broken, wants to review flagged issues, understand a session recording, find the code behind a bug, fix a bug Snag caught or confirm a fix stopped the bug. Reads issues, sessions and an agent-readable evidence transcript via the `snag` CLI, judges real bugs vs expected behavior and only fixes with the user's go-ahead. No per-API cost: the reasoning runs in Claude Code."
 author: "saakshigupta2002"
 license: "MIT"
 argument-hint: "<triage|judge|session <id>|fix <groupKey>|verify <groupKey>>"
@@ -19,7 +19,7 @@ metadata:
         module: github.com/saakshigupta2002/snag-cli/cmd/snag
 ---
 
-# pp-snag
+# snag
 
 Close Snag's loop: it finds and evidences the bug, you (Claude, in the repo) fix it.
 
@@ -75,7 +75,7 @@ Classify each as:
 
 `snag session evidence <id>` prints a timestamped transcript (clicks, navigations,
 console/uncaught errors, network calls, form actions). Read it like a story: what did the user
-do, and where did it go wrong?
+do and where did it go wrong?
 
 ### Report and wait
 
@@ -87,7 +87,7 @@ suggested fix. Then **stop and ask the user which ones to fix.** Do not continue
 So a finding does not vanish when the chat ends, you can file each judged bug back into Snag as an
 **AI-flagged issue**, linked to the session's clip. It lands in the Issues list next to the
 auto-detected ones, tagged "AI", as a normal open issue the user triages (confirm or dismiss). This
-records a finding; it never fixes code. Only file bugs that passed the judge gate, and tell the
+records a finding; it never fixes code. Only file bugs that passed the judge gate and tell the
 user you are doing it.
 
 ```bash
@@ -112,7 +112,7 @@ Prefer an **active** check for UI or deterministic bugs; fall back to **passive*
 timing bugs.
 
 - **Active (Playwright CLI):** turn the session's steps into a *semantic* Playwright test (use
-  `getByRole`/`getByText`, not brittle rrweb selectors), run it against the app with the fix, and
+  `getByRole`/`getByText`, not brittle rrweb selectors), run it against the app with the fix and
   assert the bad thing (console error / 5xx / dead click) no longer happens. Keep the test; it is
   a regression test grown from a real session.
   ```bash

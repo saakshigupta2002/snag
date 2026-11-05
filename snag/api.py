@@ -1,6 +1,6 @@
 """Thin client for the Snag ingest management API.
 
-Every read the dashboard can do, the CLI can do — over the same ``/api/*``
+Every read the dashboard can do, the CLI can do: over the same ``/api/*``
 endpoints, authenticated with the management Bearer token. Uses only
 ``urllib`` so there are no dependencies.
 """
@@ -31,7 +31,7 @@ class NotFound(ApiError):
 class Client:
     def __init__(self, cfg: Config):
         if not cfg.endpoint:
-            raise ApiError("no Snag endpoint configured — run `snag auth login`")
+            raise ApiError("no Snag endpoint configured: run `snag auth login`")
         self.cfg = cfg
 
     def request(self, path: str, method: str = "GET",

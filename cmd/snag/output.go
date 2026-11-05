@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Exit codes — identical to the Python CLI.
+// Exit codes: identical to the Python CLI.
 const (
 	exitOK       = 0
 	exitError    = 1

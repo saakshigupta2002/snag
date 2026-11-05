@@ -75,7 +75,7 @@ func authLogin() int {
 func authStatus() (int, error) {
 	cfg := resolveConfig()
 	if cfg.Endpoint == "" {
-		return 0, &apiError{msg: "not configured — run `snag auth login`", status: 2}
+		return 0, &apiError{msg: "not configured: run `snag auth login`", status: 2}
 	}
 	reachable := green("reachable")
 	if cl, _ := newClient(cfg); cl != nil {

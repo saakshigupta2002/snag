@@ -1,4 +1,4 @@
-"""snag — command-line entry point.
+"""snag: command-line entry point.
 
 Grammar (noun-verb, like `gh`):  snag <resource> <verb> [args] [flags]
 Global flags: --json, --select a,b,c, --endpoint, --token, --project, --no-color, -q.
@@ -36,9 +36,9 @@ def _client(args, need_project: bool = True) -> Tuple[Client, Optional[str]]:
         if isinstance(projects, list) and len(projects) == 1:
             pid = projects[0].get("id")
         elif isinstance(projects, list) and len(projects) > 1:
-            raise Usage("multiple projects — pass --project <id> or set a default with `snag auth login`")
+            raise Usage("multiple projects: pass --project <id> or set a default with `snag auth login`")
         else:
-            raise Usage("no project configured — run `snag auth login` or pass --project <id>")
+            raise Usage("no project configured: run `snag auth login` or pass --project <id>")
     return client, pid
 
 
@@ -253,7 +253,7 @@ def cmd_analytics_report(args) -> int:
     a = client.analytics(pid, days=args.days)
     groups = client.issues(pid, status="open") or []
     high = [g for g in groups if g.get("severity") == "high"]
-    lines = [f"# Snag report — last {args.days} days", "",
+    lines = [f"# Snag report: last {args.days} days", "",
              f"- **{a.get('kpis', {}).get('sessions', 0)}** sessions, "
              f"**{a.get('users', {}).get('unique', 0)}** unique users",
              f"- **{len(groups)}** open issues (**{len(high)}** high severity)",
@@ -319,7 +319,7 @@ def cmd_version(args) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="snag",
-        description="Agent-native CLI for Snag — see, judge, fix and verify the bugs your users hit.",
+        description="Agent-native CLI for Snag: see, judge, fix and verify the bugs your users hit.",
         epilog="Examples:\n"
                "  snag auth login\n"
                "  snag issue list --json\n"

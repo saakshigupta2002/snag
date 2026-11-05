@@ -33,7 +33,7 @@ var riskyHosts = []string{
 var destructive = []string{"delete", "remove", "pay", "purchase", "buy", "charge",
 	"subscribe", "cancel", "deactivate", "close account", "send"}
 
-const mockJS = `// Auto-mock risky third parties with a fake success — exploration stays safe.
+const mockJS = `// Auto-mock risky third parties with a fake success: exploration stays safe.
 const RISKY_HOSTS = %s;
 async function installSafetyNet(page) {
   await page.route('**/*', async (route) => {
@@ -120,7 +120,7 @@ func exploreDispatch(verb string, p parsed) (int, error) {
 func exploreRun(p parsed) (int, error) {
 	url := strDefault(p.str["--url"], resolveConfig().AppURL)
 	if url == "" {
-		return 0, &apiError{msg: "no URL — pass --url or set your app URL with `snag auth login`", status: 2}
+		return 0, &apiError{msg: "no URL: pass --url or set your app URL with `snag auth login`", status: 2}
 	}
 	if looksProd(url) && !p.bools["--force"] {
 		errorln(url + " looks like production.")
@@ -139,7 +139,7 @@ func exploreRun(p parsed) (int, error) {
 			}
 			fmt.Println(line)
 		}
-		fmt.Println(dim("(dry run — nothing executed)"))
+		fmt.Println(dim("(dry run: nothing executed)"))
 		return exitOK, nil
 	}
 	if _, err := exec.LookPath("npx"); err != nil {
@@ -168,7 +168,7 @@ func exploreRun(p parsed) (int, error) {
 	cmd := exec.Command("npx", "playwright", "test", fmt.Sprintf("--workers=%d", workers))
 	cmd.Dir = work
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-	_ = cmd.Run() // playwright "failures" here mean bugs found — not a CLI error
+	_ = cmd.Run() // playwright "failures" here mean bugs found: not a CLI error
 	fmt.Println("\n" + green("done") + " explored " + url + ". Now: " + boldc("snag issue list"))
 	return exitOK, nil
 }
