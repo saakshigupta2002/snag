@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 
 const SKIP = new Set(["node_modules", "dist", "build", ".git", ".placebo", "fixtures", "coverage", ".next", "out"]);
-const EXT = new Set([".md", ".mdx", ".ts", ".tsx", ".js", ".mjs", ".py", ".yml", ".yaml", ".html", ".json", ".txt"]);
+const EXT = new Set([".md", ".mdx", ".ts", ".tsx", ".js", ".mjs", ".py", ".css", ".yml", ".yaml", ".html", ".json", ".txt"]);
 const roots = (process.argv.slice(2).length ? process.argv.slice(2) : ["."]).map((p) => resolve(p));
 const files = [];
 const walk = (p) => {

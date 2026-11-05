@@ -1,7 +1,7 @@
 /* ───────────────────────────────────────────────────────────────────────────
-   Snag — mono console
+   Snag: mono console
    True near-black with a faint grid, a clean grotesque for headings, monospace
-   for labels / the wordmark. Monochrome: white is the one accent — brighter
+   for labels / the wordmark. Monochrome: white is the one accent: brighter
    than the soft-white body text, so interactive elements read as "the light".
    Functional colour (severity red/amber, up-green) is kept, used sparingly.
    ─────────────────────────────────────────────────────────────────────────── */
@@ -9,7 +9,7 @@
 :root {
   /* Elevation: one deep ink base, then surfaces that genuinely climb toward the
      light. Each raised surface also gets a 1px top highlight (--edge-hi) so it
-     reads as lit from above — depth without drop-shadows. */
+     reads as lit from above: depth without drop-shadows. */
   --bg: #08080a;
   --panel: #141417;
   --panel-2: #1b1b1f;
@@ -44,12 +44,12 @@
   --pill: 999px;
 
   /* Flat, minimal: separation comes from hairline borders and a barely-lifted
-     surface — not shadows or glows. Elevation is reserved for true popovers. */
+     surface: not shadows or glows. Elevation is reserved for true popovers. */
   --surface: rgba(255, 255, 255, 0.035);
   --surface-2: rgba(255, 255, 255, 0.06);
   --shadow-card: none;
   --shadow-pop: 0 16px 40px -20px rgba(0, 0, 0, 0.7);
-  /* Lift for interactive surfaces on hover — a hairline, not a drop-shadow. */
+  /* Lift for interactive surfaces on hover: a hairline, not a drop-shadow. */
   --shadow-hover: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
 
   /* Motion system: one snappy ease + one gentle spring, shared everywhere so
@@ -58,7 +58,7 @@
   --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
   --t-fast: 0.11s;
   --t-med: 0.18s;
-  /* Accent focus ring for keyboard users — visible, on-brand, offset. */
+  /* Accent focus ring for keyboard users: visible, on-brand, offset. */
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255, 255, 255, 0.55);
 
   --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -68,7 +68,7 @@
      reads like an instrument, not a marketing page. */
   --data: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Type scale — deliberate steps, not near-uniform sizing. */
+  /* Type scale: deliberate steps, not near-uniform sizing. */
   --fs-display: 30px;
   --fs-h1: 22px;
   --fs-h2: 14.5px;
@@ -155,7 +155,7 @@ a:hover {
   background: var(--panel);
 }
 
-/* Wordmark: mono, lowercase, with a blinking teal cursor — echoes a prompt. */
+/* Wordmark: mono, lowercase, with a blinking teal cursor: echoes a prompt. */
 .logo {
   display: flex;
   align-items: baseline;
@@ -710,7 +710,7 @@ button:disabled:active,
   transform: none;
   box-shadow: none;
 }
-/* Keyboard focus ring — accessible and on-brand, never shown on mouse click. */
+/* Keyboard focus ring: accessible and on-brand, never shown on mouse click. */
 button:focus-visible,
 .btn:focus-visible,
 a:focus-visible,
@@ -781,7 +781,7 @@ textarea {
     background 0.14s ease,
     box-shadow 0.14s ease;
 }
-/* Kill the native select chrome (macOS spinner + bevel) — flat with a chevron. */
+/* Kill the native select chrome (macOS spinner + bevel): flat with a chevron. */
 select {
   -webkit-appearance: none;
   appearance: none;
@@ -1105,7 +1105,7 @@ a.funnel-drop-link:hover {
 }
 /* Click-anywhere-to-pause overlay (rrweb replay is a viewer, not interactive).
    Center cluster (rewind 10 · play/pause · forward 10) shows on hover, and
-   stays visible whenever paused — YouTube-style. */
+   stays visible whenever paused: YouTube-style. */
 .replay-overlay {
   position: absolute;
   inset: 0;
@@ -1202,7 +1202,7 @@ a.funnel-drop-link:hover {
 .rc-track:hover .rc-handle {
   opacity: 1;
 }
-/* Activity ticks — subtle marks where the user clicked / navigated / typed,
+/* Activity ticks: subtle marks where the user clicked / navigated / typed,
    so the empty (idle) stretches are visually obvious. */
 .rc-activity {
   position: absolute;
@@ -1912,7 +1912,7 @@ kbd {
   }
 }
 
-/* Signature: the "recording" status line — a live rec-pulse + console prompt,
+/* Signature: the "recording" status line: a live rec-pulse + console prompt,
    so the app announces that it is watching in real time. */
 .rec-bar {
   display: inline-flex;
