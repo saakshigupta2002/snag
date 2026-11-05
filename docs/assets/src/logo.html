@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snag logo</title>
+<!-- The dashboard's wordmark. Render with: node scripts/render-assets.mjs -->
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@600&display=swap" rel="stylesheet">
+<style>
+:root { --ink: #18181b; }
+:root[data-theme="dark"] { --ink: #f2f4f7; }
+* { margin: 0; }
+html, body { background: transparent; }
+#logo { display: inline-flex; align-items: flex-end; gap: 7px; padding: 8px 12px; color: var(--ink); font: 600 92px/1 Geist, -apple-system, system-ui, sans-serif; letter-spacing: -0.035em; }
+#logo i { display: block; width: 42px; height: 11px; margin-bottom: 15px; background: var(--ink); border-radius: 2px; }
+</style>
+</head>
+<body><div id="logo">snag<i></i></div></body>
+</html>

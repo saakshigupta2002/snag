@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Snag works</title>
+<!-- Render with: node scripts/render-assets.mjs -->
+<style>
+:root {
+  --panel: #ffffff; --card: #fafaf8; --ink: #18181b; --muted: #5f5f68; --faint: #8b8b94; --line: #e4e2dc;
+  --bad: #c2362b; --bad-bg: #fbe6e3; --good: #1a7f4b; --good-bg: #e3f4ea; --chip: #ecebe6; --strip: #f4f3ef;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+}
+:root[data-theme="dark"] {
+  --panel: #0f1319; --card: #171c24; --ink: #e6edf3; --muted: #9ba3ad; --faint: #6e7681; --line: #2d333d;
+  --bad: #ff8a7f; --bad-bg: #3a1714; --good: #4cc38a; --good-bg: #12301f; --chip: #262c35; --strip: #171c24;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { background: transparent; }
+body { font-family: var(--sans); color: var(--ink); width: 1240px; -webkit-font-smoothing: antialiased; }
+#fig { width: 1240px; padding: 36px 40px 34px; background: var(--panel); border: 1.5px solid var(--line); border-radius: 20px; }
+h1 { font-size: 27px; font-weight: 700; letter-spacing: -0.02em; }
+.strap { margin-top: 5px; font-size: 18px; color: var(--muted); }
+.flow { margin-top: 26px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 30px; }
+.step { position: relative; display: flex; flex-direction: column; min-height: 318px; padding: 16px 15px 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: 15px; }
+.step + .step::before { content: ""; position: absolute; left: -24px; top: 50%; width: 18px; height: 2px; background: var(--faint); }
+.step + .step::after { content: ""; position: absolute; left: -11px; top: calc(50% - 5px); border-left: 8px solid var(--faint); border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+.badge { position: absolute; top: -13px; left: 13px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--panel); font: 700 15px/28px var(--sans); text-align: center; }
+.label { margin-top: 5px; font-size: 19px; font-weight: 700; line-height: 1.22; letter-spacing: -0.012em; }
+.scene { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 7px; margin: 13px 0 12px; }
+.note { font-size: 15px; line-height: 1.34; color: var(--muted); }
+.term { margin-top: 7px; font: 13px var(--mono); color: var(--faint); }
+.btn { align-self: center; padding: 8px 15px; border-radius: 8px; background: #3b5bdb; color: #fff; font-size: 15px; font-weight: 600; box-shadow: 0 0 0 6px rgba(59, 91, 219, .22), 0 0 0 13px rgba(59, 91, 219, .1); }
+.mask { display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 8px; background: var(--chip); font-size: 14px; color: var(--muted); }
+.mask b { font: 700 14px var(--mono); color: var(--ink); letter-spacing: 1px; }
+.chip { display: flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 8px; background: var(--chip); font-size: 14px; font-weight: 550; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+.chip.hit { background: var(--bad-bg); color: var(--bad); }
+.chip.hit i { background: var(--bad); }
+.issue { padding: 9px 10px; border-radius: 9px; background: var(--bad-bg); color: var(--bad); font: 600 13.5px/1.3 var(--mono); }
+.row { display: flex; gap: 6px; }
+.act { flex: 1; padding: 6px 0; border-radius: 7px; text-align: center; font-size: 14px; font-weight: 650; background: var(--chip); color: var(--muted); }
+.act.yes { background: var(--good-bg); color: var(--good); }
+.shell { padding: 9px 10px; border-radius: 9px; background: #0b0e13; color: #d4dae1; font: 12.5px/1.5 var(--mono); }
+.shell .ok { color: #4cc38a; }
+.shell .dim { color: #7d8590; }
+.conclusion { margin-top: 22px; padding: 14px 18px; border-radius: 12px; background: var(--strip); font-size: 18px; color: var(--muted); }
+.conclusion b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="fig">
+  <h1>How Snag finds a bug and gets it fixed</h1>
+  <div class="strap">From a visitor's broken click to a fix you can prove.</div>
+
+  <div class="flow">
+    <div class="step">
+      <span class="badge">1</span>
+      <div class="label">A visitor hits a problem</div>
+      <div class="scene"><span class="btn">Place order</span></div>
+      <div class="note">A small script records clicks, requests and errors.</div>
+      <div class="term">rrweb recorder</div>
+    </div>
+
+    <div class="step">
+      <span class="badge">2</span>
+      <div class="label">Private data stays behind</div>
+      <div class="scene">
+        <div class="mask">Email <b>•••••••</b></div>
+        <div class="mask">Card <b>••••</b></div>
+      </div>
+      <div class="note">Masked in the browser, before anything is sent.</div>
+      <div class="term">masking + redaction</div>
+    </div>
+
+    <div class="step">
+      <span class="badge">3</span>
+      <div class="label">Rules flag the moment</div>
+      <div class="scene">
+        <div class="chip"><i></i>Rage click</div>
+        <div class="chip"><i></i>Dead button</div>
+        <div class="chip hit"><i></i>Failed request</div>
+      </div>
+      <div class="note">Runs on your server. No AI needed.</div>
+      <div class="term">detectors</div>
+    </div>
+
+    <div class="step">
+      <span class="badge">4</span>
+      <div class="label">You watch the clip and decide</div>
+      <div class="scene">
+        <div class="issue">POST /api/orders failed (500)</div>
+        <div class="row"><span class="act yes">Confirm</span><span class="act">Dismiss</span></div>
+      </div>
+      <div class="note">The replay opens at the exact moment.</div>
+      <div class="term">dashboard</div>
+    </div>
+
+    <div class="step">
+      <span class="badge">5</span>
+      <div class="label">Your coding agent fixes it</div>
+      <div class="scene">
+        <div class="shell"><span class="dim">$</span> snag session evidence<br><span class="dim">reads the recording</span><br><span class="ok">fix + passing test</span></div>
+      </div>
+      <div class="note">Optional. It waits for your go-ahead.</div>
+      <div class="term">snag-cli + Claude Code</div>
+    </div>
+  </div>
+
+  <div class="conclusion"><b>Snag points, you decide.</b> It all runs on your own server, so your users' data never leaves it.</div>
+</div>
+</body>
+</html>
