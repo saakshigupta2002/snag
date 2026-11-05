@@ -13,6 +13,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * One encoded URL path segment. Next.js passes route params decoded in route
+ * handlers and encoded in pages. Issue keys can contain `/` or `%`.
+ */
+export function pathSegment(value: string): string {
+  try {
+    return encodeURIComponent(decodeURIComponent(value));
+  } catch {
+    return encodeURIComponent(value);
+  }
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'content-type': 'application/json',

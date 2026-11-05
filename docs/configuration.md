@@ -10,6 +10,7 @@ Every secret ships blank in `.env.example`. Generate tokens with `openssl rand -
 | `PORT` | ingest | `8787` | Ingest/API port. |
 | `SNAG_API_TOKEN` | both | *(off)* | Bearer token the dashboard uses for the management API. Set it in production. |
 | `INGEST_URL` | dashboard | `http://localhost:8787` | Where the dashboard server reaches ingest. |
+| `PUBLIC_INGEST_URL` | dashboard | `INGEST_URL` | The address browsers use to reach ingest, shown in the install snippet. Set it when the dashboard reaches ingest on a private address. |
 | `SNAG_SECRET` | dashboard | dev value | Signs the login cookie. |
 | `DASHBOARD_PASSWORD` | dashboard | *(auth off)* | Single-user login password (v1 auth model). |
 | `RETENTION_DAYS` | ingest | `30` | Default session retention; per-project override in Settings. |
@@ -24,9 +25,14 @@ Every secret ships blank in `.env.example`. Generate tokens with `openssl rand -
 
 ## SDK options
 
-```ts
-import { Snag } from "@snag/sdk";
+Load the recorder from your own ingest service, then call `Snag.init`. Settings in the
+dashboard shows this snippet with your project key filled in.
 
+```html
+<script src="https://ingest.myapp.com/snag.js"></script>
+```
+
+```js
 Snag.init({
   projectKey: "pk_live_xxx",        // from the dashboard
   endpoint: "https://ingest.myapp.com",
@@ -53,15 +59,15 @@ Snag.init({
 |---|---|---|
 | Password inputs | always masked | Records that input occurred, never the characters. Non-negotiable. |
 | `maskAllInputs` | on | Every text input records as dots; unmask selectively via `unmask`. |
-| `.snag-block` | class hook | Element not recorded at all — placeholder box in replay. |
+| `.snag-block` | class hook | Element not recorded at all: placeholder box in replay. |
 | `.snag-mask` | class hook | Text obfuscated, layout preserved. |
-| Pattern safety net | always on | Emails, card numbers (Luhn-checked), JWTs, and long tokens are masked even when untagged — including inside `unmask`ed fields. |
+| Pattern safety net | always on | Emails, card numbers (Luhn-checked), JWTs and long tokens are masked even when untagged: including inside `unmask`ed fields. |
 
 ### Network redaction (two layers, because either can miss)
 
 Kept: method, path, status, duration. Redacted **before transmission**: `Authorization`
 headers and cookies always; query/body values by key denylist (`password`, `token`, `secret`,
 `card`, …) **and** by value shape (JWT-like, card-like, long-random-token-like). Honest
-limitation: pattern matching is not infallible — a bizarrely shaped secret could slip past,
+limitation: pattern matching is not infallible: a bizarrely shaped secret could slip past,
 which is exactly why the layers stack and the default is redact. Add app-specific names via
 `redactExtraKeys`.

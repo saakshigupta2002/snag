@@ -3,7 +3,7 @@
 Every value is a tunable parameter, not a constant (Settings → Detectors). Defaults are
 conservative on purpose: a tool that cries wolf gets muted.
 
-## Tier 1 — on by default
+## Tier 1: on by default
 
 | Detector | Fires when (default) | Params (defaults) | Severity |
 |---|---|---|---|
@@ -14,7 +14,7 @@ conservative on purpose: a tool that cries wolf gets muted.
 | `form_abandonment` | ≥1 form field engaged, then the page is left with no submit | `minFieldsInteracted 1` | low |
 | `backward_navigation` | Navigate forward to a page then straight back to the prior one within 10 s | `windowMs 10000` | low |
 
-## Tier 2 — off by default until tuned against real traffic
+## Tier 2: off by default until tuned against real traffic
 
 | Detector | Fires when (default) | Params (defaults) | Severity |
 |---|---|---|---|
@@ -26,12 +26,12 @@ conservative on purpose: a tool that cries wolf gets muted.
 ## Adding a detector
 
 Drop a module into `packages/detectors/src/detectors/`, implement the `Detector` interface,
-register it in `registry.ts`, give it default params — no core changes. The bar for shipping:
+register it in `registry.ts`, give it default params: no core changes. The bar for shipping:
 
 1. Fixture-based unit tests with positive **and negative** cases.
 2. It must pass the shared `normalSession()` negative fixture.
-3. It ships `defaultEnabled: false` until validated against real sessions — a detector earns
+3. It ships `defaultEnabled: false` until validated against real sessions: a detector earns
    default-on by rarely lying, not by being clever.
 
-The one metric that matters most is the **false-positive rate**. Confidence — the entire point
-of the tool — dies the first time it cries wolf.
+The one metric that matters most is the **false-positive rate**. Confidence: the entire point
+of the tool: dies the first time it cries wolf.

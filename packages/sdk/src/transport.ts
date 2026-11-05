@@ -15,7 +15,7 @@ function ingestUrl(endpoint: string): string {
 }
 
 /**
- * Buffers events and flushes on an interval, on buffer-size pressure, and on
+ * Buffers events and flushes on an interval, on buffer-size pressure and on
  * page hide (sendBeacon). Fails quietly: the SDK must never break or slow the
  * host app.
  */
@@ -75,7 +75,7 @@ export class Transport {
     try {
       // Prefer keepalive fetch even on the final flush: sendBeacon() sends a
       // JSON blob as a CORS-preflighted request, which it silently drops
-      // cross-origin — so the last batch (page-hide events, Web Vitals) would
+      // cross-origin: so the last batch (page-hide events, Web Vitals) would
       // never arrive. keepalive fetch survives unload AND handles the preflight.
       void fetch(this.url, {
         method: 'POST',

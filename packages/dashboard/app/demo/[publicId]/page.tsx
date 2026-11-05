@@ -35,7 +35,7 @@ export default async function DemoOverview({
         <div>
           <h1 style={{ marginBottom: 4 }}>Overview</h1>
           <p className="subtitle" style={{ margin: 0 }}>
-            <span className="mono">{project.name}</span> —{' '}
+            <span className="mono">{project.name}</span>:{' '}
             {noData ? 'no sessions yet.' : <>last session {timeAgo(a.ingest.lastSessionAt!)}</>}
           </p>
         </div>
@@ -47,7 +47,7 @@ export default async function DemoOverview({
           <p>
             <strong>No sessions recorded yet.</strong>
           </p>
-          <p>This is a read-only demo — analytics appear here once the app records traffic.</p>
+          <p>This is a read-only demo. Analytics appear here once the app records traffic.</p>
         </div>
       ) : (
         <>

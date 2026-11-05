@@ -1,9 +1,9 @@
 # Self-hosting Snag
 
-Snag is one always-on Node service (ingest + workers), one web app (dashboard), and a Postgres
+Snag is one always-on Node service (ingest + workers), one web app (dashboard) and a Postgres
 database. Session data never leaves your infrastructure.
 
-## Option 1 — docker compose (fastest)
+## Option 1: docker compose (fastest)
 
 ```bash
 git clone https://github.com/saakshigupta2002/snag && cd snag
@@ -15,26 +15,30 @@ docker compose up --build
 - Ingest → http://localhost:8787
 - Postgres → localhost:5432 (`snag`/`snag`)
 
-Create a project in the dashboard, copy the `pk_live_…` key, drop the SDK into your app.
+Every port is bound to `127.0.0.1` because the defaults are for trying Snag on your own machine.
+To go live, set real values for `SNAG_API_TOKEN`, `SNAG_SECRET` and `DASHBOARD_PASSWORD`, then put a
+reverse proxy with TLS in front of the dashboard and ingest.
 
-## Option 2 — split deployment (recommended for production)
+Create a project in the dashboard, then copy the install snippet from Settings into your app.
+
+## Option 2: split deployment (recommended for production)
 
 The dashboard is stateless and can live anywhere (Vercel works). The **ingest service must be an
-always-on host** — session recording is a continuous stream of batches; serverless functions
+always-on host**: session recording is a continuous stream of batches; serverless functions
 don't hold it well. Railway, Render, Fly.io, or any VM with Node 20+ all work.
 
 | Piece | Where | Needs |
 |---|---|---|
 | `@snag/ingest` | Railway / Render / Fly / VM | `DATABASE_URL`, `SNAG_API_TOKEN`, `PORT` |
 | `@snag/dashboard` | Vercel / same host | `INGEST_URL`, `SNAG_API_TOKEN`, `SNAG_SECRET`, `DASHBOARD_PASSWORD` |
-| Postgres | Supabase / Neon / RDS / anywhere | — |
+| Postgres | Supabase / Neon / RDS / anywhere | - |
 
 Steps:
 
 ```bash
 npm ci
 npm run build:libs                      # shared + detectors + sdk + ingest
-node packages/ingest/dist/server.js    # with env set — migrates the schema on boot
+node packages/ingest/dist/server.js    # with env set: migrates the schema on boot
 
 npm run build -w @snag/dashboard
 npm run start -w @snag/dashboard       # or deploy packages/dashboard to Vercel
@@ -43,16 +47,16 @@ npm run start -w @snag/dashboard       # or deploy packages/dashboard to Vercel
 The schema is applied automatically on ingest boot (idempotent `CREATE TABLE IF NOT EXISTS`,
 see [`packages/ingest/src/db/schema.ts`](../packages/ingest/src/db/schema.ts)).
 
-## Option 3 — Vercel + Supabase only (no always-on server)
+## Option 3: Vercel + Supabase only (no always-on server)
 
 For personal / low-volume use, both services run on Vercel functions with Supabase as the
-database — detection happens inline on each session's final flush and a daily cron sweeps up
+database: detection happens inline on each session's final flush and a daily cron sweeps up
 the rest. See [docs/deploy-vercel-supabase.md](deploy-vercel-supabase.md).
 
 ## The two-version rule
 
 The public repo is the machine with empty slots; your deployment is the same machine with your
-slots filled in. **Real values live only in your deployment's environment** — never commit a
+slots filled in. **Real values live only in your deployment's environment**: never commit a
 key, even temporarily. `.env` is gitignored and CI runs a secret scan on every PR.
 
 ## Sizing notes

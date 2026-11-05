@@ -19,8 +19,8 @@ function fmtDuration(ms: number): string {
 /**
  * The whole analytics body, shared by the owner Overview and the public demo so
  * the two can't drift. Presentational + server-rendered (no hooks). When
- * `drilldown` is on, every breakdown row, insight, and chart point links to the
- * sessions behind it — the click → filter → replay loop. The demo passes it off
+ * `drilldown` is on, every breakdown row, insight and chart point links to the
+ * sessions behind it: the click → filter → replay loop. The demo passes it off
  * (read-only, nowhere to drill).
  */
 export function AnalyticsView({
@@ -85,7 +85,7 @@ export function AnalyticsView({
         <div className="stat">
           <div className="stat-label">scroll depth</div>
           <div className="stat-value">
-            {a.kpis.avgScrollPct != null ? `${a.kpis.avgScrollPct}%` : '—'}
+            {a.kpis.avgScrollPct != null ? `${a.kpis.avgScrollPct}%` : '-'}
           </div>
         </div>
       </div>
@@ -253,11 +253,11 @@ export function AnalyticsView({
               </div>
               <dl className="ctx" style={{ marginTop: 14 }}>
                 <dt>LCP</dt>
-                <dd className="mono">{perf.lcpMs != null ? `${(perf.lcpMs / 1000).toFixed(2)}s` : '—'}</dd>
+                <dd className="mono">{perf.lcpMs != null ? `${(perf.lcpMs / 1000).toFixed(2)}s` : '-'}</dd>
                 <dt>INP≈</dt>
-                <dd className="mono">{perf.inpMs != null ? `${perf.inpMs}ms` : '—'}</dd>
+                <dd className="mono">{perf.inpMs != null ? `${perf.inpMs}ms` : '-'}</dd>
                 <dt>CLS</dt>
-                <dd className="mono">{perf.cls != null ? perf.cls.toFixed(3) : '—'}</dd>
+                <dd className="mono">{perf.cls != null ? perf.cls.toFixed(3) : '-'}</dd>
               </dl>
             </>
           )}

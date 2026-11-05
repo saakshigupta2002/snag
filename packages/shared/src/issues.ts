@@ -16,7 +16,7 @@ export interface IssueCandidate {
   /** Epoch ms where the flagged moment starts (replay seeks a few s before). */
   tsStart: number;
   tsEnd: number;
-  /** detector + normalized selector/URL/message — dedups repeats of one bug. */
+  /** detector + normalized selector/URL/message: dedups repeats of one bug. */
   groupKey: string;
   /** One-line plain-English description shown in the issue list. */
   title: string;

@@ -28,7 +28,7 @@ export function buildMaskingOptions(opts: SnagOptions): Record<string, unknown> 
   const maskTextFn = (text: string, element?: HTMLElement | null): string => {
     if (element?.closest?.(maskSelector)) return maskChars(text);
     // Pattern safety net: emails / cards / tokens masked even if untagged.
-    // Width-preserving so masking never reflows the page — a reflow would shift
+    // Width-preserving so masking never reflows the page: a reflow would shift
     // recorded click coordinates onto the wrong element at replay time.
     return scrubTextKeepingWidth(text);
   };

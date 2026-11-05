@@ -10,7 +10,7 @@ type Nav = Extract<NormalizedEvent, { t: 'navigation' }>;
  * until tuned against real traffic. Toggle them per project in flag settings.
  */
 
-/** Navigation thrash: bouncing between the same two pages repeatedly — lost. */
+/** Navigation thrash: bouncing between the same two pages repeatedly: lost. */
 export const navigationThrash: Detector = {
   id: 'navigation_thrash',
   tier: 2,
@@ -59,7 +59,7 @@ export const navigationThrash: Detector = {
   },
 };
 
-/** Refresh spam: multiple full reloads of one URL in a short window — stuck. */
+/** Refresh spam: multiple full reloads of one URL in a short window: stuck. */
 export const refreshSpam: Detector = {
   id: 'refresh_spam',
   tier: 2,
@@ -146,7 +146,7 @@ export const rapidBounce: Detector = {
   },
 };
 
-/** Repeated form errors: the same form kept failing validation — a trap. */
+/** Repeated form errors: the same form kept failing validation: a trap. */
 export const repeatedFormErrors: Detector = {
   id: 'repeated_form_errors',
   tier: 2,

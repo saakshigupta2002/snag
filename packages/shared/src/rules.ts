@@ -19,7 +19,7 @@ export interface FlagRule {
 }
 
 /**
- * Kind A — mechanical custom flag. Composed only from primitives the engine
+ * Kind A: mechanical custom flag. Composed only from primitives the engine
  * can evaluate deterministically over the event stream, so it is free by
  * definition. The dashboard's dropdown builder only ever emits this shape.
  */
@@ -39,7 +39,7 @@ export type MechanicalCondition =
   | { networkMatches: { path?: string; statusMin?: number } }
   | { formSubmitted: string };
 
-/** Kind B — AI judgment flag (BYO-key). Only ever evaluated by the AI worker. */
+/** Kind B: AI judgment flag (BYO-key). Only ever evaluated by the AI worker. */
 export interface AiRule {
   name: string;
   severity: Severity;

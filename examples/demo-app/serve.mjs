@@ -20,6 +20,12 @@ const types = {
 
 createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
+  // Broken on purpose, so the failed request shows up next to the click.
+  if (url.pathname === '/api/orders') {
+    res.writeHead(500, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ error: 'payment service unavailable' }));
+    return;
+  }
   let file;
   if (url.pathname === '/snag.iife.js') {
     file = sdkBundle;

@@ -1,4 +1,4 @@
-// AUTO-GENERATED — do not edit by hand.
+// AUTO-GENERATED: do not edit by hand.
 // The browser SDK bundle (packages/sdk/dist/snag.iife.js), base64-encoded so
 // the ingest service can serve it at /snag.js. Regenerate with:
 //   npm run build -w @snag/sdk && npm run embed-sdk -w @snag/ingest

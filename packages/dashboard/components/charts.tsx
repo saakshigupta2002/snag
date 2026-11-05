@@ -3,7 +3,7 @@ import type { CountRow, TrendPoint } from '@snag/shared';
 
 /**
  * Minimal inline-SVG charts, styled for the teal console. Single-hue (teal)
- * magnitude marks — no categorical palette to validate. Area fill with an
+ * magnitude marks: no categorical palette to validate. Area fill with an
  * emphasized endpoint; horizontal bars use one hue scaled by value.
  */
 export function Sparkline({

@@ -4,7 +4,7 @@ import { duration, pathOfUrl, timeAgo } from '@/lib/format';
 import { SessionActions } from './SessionActions';
 
 function fmtMs(ms: number | null | undefined): string {
-  if (ms == null || ms <= 0) return '—';
+  if (ms == null || ms <= 0) return '-';
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
   return `${Math.floor(s / 60)}m ${s % 60}s`;
@@ -70,15 +70,15 @@ export function SessionsTable({
                 </td>
                 <td className="mono num">
                   {inter == null ? (
-                    <span className="muted">—</span>
+                    <span className="muted">-</span>
                   ) : inter === 0 ? (
                     <span className="muted">0</span>
                   ) : (
                     <span className="act-count">{inter}</span>
                   )}
                 </td>
-                <td className="muted">{s.device ?? '—'}</td>
-                <td className="muted">{s.browser ?? '—'}</td>
+                <td className="muted">{s.device ?? '-'}</td>
+                <td className="muted">{s.browser ?? '-'}</td>
                 <td>
                   <span className={`st ${s.status}`}>{s.status}</span>
                 </td>

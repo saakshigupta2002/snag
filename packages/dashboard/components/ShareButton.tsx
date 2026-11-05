@@ -9,7 +9,7 @@ export function ShareButton() {
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(window.location.href);
-          toast('Link copied — send it to a dev', 'ok');
+          toast('Link copied. Send it to a dev', 'ok');
         } catch {
           toast('Could not copy the link', 'error');
         }

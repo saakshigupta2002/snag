@@ -12,14 +12,14 @@ export function timeAgo(iso: string): string {
 }
 
 export function duration(startIso: string, endIso: string | null): string {
-  if (!endIso) return '—';
+  if (!endIso) return '-';
   const s = Math.max(Math.round((Date.parse(endIso) - Date.parse(startIso)) / 1000), 0);
   if (s < 60) return `${s}s`;
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 export function pathOfUrl(url: string | null): string {
-  if (!url) return '—';
+  if (!url) return '-';
   try {
     return new URL(url).pathname || '/';
   } catch {

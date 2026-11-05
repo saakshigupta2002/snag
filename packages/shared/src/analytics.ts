@@ -40,7 +40,7 @@ export interface VitalStat {
   lcpMs: number | null;
   inpMs: number | null;
   cls: number | null;
-  /** 0–100 Clarity-style score, or null when no samples. */
+  /** 0–100 score, or null when no samples. */
   score: number | null;
   /** % of pageviews in each Web-Vitals bucket. */
   good: number;
@@ -49,7 +49,7 @@ export interface VitalStat {
   sampleSize: number;
 }
 
-/** Rich, session-centric analytics for the Clarity-style overview. */
+/** Rich, session-centric analytics for the overview. */
 export interface Analytics {
   days: number;
   kpis: {
@@ -97,7 +97,7 @@ export interface ScrollDepthBucket {
   sharePct: number;
 }
 
-/** Distribution of how far visitors scroll — the "reach" gradient. */
+/** Distribution of how far visitors scroll: the "reach" gradient. */
 export interface ScrollDepth {
   buckets: ScrollDepthBucket[];
   /** Sessions with a recorded scroll depth (the denominator). */

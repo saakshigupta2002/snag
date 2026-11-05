@@ -30,19 +30,19 @@ export function describeIssue(detector: string, meta: Record<string, unknown>): 
       return `A ${m.method ?? 'network'} request to ${pathOf(meta)} ${outcome}${m.durationMs ? ` after ${Math.round(Number(m.durationMs))}ms` : ''}. The user likely saw missing data or a broken action.`;
     }
     case 'rage_click':
-      return `The user clicked ${m.text ? `“${m.text}”` : m.selector} ${m.clicks ?? 'several'} times in quick succession with no visible response — the control looked clickable but did nothing.`;
+      return `The user clicked ${m.text ? `“${m.text}”` : m.selector} ${m.clicks ?? 'several'} times in quick succession with no visible response. The control looked clickable but did nothing.`;
     case 'dead_click':
       return `The user clicked ${m.text ? `“${m.text}”` : m.selector} but nothing on the page reacted.`;
     case 'form_abandonment':
-      return `A form (${m.formSelector}) was started${m.fieldsInteracted ? ` — ${m.fieldsInteracted} field(s) touched` : ''} but never submitted.`;
+      return `A form (${m.formSelector}) was started${m.fieldsInteracted ? ` with ${m.fieldsInteracted} field(s) touched` : ''} but never submitted.`;
     case 'repeated_form_errors':
-      return `A form (${m.formSelector}) was rejected ${m.rejections ?? 'several'} times — the user kept hitting validation errors.`;
+      return `A form (${m.formSelector}) was rejected ${m.rejections ?? 'several'} times. The user kept hitting validation errors.`;
     case 'backward_navigation':
       return `The user opened ${m.page} then bounced straight back to ${m.returnedTo}${m.dwellMs ? ` after only ${secs(m.dwellMs)}` : ''}.`;
     case 'navigation_thrash':
-      return `The user bounced repeatedly between ${Array.isArray(m.pages) ? m.pages.join(' ↔ ') : 'two pages'} (${m.hops ?? 'several'} hops) — usually a sign they couldn't find what they needed.`;
+      return `The user bounced repeatedly between ${Array.isArray(m.pages) ? m.pages.join(' ↔ ') : 'two pages'} (${m.hops ?? 'several'} hops), usually a sign they couldn't find what they needed.`;
     case 'refresh_spam':
-      return `${m.page} was reloaded ${m.reloads ?? 'several'} times in a row — often a sign the page felt stuck or broken.`;
+      return `${m.page} was reloaded ${m.reloads ?? 'several'} times in a row, often a sign the page felt stuck or broken.`;
     case 'rapid_bounce':
       return `The user left ${m.page} almost immediately${m.durationMs ? ` (after ${secs(m.durationMs)})` : ''}.`;
     default:
@@ -53,7 +53,7 @@ export function describeIssue(detector: string, meta: Record<string, unknown>): 
 /**
  * The raw signal a dev can act on without watching the replay: an error's stack
  * trace, or the failed request line. Returns null when there's nothing crisp to
- * show (behavioural detectors — the finding + replay carry those).
+ * show (behavioural detectors: the finding + replay carry those).
  */
 export function evidenceCode(detector: string, meta: Record<string, unknown>): string | null {
   const m = meta as Record<string, string | number | boolean | undefined>;
@@ -73,7 +73,7 @@ export function evidenceCode(detector: string, meta: Record<string, unknown>): s
 /**
  * Prioritisation signals derived from when/how often an issue fires.
  * `isNew`: first seen in the last 3 days. `isSpike`: today's count is well
- * above the recent baseline — a regression worth looking at first.
+ * above the recent baseline: a regression worth looking at first.
  */
 export function issueSignals(
   firstSeen: string,

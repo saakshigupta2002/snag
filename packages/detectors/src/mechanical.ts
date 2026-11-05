@@ -40,7 +40,7 @@ function compile(c: MechanicalCondition): Matcher {
 /**
  * Evaluate a Kind A (mechanical) custom flag: every condition in `when.all`
  * must occur, all inside the `within` window (whole session when absent).
- * Deterministic, zero model calls — free by definition.
+ * Deterministic, zero model calls: free by definition.
  */
 export function runMechanicalRule(
   events: NormalizedEvent[],

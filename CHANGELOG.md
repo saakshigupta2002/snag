@@ -4,7 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] — 2026-07-10
+## [Unreleased]
+
+### Added
+- Analytics overview with drill-down from any number to the sessions behind it.
+- Click heatmaps, funnels with drop-off replays and a scored list of sessions worth watching.
+- A public read-only demo link for one project, with no login.
+- AI-flagged issues: agents can file findings with a clip, next to what the detectors found.
+- Favorites and deletion for recordings.
+- `PUBLIC_INGEST_URL`, so the install snippet shows the address browsers should use.
+- A warning at startup when `SNAG_API_TOKEN` is not set.
+
+### Changed
+- The install instructions in Settings and the docs now use the script tag ingest serves.
+  They named an npm package that was never published.
+- `docker compose` binds every port to `127.0.0.1`, because its defaults are for local trials.
+
+### Fixed
+- The demo shop's failing API call now reaches a route the recorder can see, so failed requests
+  show up in the demo.
+
+### Security
+- Upgraded Next.js to 15.5.29, Fastify to 5.12 and Vitest to 5 to close critical and high
+  advisories.
+
+## [0.1.0] - 2026-07-10
 
 Initial release.
 

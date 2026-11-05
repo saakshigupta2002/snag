@@ -11,7 +11,7 @@ function dist(a: Click, b: Click): number {
 
 /**
  * Rage click: ≥N clicks within a short window inside a small radius on the
- * same element, with no resulting navigation or DOM change — pure frustration.
+ * same element, with no resulting navigation or DOM change: pure frustration.
  */
 export const rageClick: Detector = {
   id: 'rage_click',

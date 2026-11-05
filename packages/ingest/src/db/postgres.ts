@@ -135,7 +135,7 @@ export class PostgresStore implements Store {
     // Managed Postgres hosts (Supabase, Neon, Heroku, RDS) present certs that
     // aren't in Node's default trust store, so full verification fails with
     // "self-signed certificate in certificate chain". Connect over TLS but
-    // without chain verification — the documented setup for these hosts.
+    // without chain verification: the documented setup for these hosts.
     //
     // We also strip `sslmode` from the connection string first: leaving it in
     // lets node-postgres apply its own stricter TLS policy that overrides the
@@ -265,7 +265,7 @@ export class PostgresStore implements Store {
   }
 
   async listSessions(projectId: string, limit = 100): Promise<Session[]> {
-    // Excludes the heavy click_points/paths JSON — those are only for
+    // Excludes the heavy click_points/paths JSON: those are only for
     // heatmaps/funnels (see listSessionActivity).
     const res = await this.pool.query(
       `SELECT ${SESSION_COLS} FROM sessions WHERE project_id = $1 ORDER BY started_at DESC LIMIT $2`,

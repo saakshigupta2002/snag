@@ -1,6 +1,6 @@
 import type { RawEvent } from './events.js';
 
-/** POST /ingest body — a batch of already-masked/redacted events. */
+/** POST /ingest body: a batch of already-masked/redacted events. */
 export interface IngestPayload {
   projectKey: string;
   sessionId: string;

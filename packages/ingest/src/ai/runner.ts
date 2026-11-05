@@ -6,7 +6,7 @@ import { createProvider, type AiProvider } from './provider.js';
 
 /**
  * The cost funnel, enforced in code:
- *   1. Off by default — runs only if the project opted in AND a key exists.
+ *   1. Off by default: runs only if the project opted in AND a key exists.
  *   2. Runs only on already-flagged, deduped issue groups (never raw traffic).
  *   3. One analysis per group, ever (dedup = analyze the group once).
  *   4. Daily cap + optional sampling as further ceilings.
@@ -64,7 +64,7 @@ function clamp01(n: number): number {
 
 /**
  * Context = the flagged moment plus nearby technical evidence (console,
- * network, navigation) from the sample session — a "clip transcript", not
+ * network, navigation) from the sample session: a "clip transcript", not
  * the whole session. Everything in it was already masked/redacted at source.
  */
 async function buildPrompt(store: Store, group: IssueGroup): Promise<string> {

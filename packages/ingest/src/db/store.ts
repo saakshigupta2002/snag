@@ -274,7 +274,7 @@ function bump(m: Map<string, number>, key: string | null | undefined): void {
   m.set(key, (m.get(key) ?? 0) + 1);
 }
 
-/** Group a referrer host into an acquisition channel (Clarity-style). */
+/** Group a referrer host into an acquisition channel. */
 export function channelOf(referrer: string | null | undefined): string {
   if (!referrer) return 'Direct';
   const h = referrer.toLowerCase();
@@ -305,7 +305,7 @@ function vitalsBucket(
 }
 
 /**
- * Session-centric analytics for the Clarity-style overview. Reuses
+ * Session-centric analytics for the overview. Reuses
  * computeOverview for the issue trend / detectors / ingest health, then rolls
  * up the per-session aggregates persisted at seal time.
  */
@@ -318,7 +318,7 @@ export function computeAnalytics(
 ): Analytics {
   const cutoff = now - days * DAY_MS;
   const recent = sessions.filter((s) => Date.parse(s.startedAt) >= cutoff);
-  // Headline metrics exclude bots (like Clarity); bot traffic gets its own card.
+  // Headline metrics exclude bots; bot traffic gets its own card.
   const humans = recent.filter((s) => !s.isBot);
   const humanIds = new Set(humans.map((s) => s.id));
   const botCount = recent.length - humans.length;
@@ -434,13 +434,13 @@ export function computeAnalytics(
   const inRange = new Set<string>();
   const liveSince = now - 5 * 60_000;
   const liveVisitors = new Set<string>();
-  // Session-level new/returning (matches Clarity): a session is "returning" if
+  // Session-level new/returning: a session is "returning" if
   // that visitor was seen in an earlier session.
   let newSessions = 0;
   let returningSessions = 0;
   for (const s of humans) {
     // Sessions without a visitorId (e.g. recorded before the SDK update) are
-    // treated as distinct anonymous, first-time visitors — keeps unique/new/
+    // treated as distinct anonymous, first-time visitors: keeps unique/new/
     // returning internally consistent instead of "0 unique · N new".
     const vid = s.visitorId ?? `anon:${s.id}`;
     inRange.add(vid);
@@ -485,7 +485,7 @@ export function computeAnalytics(
       .sort((a, b) => b.count - a.count)
       .slice(0, 10),
     jsErrors: { total: jsErrTotal, sessionsWith: sessWithErr, pct: pct(sessWithErr) },
-    // Bot % is over ALL traffic (humans + bots) so it reads like Clarity's.
+    // Bot % is over ALL traffic (humans + bots).
     bots: {
       sessions: botCount,
       pct: recent.length ? Math.round((botCount / recent.length) * 1000) / 10 : 0,

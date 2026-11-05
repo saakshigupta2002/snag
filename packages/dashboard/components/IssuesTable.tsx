@@ -68,10 +68,6 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
   // background, reconcile the server on success, revert on failure.
   const setGroupStatus = useCallback(
     (g: IssueGroup, next: IssueStatus) => {
-      toast(
-        next === 'confirmed' ? 'Confirmed — real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
-        next === 'dismissed' ? 'info' : 'ok',
-      );
       const apply = () => setOverrides((o) => ({ ...o, [g.groupKey]: next }));
       const willLeave = status !== 'all' && next !== status;
       if (willLeave) {
@@ -94,6 +90,10 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
       })
         .then((r) => {
           if (!r.ok) throw new Error();
+          toast(
+            next === 'confirmed' ? 'Confirmed: real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
+            next === 'dismissed' ? 'info' : 'ok',
+          );
           router.refresh();
         })
         .catch(() => {
@@ -102,13 +102,13 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
             delete n[g.groupKey];
             return n;
           });
-          toast('Could not update — try again', 'error');
+          toast('Could not update. Try again', 'error');
         });
     },
     [status, projectId, toast, router],
   );
 
-  // Keyboard triage — active whenever focus isn't in a text field.
+  // Keyboard triage: active whenever focus isn't in a text field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
@@ -138,7 +138,7 @@ export function IssuesTable({ projectId, groups }: { projectId: string; groups: 
     return () => window.removeEventListener('keydown', onKey);
   }, [rows, cursor, projectId, router, setGroupStatus]);
 
-  // Per-severity counts within the current status filter — shown on the
+  // Per-severity counts within the current status filter: shown on the
   // severity tabs so the at-a-glance breakdown lives where you act on it.
   const sevCounts = useMemo(() => {
     const base = groups

@@ -2,7 +2,7 @@
   "name": "snag-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Snag — a self-hosted, privacy-first session watcher and issue detector for modern web apps.",
+  "description": "Self-hosted session replay that finds the bugs in your app for you, then hands them to your coding agent to fix.",
   "license": "MIT",
   "workspaces": [
     "packages/shared",
@@ -18,9 +18,28 @@
     "test": "npm run test --workspaces --if-present",
     "dev:ingest": "npm run dev -w @snag/ingest",
     "dev:dashboard": "npm run dev -w @snag/dashboard",
-    "demo": "node examples/demo-app/serve.mjs"
+    "demo": "node examples/demo-app/serve.mjs",
+    "check:prose": "node scripts/check-prose.mjs",
+    "check": "npm run typecheck && npm test && npm run check:prose"
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "homepage": "https://github.com/saakshigupta2002/snag#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saakshigupta2002/snag.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saakshigupta2002/snag/issues"
+  },
+  "keywords": [
+    "session-replay",
+    "self-hosted",
+    "bug-detection",
+    "rrweb",
+    "analytics",
+    "privacy",
+    "observability"
+  ]
 }

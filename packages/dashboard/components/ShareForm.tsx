@@ -6,7 +6,7 @@ import type { ProjectSettings } from '@snag/shared';
 import { useToast } from './Toast';
 import { CopyButton } from './CopyButton';
 
-/** Random URL-safe slug, ~132 bits — not guessable, no server round-trip. */
+/** Random URL-safe slug, ~132 bits: not guessable, no server round-trip. */
 function newPublicId(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -58,15 +58,15 @@ export function ShareForm({
     const id = newPublicId();
     setPublicId(id);
     await persist({ enabled: true, publicId: id });
-    toast('New link generated — the old one no longer works', 'ok');
+    toast('New link generated. The old one no longer works', 'ok');
   }
 
   return (
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Share a read-only demo</h2>
       <p className="muted" style={{ fontSize: 12.5 }}>
-        Turn on a public link that shows <strong>only this project</strong> — overview, issues, and
-        session replays — with no login and no way to change anything. Your API token and database
+        Turn on a public link that shows <strong>only this project</strong> (overview, issues and
+        session replays) with no login and no way to change anything. Your API token and database
         stay server-side. Anyone with the link can look; nobody can touch your other projects.
       </p>
 

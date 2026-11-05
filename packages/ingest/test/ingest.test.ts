@@ -129,6 +129,14 @@ describe('detection pipeline end to end', () => {
     ) as IssueGroup[];
     expect(after).toHaveLength(1);
     expect(after[0]!.groupKey).toBe(netGroup.groupKey);
+
+    // A key can hold any character, so a stray % must not crash the route.
+    const odd = await app.inject({
+      method: 'POST',
+      url: `/api/projects/${project.id}/issues/${encodeURIComponent('console_error|100% broken')}/status`,
+      payload: { status: 'confirmed' },
+    });
+    expect(odd.statusCode).toBe(404);
   });
 
   it('idle sessions get sealed and processed without a final flush', async () => {

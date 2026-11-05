@@ -16,7 +16,7 @@ function looksInteractive(selector: string): boolean {
 
 /**
  * Dead click: a click that produced no DOM mutation, navigation, network
- * request, or input change within the quiet window — a control that looks
+ * request, or input change within the quiet window: a control that looks
  * live but isn't wired. Restricted to interactive-looking targets to keep
  * false positives low (clicking whitespace is normal behaviour).
  */
@@ -38,7 +38,7 @@ export const deadClick: Detector = {
       if (e.t !== 'click') continue;
       const click = e as Click;
       if (interactiveOnly && !looksInteractive(click.selector)) continue;
-      // If the session ends inside the quiet window we can't know — skip.
+      // If the session ends inside the quiet window we can't know: skip.
       if (lastTs < click.ts + quietMs) continue;
 
       const reacted = events.some(

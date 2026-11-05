@@ -39,7 +39,7 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
   const customEvents = new Map<string, number>();
   let maxScroll: number | null = null;
   // Meaningful user actions (clicks, navigations beyond entry, form submits,
-  // errors) — the basis for ranking real sessions above idle/bounce noise.
+  // errors): the basis for ranking real sessions above idle/bounce noise.
   let interactions = 0;
   let cur = entryPage ?? '/';
   const pushPath = (p: string | null) => {
@@ -79,7 +79,7 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
       if (p.scrollPct != null) maxScroll = p.scrollPct;
     }
   }
-  // Duration comes from the event timestamps (real elapsed time) — the session
+  // Duration comes from the event timestamps (real elapsed time): the session
   // row's started/ended can collapse when events flush in a single chunk.
   const firstTs = events.length ? events[0]!.timestamp : null;
   const lastTs = events.length ? events[events.length - 1]!.timestamp : null;
@@ -90,8 +90,8 @@ export function computeSessionAggregates(session: Session, events: RawEvent[]): 
       : null;
   const dur = durFromEvents != null && durFromEvents > 0 ? durFromEvents : durFromRow;
   // Active (engaged) time: sum only the gaps between consecutive events that are
-  // short enough to be continuous attention. Long idle stretches — the reason a
-  // 3-second glance becomes a 20-minute recording — are excluded.
+  // short enough to be continuous attention. Long idle stretches (the reason a
+  // 3-second glance becomes a 20-minute recording) are excluded.
   const ACTIVE_GAP_MS = 8_000;
   let activeMs = 0;
   for (let i = 1; i < events.length; i++) {

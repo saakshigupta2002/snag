@@ -14,4 +14,4 @@ e.g. `rage_click`
 **Params in effect** (from Settings → Detectors, if tuned)
 
 **Why it matters**
-Precision over coverage is the core promise — false positives get priority.
+Precision over coverage is the core promise: false positives get priority.

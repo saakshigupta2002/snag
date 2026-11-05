@@ -25,7 +25,7 @@ const SDK_JS = Buffer.from(SDK_BUNDLE_BASE64, 'base64').toString('utf8');
 const MAX_EVENTS_PER_BATCH = 5000;
 const RATE_LIMIT_PER_MIN = 240;
 
-/** Naive per-key sliding-window rate limiter — enough for v1 self-hosting. */
+/** Naive per-key sliding-window rate limiter: enough for v1 self-hosting. */
 class RateLimiter {
   private hits = new Map<string, number[]>();
   private lastSweep = 0;
@@ -65,14 +65,14 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
   void app.register(cors, { origin: true });
   const limiter = new RateLimiter();
 
-  // Management API auth — /ingest stays open (the public project key
+  // Management API auth: /ingest stays open (the public project key
   // identifies, it does not authenticate; rate limiting bounds abuse).
   app.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
     if (!req.url.startsWith('/api/')) return;
     if (req.url === '/api/health') return;
     // Public read-only demo resolve: the unguessable publicId in the path IS the
     // capability. It returns only {id, name, publicId} for an explicitly shared
-    // project — never traffic, and never anything for a project that isn't shared.
+    // project: never traffic and never anything for a project that isn't shared.
     if (req.url.startsWith('/api/public-projects/')) return;
     if (!config.apiToken) return;
     const auth = req.headers.authorization;
@@ -416,7 +416,7 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
 
   app.get('/api/projects/:id/issues/:groupKey', async (req, reply) => {
     const { id, groupKey } = req.params as { id: string; groupKey: string };
-    const key = decodeURIComponent(groupKey);
+    const key = groupKey; // Fastify has already decoded it
     const [issues, allIssues, notes] = await Promise.all([
       store.issuesByGroup(id, key),
       store.listIssues(id),
@@ -435,7 +435,7 @@ export function buildApp(store: Store, config: Config): FastifyInstance {
     if (status !== 'open' && status !== 'confirmed' && status !== 'dismissed') {
       return reply.code(400).send({ error: 'status must be open | confirmed | dismissed' });
     }
-    const key = decodeURIComponent(groupKey);
+    const key = groupKey; // Fastify has already decoded it
     const updated = await store.setGroupStatus(id, key, status, note);
     if (!updated) return reply.code(404).send({ error: 'not found' });
     const action = status === 'open' ? 'reopened' : status;

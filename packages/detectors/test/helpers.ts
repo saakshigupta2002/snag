@@ -105,7 +105,7 @@ export function pageHide(offsetMs: number): RawEvent {
   return snag(offsetMs, { kind: 'page_hide' });
 }
 
-/** A calm, healthy session — the negative fixture every detector must pass. */
+/** A calm, healthy session: the negative fixture every detector must pass. */
 export function normalSession(): RawEvent[] {
   return [
     snapshot(0),

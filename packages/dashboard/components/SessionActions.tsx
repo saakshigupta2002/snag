@@ -32,7 +32,7 @@ export function SessionActions({
         body: JSON.stringify({ favorite: next }),
       });
       if (!r.ok) throw new Error();
-      toast(next ? 'Favorited — kept past retention' : 'Removed from favorites', next ? 'ok' : 'info');
+      toast(next ? 'Favorited: kept past retention' : 'Removed from favorites', next ? 'ok' : 'info');
       router.refresh();
     } catch {
       setFav(!next);
@@ -51,7 +51,7 @@ export function SessionActions({
       router.refresh();
     } catch {
       setBusy(false);
-      toast('Could not delete — try again', 'error');
+      toast('Could not delete. Try again', 'error');
     }
   };
 

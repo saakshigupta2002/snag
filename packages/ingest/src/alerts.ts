@@ -19,7 +19,7 @@ export async function fireAlerts(
   if (!qualifying.length) return;
 
   const lines = qualifying.map((g) => `• [${g.severity.toUpperCase()}] ${g.title} (${g.detector})`);
-  const text = `🔎 Snag — ${qualifying.length} new issue${qualifying.length === 1 ? '' : 's'} in *${project.name}*\n${lines.join('\n')}`;
+  const text = `🔎 Snag: ${qualifying.length} new issue${qualifying.length === 1 ? '' : 's'} in *${project.name}*\n${lines.join('\n')}`;
 
   const body = JSON.stringify({
     text,

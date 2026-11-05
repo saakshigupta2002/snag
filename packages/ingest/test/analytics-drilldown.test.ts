@@ -82,7 +82,7 @@ describe('interactive analytics: scroll depth + session drill-down filters', () 
   });
 
   it('filters the sessions list by browser / errors / bot for drill-down', async () => {
-    // Stored ids are `<projectId>:<clientId>` — assert on the client suffix.
+    // Stored ids are `<projectId>:<clientId>`: assert on the client suffix.
     const clientId = (s: Session) => s.id.split(':').slice(1).join(':');
     expect((await sessions()).length).toBe(3);
     expect((await sessions('?browser=Chrome')).map(clientId)).toEqual(['A-deep']);

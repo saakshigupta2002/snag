@@ -86,7 +86,7 @@ export function SessionReplay({
     const [w, h] = dimsRef.current;
     const availW = stage.clientWidth || 900;
     // Bound the height so tall (portrait / mobile) recordings don't turn the
-    // player into an endless scroll, and fit to *both* axes so we never
+    // player into an endless scroll and fit to *both* axes so we never
     // overflow. The recording is then centred with a letterbox rather than
     // left-aligned in a sea of white.
     const maxH = Math.max(320, Math.min(Math.round(window.innerHeight * 0.62), 760));
@@ -194,7 +194,7 @@ export function SessionReplay({
         setState(hasVisual ? 'ready' : 'blank');
         requestAnimationFrame(fit);
         // When we're here for a specific flagged moment, roll the clip straight
-        // away — the point is to see the problem, not to press play and hunt.
+        // away: the point is to see the problem, not to press play and hunt.
         if (flagTsStart && hasVisual) {
           replayer.play(startOffset);
           setPlaying(true);
@@ -313,7 +313,7 @@ export function SessionReplay({
     if (!r) return;
     const clamped = Math.min(Math.max(ms, 0), totalMs);
     // Navigating outside the flagged clip means the user wants the wider
-    // session — drop clip mode so playback doesn't snap back to the clip.
+    // session: drop clip mode so playback doesn't snap back to the clip.
     if (clip && clipBounds && (clamped < clipBounds.start - 50 || clamped > clipBounds.end + 50)) {
       setClip(false);
     }
@@ -386,7 +386,7 @@ export function SessionReplay({
   const pct = totalMs ? (posMs / totalMs) * 100 : 0;
   const showControls = state === 'ready' || state === 'blank';
 
-  // The click the detector reacted to — shown as a spotlight ring in the frame
+  // The click the detector reacted to: shown as a spotlight ring in the frame
   // while the playhead is near it, so "the problem is here" is literal.
   const activeSpot = useMemo(() => {
     for (const s of spots) if (posMs >= s.offset - 400 && posMs <= s.offset + 2600) return s;
@@ -406,7 +406,7 @@ export function SessionReplay({
     };
   }, [flagTsStart, flagTsEnd, totalMs, state]);
 
-  // The handful of user actions right before the flag — a reproduction recipe
+  // The handful of user actions right before the flag: a reproduction recipe
   // assembled from the event trail, each seekable.
   const steps = useMemo(() => {
     if (!report || !flag) return [];
@@ -568,8 +568,8 @@ export function SessionReplay({
                   }}
                   title={
                     clip
-                      ? 'Playing just the flagged clip — switch to the full session'
-                      : 'Playing the full session — switch back to the flagged clip'
+                      ? 'Playing just the flagged clip. Switch to the full session'
+                      : 'Playing the full session. Switch back to the flagged clip'
                   }
                 >
                   {clip ? 'clip' : 'full'}
@@ -614,7 +614,7 @@ export function SessionReplay({
       <div className="evidence-col">
         {report && (
           <button className={`copy-report ${copied ? 'done' : ''}`} onClick={copyReport}>
-            {copied ? '✓ Copied — paste into GitHub / Linear / Slack' : '⧉ Copy bug report'}
+            {copied ? '✓ Copied. Paste into GitHub, Linear or Slack' : '⧉ Copy bug report'}
           </button>
         )}
 
@@ -667,7 +667,10 @@ export function SessionReplay({
 
 function humanStep(e: Ev): string {
   if (e.kind === 'navigation') return e.text.replace(/^navigate /, 'Went to ');
-  if (e.kind === 'click') return e.text.replace(/^click /, 'Clicked ');
+  if (e.kind === 'click') {
+    const label = e.text.match(/ "(.+)"$/);
+    return label ? `Clicked “${label[1]}”` : e.text.replace(/^click /, 'Clicked ');
+  }
   if (e.kind === 'form') return e.text.replace(/^form /, 'Form ');
   return e.text;
 }

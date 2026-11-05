@@ -23,7 +23,7 @@ const FILTER_KEYS = [
 ] as const;
 
 function fmtDur(ms: number): string {
-  if (!ms) return '—';
+  if (!ms) return '-';
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
   return `${Math.floor(s / 60)}m ${s % 60}s`;
@@ -76,7 +76,7 @@ export default async function SessionsPage({
     `/api/projects/${projectId}/sessions${query ? `?${query}` : ''}`,
   );
 
-  // Split real sessions from idle/bounce noise, and rank the real ones so the
+  // Split real sessions from idle/bounce noise and rank the real ones so the
   // sessions worth watching sit on top.
   const active = sessions.filter((s) => !isLowSignal(s)).sort(byActivity);
   const lowSignal = sessions.filter(isLowSignal).sort(byActivity);
@@ -133,7 +133,7 @@ export default async function SessionsPage({
           ) : (
             <>
               No sessions yet. Install the SDK from{' '}
-              <Link href={`/p/${projectId}/settings`}>Settings</Link> and use your app — sessions show
+              <Link href={`/p/${projectId}/settings`}>Settings</Link> and use your app. Sessions show
               up here within seconds.
             </>
           )}
@@ -144,7 +144,7 @@ export default async function SessionsPage({
             <SessionsTable sessions={active} basePath={basePath} owner />
           ) : (
             <div className="empty">
-              No sessions with activity in this set — only idle/bounce visits (below).
+              No sessions with activity in this set. Only idle/bounce visits (below).
             </div>
           )}
 
@@ -154,8 +154,8 @@ export default async function SessionsPage({
                 <span className="ls-caret" aria-hidden>
                   ▸
                 </span>
-                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'} —
-                no clicks or interactions
+                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'}: no clicks or
+                interactions
               </summary>
               <p className="ls-note muted">
                 A visitor opened a page and left without interacting. Kept for completeness; they

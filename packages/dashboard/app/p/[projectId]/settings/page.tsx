@@ -32,14 +32,16 @@ export default async function SettingsPage({
     api<{ funnels: FunnelDef[]; results: FunnelResult[] }>(`/api/projects/${projectId}/funnels`),
   ]);
 
-  const snippet = `import { Snag } from "@snag/sdk";
-
-Snag.init({
-  projectKey: "${project.projectKey}",
-  endpoint: "https://your-ingest-host",  // where @snag/ingest runs
-  maskAllInputs: true,                   // default — loosen deliberately
-  captureNetwork: true,                  // default — redaction always applied
-});`;
+  const ingest = process.env.PUBLIC_INGEST_URL || process.env.INGEST_URL || 'http://localhost:8787';
+  const snippet = `<script src="${ingest}/snag.js"></script>
+<script>
+  Snag.init({
+    projectKey: "${project.projectKey}",
+    endpoint: "${ingest}",
+    maskAllInputs: true,   // default, loosen deliberately
+    captureNetwork: true,  // default, redaction always applied
+  });
+</script>`;
 
   return (
     <>

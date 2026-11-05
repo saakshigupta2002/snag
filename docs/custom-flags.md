@@ -7,17 +7,17 @@ Three layers of control, revealed progressively: built-in defaults (zero effort)
 
 The creation UI splits the kinds **before you save**, so a flag's cost is never a surprise:
 
-| | Kind A — Mechanical | Kind B — Smart (AI) |
+| | Kind A: Mechanical | Kind B: Smart (AI) |
 |---|---|---|
 | Built with | Dropdown rule builder | Separate, clearly-labeled AI-flag form |
 | Checks | Facts code can measure | Judgment ("looks broken", "seems confusing") |
 | Cost | Zero, always | Model call on **your own key** |
 | Runtime path | Detection engine (deterministic) | AI worker (only on already-flagged clips, daily-capped) |
 
-## Kind A — mechanical rule shape
+## Kind A: mechanical rule shape
 
 The builder emits shapes composed entirely of primitives the engine evaluates deterministically
-over the event stream — free by definition:
+over the event stream: free by definition:
 
 ```json
 {
@@ -51,10 +51,10 @@ Selector matching is deliberately loose: the recorded selector path
 (`div#app > form.checkout > button#buy.btn`) matches a rule value like `#buy` or `.checkout`.
 
 Scope note: primitives observe the **event stream**. Conditions that require inspecting DOM
-state at a point in time (e.g. "element X is empty") aren't expressible yet — pair a mechanical
+state at a point in time (e.g. "element X is empty") aren't expressible yet: pair a mechanical
 flag with a Kind B judgment flag for those.
 
-## Kind B — AI judgment flags
+## Kind B: AI judgment flags
 
 ```json
 { "name": "Checkout looks broken", "severity": "high",
@@ -63,5 +63,5 @@ flag with a Kind B judgment flag for those.
 
 Kind B flags are stored and shown like any rule, but only ever evaluated by the AI worker:
 off unless the project's AI layer is enabled **and** the operator's key is present, only on
-already-flagged sessions, deduped, sampled, and hard-capped per day (`AI_DAILY_CAP`). No key,
-no calls, no cost — everything else keeps working.
+already-flagged sessions, deduped, sampled and hard-capped per day (`AI_DAILY_CAP`). No key,
+no calls, no cost: everything else keeps working.

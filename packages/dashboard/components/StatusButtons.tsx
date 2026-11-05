@@ -24,10 +24,6 @@ export function StatusButtons({
     const noteVal = note || undefined;
     setOptimistic(next);
     setNote('');
-    toast(
-      next === 'confirmed' ? 'Confirmed — real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
-      next === 'dismissed' ? 'info' : 'ok',
-    );
     fetch(`/api/projects/${projectId}/issues/${encodeURIComponent(groupKey)}/status`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -35,11 +31,15 @@ export function StatusButtons({
     })
       .then((r) => {
         if (!r.ok) throw new Error();
+        toast(
+          next === 'confirmed' ? 'Confirmed: real bug' : next === 'dismissed' ? 'Dismissed' : 'Reopened',
+          next === 'dismissed' ? 'info' : 'ok',
+        );
         router.refresh();
       })
       .catch(() => {
         setOptimistic(null);
-        toast('Could not update — try again', 'error');
+        toast('Could not update. Try again', 'error');
       });
   }
 
@@ -56,10 +56,10 @@ export function StatusButtons({
       />
       <div className="row">
         <button className="confirm" disabled={cur === 'confirmed'} onClick={() => set('confirmed')}>
-          ✓ Confirm — real bug
+          ✓ Confirm: real bug
         </button>
         <button className="dismiss" disabled={cur === 'dismissed'} onClick={() => set('dismissed')}>
-          Dismiss — normal
+          Dismiss: normal
         </button>
         {cur !== 'open' && <button onClick={() => set('open')}>Reopen</button>}
       </div>

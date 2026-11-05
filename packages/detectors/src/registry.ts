@@ -14,17 +14,17 @@ import {
 
 /**
  * The open/closed seam: adding a detector = drop a module in detectors/,
- * implement the Detector interface, and register it here. No core changes.
+ * implement the Detector interface and register it here. No core changes.
  */
 export const registry: Detector[] = [
-  // Tier 1 — default on
+  // Tier 1: default on
   rageClick,
   deadClick,
   consoleError,
   networkFailure,
   formAbandonment,
   backwardNavigation,
-  // Tier 2 — default off until tuned against real traffic (Principle 2)
+  // Tier 2: default off until tuned against real traffic (Principle 2)
   navigationThrash,
   refreshSpam,
   rapidBounce,

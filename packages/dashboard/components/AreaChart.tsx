@@ -6,12 +6,12 @@ import type { TrendPoint } from '@snag/shared';
 
 /**
  * A proper time-series area chart: y-axis with nice ticks + dashed gridlines,
- * x-axis day labels, a smooth area, point markers, and a hover crosshair with a
- * tooltip. Single-hue magnitude — no categorical palette. Sizes to its
+ * x-axis day labels, a smooth area, point markers and a hover crosshair with a
+ * tooltip. Single-hue magnitude: no categorical palette. Sizes to its
  * container via ResizeObserver so text stays crisp.
  *
  * When `drillBase` is set the chart becomes a range picker: click a day to open
- * that day's sessions, or drag across a span to open the sessions in it —
+ * that day's sessions, or drag across a span to open the sessions in it:
  * `drillBase?from=YYYY-MM-DD&to=YYYY-MM-DD`.
  */
 export function AreaChart({
@@ -46,7 +46,7 @@ export function AreaChart({
   if (data.length < 2) {
     return (
       <div ref={wrapRef} className="muted" style={{ fontSize: 12.5, padding: '20px 0' }}>
-        Not enough data yet — check back after a few more sessions.
+        Not enough data yet. Check back after a few more sessions.
       </div>
     );
   }

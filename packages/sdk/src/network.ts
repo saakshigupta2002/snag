@@ -4,7 +4,7 @@ import { redactBodyText, redactUrl, scrubText } from './redact.js';
 type Emit = (payload: SnagPayload) => void;
 
 export interface NetworkCaptureOptions {
-  /** The Snag ingest endpoint — its own traffic is never captured (no loops). */
+  /** The Snag ingest endpoint: its own traffic is never captured (no loops). */
   endpoint: string;
   captureBodies: 'redacted' | 'off';
   redactExtraKeys: string[];

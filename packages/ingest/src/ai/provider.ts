@@ -14,7 +14,7 @@ export interface AiProvider {
 /**
  * BYO-key, provider-agnostic. The operator supplies their own API key and
  * pays their own bill; nothing here ever runs unless a key is present.
- * Defaults are deliberately cheap models — the mechanical layer filtered
+ * Defaults are deliberately cheap models: the mechanical layer filtered
  * first, the model only glances at the tiny already-suspicious slice.
  */
 export function createProvider(

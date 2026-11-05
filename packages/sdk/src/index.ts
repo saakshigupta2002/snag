@@ -24,7 +24,7 @@ function doNotTrack(): boolean {
  *   Snag.init({ projectKey: "pk_live_xxx", endpoint: "https://ingest.myapp.com" });
  *
  * Records DOM events + network metadata, masks and redacts at source,
- * batches, and ships to your own ingest service. Fails quietly — it must
+ * batches and ships to your own ingest service. Fails quietly: it must
  * never break or noticeably slow the host app.
  */
 export const Snag = {
@@ -87,7 +87,7 @@ function start(options: SnagOptions): SnagHandle {
     try {
       record.addCustomEvent('snag', payload);
     } catch {
-      // recording may have stopped — drop quietly
+      // recording may have stopped: drop quietly
     }
   };
 

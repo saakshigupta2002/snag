@@ -169,7 +169,7 @@ export function installEmitters(emit: Emit): () => void {
       po.observe({ type, buffered: true } as PerformanceObserverInit);
       observers.push(po);
     } catch {
-      // entry type unsupported in this browser — skip
+      // entry type unsupported in this browser: skip
     }
   };
   // LCP is only valid up to the first user interaction; freeze it there.

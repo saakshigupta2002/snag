@@ -1,4 +1,4 @@
-/* The Snag wordmark — lowercase, with a quiet blinking console cursor. */
+/* The Snag wordmark: lowercase, with a quiet blinking console cursor. */
 export function Wordmark({ style }: { style?: React.CSSProperties }) {
   return (
     <div className="logo" style={style}>

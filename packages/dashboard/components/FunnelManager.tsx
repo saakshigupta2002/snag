@@ -32,7 +32,7 @@ export function FunnelManager({
       if (!r.ok) throw new Error();
       router.refresh();
     } catch {
-      toast('Could not save funnel — try again', 'error');
+      toast('Could not save funnel. Try again', 'error');
     } finally {
       setBusy(false);
     }
@@ -122,7 +122,7 @@ export function FunnelManager({
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Checkout flow" />
         </div>
         <div className="field">
-          <label>Steps — one page path per line, in order</label>
+          <label>Steps: one page path per line, in order</label>
           <textarea
             rows={4}
             className="mono"

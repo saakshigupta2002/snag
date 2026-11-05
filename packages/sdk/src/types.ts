@@ -4,7 +4,7 @@ export interface SnagOptions {
   /** Base URL of your self-hosted ingest service, e.g. "https://ingest.myapp.com". */
   endpoint: string;
 
-  /** Record every text input as dots. Default true — loosen deliberately. */
+  /** Record every text input as dots. Default true: loosen deliberately. */
   maskAllInputs?: boolean;
   /** CSS selectors whose elements are not recorded at all (placeholder box in replay). */
   block?: string[];

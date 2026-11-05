@@ -32,7 +32,7 @@ export default async function DemoSessions({
           {active.length > 0 ? (
             <SessionsTable sessions={active} basePath={basePath} />
           ) : (
-            <div className="empty">No sessions with activity yet — only idle visits (below).</div>
+            <div className="empty">No sessions with activity yet. Only idle visits (below).</div>
           )}
 
           {lowSignal.length > 0 && (
@@ -41,8 +41,8 @@ export default async function DemoSessions({
                 <span className="ls-caret" aria-hidden>
                   ▸
                 </span>
-                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'} —
-                no clicks or interactions
+                <b>{lowSignal.length}</b> low-signal session{lowSignal.length === 1 ? '' : 's'}: no clicks or
+                interactions
               </summary>
               <SessionsTable sessions={lowSignal} basePath={basePath} />
             </details>

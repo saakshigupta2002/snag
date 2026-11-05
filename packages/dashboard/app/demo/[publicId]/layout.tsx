@@ -40,9 +40,9 @@ export default async function DemoLayout({
         <div className="demo-banner">
           <span className="mono demo-live">◉ live demo</span>
           <span>
-            A read-only tour of <strong>{project.name}</strong> in Snag — a self-hosted, privacy-first
+            A read-only tour of <strong>{project.name}</strong> in Snag, a self-hosted, privacy-first
             session watcher. Browse the flagged issues and watch the replays. Nothing here can be
-            changed, and no account or data access is exposed.
+            changed and no account or data access is exposed.
           </span>
         </div>
         {children}

@@ -6,18 +6,18 @@ both built in:
 
 - **Detection runs inline on the final flush** (`PROCESS_ON_FINAL`, forced on by the serverless
   entry): when the SDK's tab-close beacon arrives, that session is sealed and scanned
-  immediately — no interval worker needed.
+  immediately: no interval worker needed.
 - **A cron hits `GET /api/admin/tick`** for the leftovers: sessions that never sent a final
-  flush (crashed tabs), retention pruning, and the AI pass.
+  flush (crashed tabs), retention pruning and the AI pass.
 
 ## 1 · Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Copy a **pooled** connection string (Connect → Session pooler), e.g.
    `postgres://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`
-3. Nothing to run by hand — Snag applies its schema on first boot.
+3. Nothing to run by hand: Snag applies its schema on first boot.
 
-## 2 · Vercel project A — ingest
+## 2 · Vercel project A: ingest
 
 Import the repo in Vercel and create a project with:
 
@@ -36,11 +36,11 @@ CRON_SECRET    = <same value as SNAG_API_TOKEN>
 # optional AI layer: AI_PROVIDER / AI_API_KEY / AI_MODEL / AI_DAILY_CAP
 ```
 
-`CRON_SECRET` must equal `SNAG_API_TOKEN`: Vercel Cron sends it as the bearer token, and the
-tick endpoint requires it. The bundled cron (`vercel.json`) runs daily at 03:00 UTC — on a Pro
+`CRON_SECRET` must equal `SNAG_API_TOKEN`: Vercel Cron sends it as the bearer token and the
+tick endpoint requires it. The bundled cron (`vercel.json`) runs daily at 03:00 UTC: on a Pro
 plan you can tighten the schedule (e.g. `*/10 * * * *`) so crashed-tab sessions surface faster.
 
-## 3 · Vercel project B — dashboard
+## 3 · Vercel project B: dashboard
 
 Second project from the same repo:
 
@@ -71,9 +71,9 @@ Snag.init({
 
 ## Caveats of the serverless shape
 
-- Sessions from crashed tabs (no final beacon) wait for the next cron tick to be sealed —
+- Sessions from crashed tabs (no final beacon) wait for the next cron tick to be sealed:
   daily on Hobby, minutes on Pro.
 - Function cold starts add ~a second to the first request; the pg pool is kept small
   (`PG_POOL_MAX=2` by default here) since every instance holds its own.
 - High-traffic apps should still prefer the always-on shape
-  ([docs/self-hosting.md](self-hosting.md)) — this path is for the low-volume, zero-ops case.
+  ([docs/self-hosting.md](self-hosting.md)): this path is for the low-volume, zero-ops case.

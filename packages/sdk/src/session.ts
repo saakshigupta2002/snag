@@ -13,7 +13,7 @@ export function getSessionId(): string {
   try {
     sid = sessionStorage.getItem(KEY);
   } catch {
-    // storage blocked — fall through to ephemeral id
+    // storage blocked: fall through to ephemeral id
   }
   if (!sid) {
     sid = newId('s');
@@ -32,7 +32,7 @@ export function getVisitorId(): string {
   try {
     vid = localStorage.getItem(VISITOR_KEY);
   } catch {
-    // storage blocked — ephemeral id, counts this visit as a new user
+    // storage blocked: ephemeral id, counts this visit as a new user
   }
   if (!vid) {
     vid = newId('v');

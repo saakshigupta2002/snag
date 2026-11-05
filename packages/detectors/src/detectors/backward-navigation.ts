@@ -7,7 +7,7 @@ type Nav = Extract<NormalizedEvent, { t: 'navigation' }>;
 
 /**
  * Backward navigation (U-turn): the user went forward to a page and bounced
- * straight back to where they came from — usually confusion, a dead end, or
+ * straight back to where they came from: usually confusion, a dead end, or
  * the wrong link label.
  */
 export const backwardNavigation: Detector = {

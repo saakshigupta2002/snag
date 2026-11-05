@@ -10,7 +10,7 @@ export default function NewProjectPage() {
       <div className="login-card" style={{ width: 460 }}>
         <Wordmark style={{ padding: 0, marginBottom: 14, fontSize: 22 }} />
         <p className="muted" style={{ marginBottom: 18 }}>
-          Create a new project — it gets its own SDK key and its own dashboard. One deployment can
+          Create a new project. It gets its own SDK key and its own dashboard. One deployment can
           watch many apps.
         </p>
         <CreateProjectForm />

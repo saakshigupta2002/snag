@@ -67,7 +67,7 @@ export function ProjectSettingsForm({
       <p className="muted" style={{ fontSize: 12.5 }}>
         Off by default; zero model calls unless enabled here <em>and</em> the server has{' '}
         <code>AI_PROVIDER</code> + <code>AI_API_KEY</code> set. The model only glances at
-        already-flagged moments — never raw traffic — on your own key and bill.
+        already-flagged moments (never raw traffic) on your own key and bill.
       </p>
       <div className="field row">
         <input

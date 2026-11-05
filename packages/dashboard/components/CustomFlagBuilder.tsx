@@ -43,7 +43,7 @@ function toCondition(d: ConditionDraft): MechanicalCondition | null {
 export function CustomFlagBuilder({ projectId }: { projectId: string }) {
   const router = useRouter();
 
-  // ── Kind A — mechanical (free) ─────────────────────────────────────────────
+  // ── Kind A: mechanical (free) ─────────────────────────────────────────────
   const [name, setName] = useState('');
   const [severity, setSeverity] = useState<Severity>('medium');
   const [within, setWithin] = useState('10s');
@@ -52,7 +52,7 @@ export function CustomFlagBuilder({ projectId }: { projectId: string }) {
   ]);
   const [busyA, setBusyA] = useState(false);
 
-  // ── Kind B — AI judgment (BYO-key) ────────────────────────────────────────
+  // ── Kind B: AI judgment (BYO-key) ────────────────────────────────────────
   const [aiName, setAiName] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiSeverity, setAiSeverity] = useState<Severity>('medium');

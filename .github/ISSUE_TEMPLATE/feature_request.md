@@ -8,6 +8,6 @@ labels: enhancement
 What rough moment or workflow gap is this about?
 
 **Proposed solution**
-If it's a new detector: what's the firing condition, and why would it rarely lie?
+If it's a new detector: what's the firing condition and why would it rarely lie?
 
 **Alternatives considered**

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Issue, IssueGroup, IssueNote, TrendPoint } from '@snag/shared';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, pathSegment } from '@/lib/api';
 import { timeAgo } from '@/lib/format';
 import { describeIssue, evidenceCode, issueSignals } from '@/lib/issue';
 import { SessionReplay } from '@/components/SessionReplay';
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 function pageOf(meta: Record<string, unknown>): string {
   const raw = (meta.page as string) || (meta.url as string) || '';
-  if (!raw) return '—';
+  if (!raw) return '-';
   try {
     return new URL(raw, 'http://x.local').pathname || '/';
   } catch {
@@ -30,7 +30,7 @@ export default async function IssueDetailPage({
 
   let data: { group: IssueGroup; issues: Issue[]; notes: IssueNote[]; trend: TrendPoint[] };
   try {
-    data = await api(`/api/projects/${projectId}/issues/${groupKey}`);
+    data = await api(`/api/projects/${projectId}/issues/${pathSegment(groupKey)}`);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
@@ -69,7 +69,7 @@ export default async function IssueDetailPage({
           {code && <pre className="finding-code">{code}</pre>}
           {sample.sessionId && (
             <p className="finding-hint muted">
-              The flagged moment is highlighted on the replay timeline below — hit play, or click
+              The flagged moment is highlighted on the replay timeline below. Hit play, or click
               <span className="finding-chip">◆ flagged moment</span> to jump straight to it.
             </p>
           )}

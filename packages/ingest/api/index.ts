@@ -7,7 +7,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const app = await getApp();
     await app.ready();
-    // Keep the invocation alive until Fastify has finished the response —
+    // Keep the invocation alive until Fastify has finished the response:
     // returning before res is done makes Vercel report a failed invocation.
     const done = new Promise<void>((resolve) => {
       res.once('finish', resolve);

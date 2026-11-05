@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, pathSegment } from '@/lib/api';
 
 export async function POST(
   req: NextRequest,
@@ -8,7 +8,7 @@ export async function POST(
   const { id, groupKey } = await ctx.params;
   try {
     const body = await req.json();
-    const result = await api(`/api/projects/${id}/issues/${groupKey}/status`, {
+    const result = await api(`/api/projects/${id}/issues/${pathSegment(groupKey)}/status`, {
       method: 'POST',
       body: JSON.stringify(body),
     });

@@ -21,7 +21,7 @@ import { FunnelManager } from './FunnelManager';
 type TabId = 'general' | 'detectors' | 'flags' | 'funnels' | 'alerts' | 'sharing';
 
 const TABS: { id: TabId; label: string; blurb: string }[] = [
-  { id: 'general', label: 'General', blurb: 'Project name, retention, and the SDK install snippet.' },
+  { id: 'general', label: 'General', blurb: 'Project name, retention and the SDK install snippet.' },
   { id: 'detectors', label: 'Detectors', blurb: 'Toggle and tune what gets flagged, per project.' },
   { id: 'flags', label: 'Custom flags', blurb: 'Your own rules on top of the built-in detectors.' },
   { id: 'funnels', label: 'Funnels', blurb: 'Track a flow and watch the sessions behind each drop-off.' },

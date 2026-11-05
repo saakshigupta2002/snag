@@ -11,7 +11,10 @@ async function main(): Promise<void> {
     ? new PostgresStore(config.databaseUrl, config.pgPoolMax)
     : new MemoryStore();
   if (!config.databaseUrl) {
-    console.warn('[snag] DATABASE_URL not set — using in-memory storage (data is lost on restart)');
+    console.warn('[snag] DATABASE_URL not set: using in-memory storage (data is lost on restart)');
+  }
+  if (!config.apiToken) {
+    console.warn('[snag] SNAG_API_TOKEN not set: the management API is open. Set it before exposing this service.');
   }
   await store.init();
 

@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const { password } = (await req.json().catch(() => ({}))) as { password?: string };
   const configured = process.env.DASHBOARD_PASSWORD;
   if (!configured) {
-    // Auth disabled — accept anything so local setups aren't locked out.
+    // Auth disabled: accept anything so local setups aren't locked out.
     return NextResponse.json({ ok: true });
   }
   if (password !== configured) {

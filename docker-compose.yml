@@ -1,3 +1,6 @@
+# Local trial setup. Every port is bound to this machine because the defaults
+# below are not secrets. To go live, set real values in .env and put a reverse
+# proxy in front: see docs/self-hosting.md.
 services:
   db:
     image: postgres:16-alpine
@@ -6,7 +9,7 @@ services:
       POSTGRES_PASSWORD: snag
       POSTGRES_DB: snag
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -29,7 +32,7 @@ services:
       AI_MODEL: ${AI_MODEL:-}
       AI_DAILY_CAP: ${AI_DAILY_CAP:-50}
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
     depends_on:
       db:
         condition: service_healthy
@@ -40,11 +43,12 @@ services:
       dockerfile: packages/dashboard/Dockerfile
     environment:
       INGEST_URL: http://ingest:8787
+      PUBLIC_INGEST_URL: ${PUBLIC_INGEST_URL:-http://localhost:8787}
       SNAG_API_TOKEN: ${SNAG_API_TOKEN:-dev-token-change-me}
       SNAG_SECRET: ${SNAG_SECRET:-dev-secret-change-me}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-snag}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - ingest
 

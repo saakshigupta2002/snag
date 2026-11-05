@@ -17,4 +17,4 @@ labels: bug
 **Steps to reproduce**
 
 **Logs / screenshots**
-Redact anything sensitive — session data stays on your infrastructure and we never need it.
+Redact anything sensitive: session data stays on your infrastructure and we never need it.

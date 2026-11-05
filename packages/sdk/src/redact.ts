@@ -1,7 +1,7 @@
 /**
- * Redaction — pure functions, no DOM. Two layers, because either can miss:
- *   (1) by key name  — a denylist of key names catches the obvious cases
- *   (2) by pattern   — a value-shape safety net catches secrets named oddly
+ * Redaction: pure functions, no DOM. Two layers, because either can miss:
+ *   (1) by key name: a denylist of key names catches the obvious cases
+ *   (2) by pattern: a value-shape safety net catches secrets named oddly
  * Everything runs in the browser BEFORE transmission: a raw secret must never
  * enter the database, then it physically cannot leak from the dashboard.
  */
@@ -52,7 +52,7 @@ export function isDenylistedKey(key: string, extraKeys: string[] = []): boolean 
 const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
 const JWT_RE = /\beyJ[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\b/;
 const CARD_RE = /\b(?:\d[ -]?){13,19}\b/;
-// ≥24 chars of token alphabet containing both letters and digits — API-key shaped.
+// ≥24 chars of token alphabet containing both letters and digits: API-key shaped.
 const LONG_TOKEN_RE = /\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{24,}\b/;
 const BEARER_RE = /\bbearer\s+\S+/i;
 
@@ -87,7 +87,7 @@ export function looksSensitive(value: string): boolean {
 /**
  * Replace sensitive-shaped tokens inside otherwise-useful text. `redact` decides
  * what each match becomes: a fixed marker for metadata, or a same-length mask for
- * on-screen text (so the element keeps its width — see scrubTextKeepingWidth).
+ * on-screen text (so the element keeps its width: see scrubTextKeepingWidth).
  */
 function scrubWith(text: string, redact: (match: string) => string): string {
   let out = text
@@ -145,7 +145,7 @@ export function redactUrl(url: string, extraKeys: string[] = []): string {
   }
 }
 
-/** Authorization headers and cookies — always. Others by key + pattern. */
+/** Authorization headers and cookies: always. Others by key + pattern. */
 export function redactHeaders(
   headers: Record<string, string>,
   extraKeys: string[] = [],

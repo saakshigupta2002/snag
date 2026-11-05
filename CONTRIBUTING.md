@@ -1,7 +1,7 @@
 # Contributing to Snag
 
 Thanks for helping. The bar for the project is simple: a stranger should be able to understand,
-trust, and run it in ten minutes.
+trust and run it in ten minutes.
 
 ## Setup
 
@@ -43,10 +43,10 @@ docs/                self-hosting, configuration, detectors, custom flags
   own key. The mechanical path must work fully without one.
 - **Small, isolated vendor adapters.** DB/host/model-provider code stays behind interfaces
   (`Store`, `AiProvider`) so self-hosters can swap pieces.
-- No secrets in code — everything via env vars; `.env.example` stays blank; CI runs a secret
+- No secrets in code: everything via env vars; `.env.example` stays blank; CI runs a secret
   scan.
 
 ## Pull requests
 
-Branch from `main`, keep PRs focused, make sure `npm run typecheck && npm test` pass, and fill
+Branch from `main`, keep PRs focused, make sure `npm run check` passes and fill
 in the PR template. For behavior changes, update the relevant doc in `docs/`.

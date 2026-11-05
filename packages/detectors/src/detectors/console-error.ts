@@ -4,7 +4,7 @@ import { makeGroupKey, normalizeMessage, patternMatches, truncate } from '../uti
 
 /**
  * Console error: any console.error or uncaught exception. Uncaught exceptions
- * are high severity; console.error is medium. Warnings are ignored — too noisy.
+ * are high severity; console.error is medium. Warnings are ignored: too noisy.
  */
 export const consoleError: Detector = {
   id: 'console_error',
