@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: packages/ingest/Dockerfile
     environment:
-      DATABASE_URL: postgres://snag:snag@db:5432/snag
+      DATABASE_URL: postgres://snag:snag@db:5432/snag?sslmode=disable
       PORT: "8787"
       SNAG_API_TOKEN: ${SNAG_API_TOKEN:-dev-token-change-me}
       RETENTION_DAYS: ${RETENTION_DAYS:-30}
