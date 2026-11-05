@@ -14,7 +14,9 @@
     },
     "./iife": "./dist/snag.iife.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/bundle.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -27,6 +29,6 @@
   "devDependencies": {
     "esbuild": "^0.28.1",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.7"
+    "vitest": "^5.1.0"
   }
 }
