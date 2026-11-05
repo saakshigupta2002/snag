@@ -1104,7 +1104,7 @@ a.funnel-drop-link:hover {
   min-height: 220px;
 }
 /* Click-anywhere-to-pause overlay (rrweb replay is a viewer, not interactive).
-   Center cluster (rewind 10 · play/pause · forward 10) shows on hover, and
+   Center cluster (rewind 10 · play/pause · forward 10) shows on hover and
    stays visible whenever paused: YouTube-style. */
 .replay-overlay {
   position: absolute;
