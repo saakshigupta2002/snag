@@ -86,7 +86,7 @@ Every port stays on your machine until you choose otherwise. [docs/self-hosting.
 
 ## What it catches
 
-These came from 12 recorded sessions on the demo shop, with no configuration.
+Snag caught all five bugs planted in the demo shop, across 12 scripted visits and with no configuration.
 
 | It noticed | What Snag showed | Severity |
 |---|---|---|
