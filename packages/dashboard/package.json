@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@snag/shared": "*",
+    "geist": "^1.9.1",
     "next": "15.5.29",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

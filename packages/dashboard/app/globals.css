@@ -61,12 +61,12 @@
   /* Accent focus ring for keyboard users: visible, on-brand, offset. */
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(255, 255, 255, 0.55);
 
-  --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --display: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --display: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
   /* The data face: every measured number is monospace + tabular, so the app
      reads like an instrument, not a marketing page. */
-  --data: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  --data: var(--font-geist-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Type scale: deliberate steps, not near-uniform sizing. */
   --fs-display: 30px;
