@@ -6,5 +6,7 @@
 useDefault = true
 
 [allowlist]
-description = "Synthetic secret-shaped fixtures used to test the redaction layer"
+description = "Synthetic fixtures for the redaction tests and the local default token"
 paths = ['''packages/sdk/test/redact\.test\.ts''']
+# The default local token in docker-compose.yml, used by the CI start-up test. It is not a secret.
+regexes = ['''dev-token-change-me''']
