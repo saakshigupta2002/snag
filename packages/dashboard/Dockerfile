@@ -1,13 +1,13 @@
 # Build from the repo root: docker build -f packages/dashboard/Dockerfile .
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json packages/shared/
 COPY packages/detectors/package.json packages/detectors/
 COPY packages/sdk/package.json packages/sdk/
 COPY packages/ingest/package.json packages/ingest/
 COPY packages/dashboard/package.json packages/dashboard/
-RUN npm install --workspaces --include-workspace-root --ignore-scripts
+RUN npm ci --ignore-scripts
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY packages/detectors packages/detectors
