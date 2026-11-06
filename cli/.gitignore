@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Go build artifacts (the `snag/` package dir must NOT be ignored: only binaries)
+/snag-cli-bin
+*.test
+*.out
+
+# Node (playwright scratch)
+node_modules/
+test-results/
+playwright-report/
+.snag-explore/
+
+# Local data / editor
+*.db
+.DS_Store
+.idea/
+.vscode/

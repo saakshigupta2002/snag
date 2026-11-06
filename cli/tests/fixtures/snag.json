@@ -1,0 +1,2671 @@
+{
+ "projects": [
+  {
+   "id": "demo",
+   "name": "Demo Shop",
+   "projectKey": "pk_live_example",
+   "settings": {},
+   "createdAt": "2026-11-05T01:38:59.246Z"
+  }
+ ],
+ "project": {
+  "id": "demo",
+  "name": "Demo Shop",
+  "projectKey": "pk_live_example",
+  "settings": {},
+  "createdAt": "2026-11-05T01:38:59.246Z"
+ },
+ "issues": [
+  {
+   "groupKey": "console_error|Uncaught TypeError: discount.apply is not a function",
+   "detector": "console_error",
+   "severity": "high",
+   "title": "Uncaught exception: Uncaught TypeError: discount.apply is not a function",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 5,
+   "sessionCount": 5,
+   "firstSeen": "2026-11-05T01:39:24.209Z",
+   "lastSeen": "2026-11-05T01:40:24.215Z",
+   "sample": {
+    "detector": "console_error",
+    "severity": "high",
+    "tsStart": 1793842821078,
+    "tsEnd": 1793842821078,
+    "groupKey": "console_error|Uncaught TypeError: discount.apply is not a function",
+    "title": "Uncaught exception: Uncaught TypeError: discount.apply is not a function",
+    "meta": {
+     "message": "Uncaught TypeError: discount.apply is not a function",
+     "uncaught": true,
+     "stack": "TypeError: discount.apply is not a function\n    at http://shop.example/app.js:25:13"
+    },
+    "occurrences": 1,
+    "sessionId": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "4a043ec5-52fa-4b30-ab06-25097ef9b2ea",
+    "createdAt": "2026-11-05T01:40:24.215Z"
+   }
+  },
+  {
+   "groupKey": "network_failure|POST /api/orders 5xx",
+   "detector": "network_failure",
+   "severity": "high",
+   "title": "POST /api/orders failed (500)",
+   "status": "confirmed",
+   "source": "detector",
+   "occurrences": 14,
+   "sessionCount": 7,
+   "firstSeen": "2026-11-05T01:39:14.211Z",
+   "lastSeen": "2026-11-05T01:40:24.215Z",
+   "sample": {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842818684,
+    "tsEnd": 1793842818684,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 64,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "8856fa40-1291-4d99-833c-06b3576b7c91",
+    "createdAt": "2026-11-05T01:40:24.215Z"
+   }
+  },
+  {
+   "groupKey": "rage_click|button#rage-button",
+   "detector": "rage_click",
+   "severity": "medium",
+   "title": "Rage click on “Checkout now”",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 6,
+   "sessionCount": 6,
+   "firstSeen": "2026-11-05T01:39:24.209Z",
+   "lastSeen": "2026-11-05T01:40:24.214Z",
+   "sample": {
+    "detector": "rage_click",
+    "severity": "medium",
+    "tsStart": 1793842812623,
+    "tsEnd": 1793842813621,
+    "groupKey": "rage_click|button#rage-button",
+    "title": "Rage click on “Checkout now”",
+    "meta": {
+     "selector": "button#rage-button",
+     "text": "Checkout now",
+     "clicks": 7,
+     "x": 108,
+     "y": 165
+    },
+    "occurrences": 1,
+    "sessionId": "demo:50750653-02f2-4e54-964b-c0104d7e2fca",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "fd4fb36f-dff9-4fd3-961c-4a0277b57977",
+    "createdAt": "2026-11-05T01:40:24.214Z"
+   }
+  },
+  {
+   "groupKey": "form_abandonment|form#signup-form",
+   "detector": "form_abandonment",
+   "severity": "low",
+   "title": "Form abandoned: form#signup-form",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 4,
+   "sessionCount": 4,
+   "firstSeen": "2026-11-05T01:39:34.211Z",
+   "lastSeen": "2026-11-05T01:40:24.214Z",
+   "sample": {
+    "detector": "form_abandonment",
+    "severity": "low",
+    "tsStart": 1793842810903,
+    "tsEnd": 1793842815342,
+    "groupKey": "form_abandonment|form#signup-form",
+    "title": "Form abandoned: form#signup-form",
+    "meta": {
+     "formSelector": "form#signup-form",
+     "fieldsInteracted": 1
+    },
+    "occurrences": 1,
+    "sessionId": "demo:50750653-02f2-4e54-964b-c0104d7e2fca",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "b76825c1-a210-437f-b34b-4645c99a3748",
+    "createdAt": "2026-11-05T01:40:24.214Z"
+   }
+  },
+  {
+   "groupKey": "dead_click|button#dead-button",
+   "detector": "dead_click",
+   "severity": "low",
+   "title": "Dead click on “Add to cart”",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 4,
+   "sessionCount": 2,
+   "firstSeen": "2026-11-05T01:39:24.210Z",
+   "lastSeen": "2026-11-05T01:40:04.213Z",
+   "sample": {
+    "detector": "dead_click",
+    "severity": "low",
+    "tsStart": 1793842789880,
+    "tsEnd": 1793842792880,
+    "groupKey": "dead_click|button#dead-button",
+    "title": "Dead click on “Add to cart”",
+    "meta": {
+     "selector": "button#dead-button",
+     "text": "Add to cart"
+    },
+    "occurrences": 2,
+    "sessionId": "demo:ba841153-f9c3-480f-8fd5-a26d72719ecf",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "754f3123-bc59-427b-8ae2-db67590ff96f",
+    "createdAt": "2026-11-05T01:40:04.213Z"
+   }
+  },
+  {
+   "groupKey": "dead_click|html > body > header > nav > a",
+   "detector": "dead_click",
+   "severity": "low",
+   "title": "Dead click on “Home”",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 1,
+   "sessionCount": 1,
+   "firstSeen": "2026-11-05T01:39:44.211Z",
+   "lastSeen": "2026-11-05T01:39:44.211Z",
+   "sample": {
+    "detector": "dead_click",
+    "severity": "low",
+    "tsStart": 1793842772482,
+    "tsEnd": 1793842775482,
+    "groupKey": "dead_click|html > body > header > nav > a",
+    "title": "Dead click on “Home”",
+    "meta": {
+     "selector": "html > body > header > nav > a",
+     "text": "Home"
+    },
+    "occurrences": 1,
+    "sessionId": "demo:25664785-dd3a-4967-93ff-303e5155e894",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "b5682ffb-b978-4cfd-a28f-6b227ba57dbb",
+    "createdAt": "2026-11-05T01:39:44.211Z"
+   }
+  },
+  {
+   "groupKey": "dead_click|button#rage-button",
+   "detector": "dead_click",
+   "severity": "low",
+   "title": "Dead click on “Checkout now”",
+   "status": "open",
+   "source": "detector",
+   "occurrences": 6,
+   "sessionCount": 1,
+   "firstSeen": "2026-11-05T01:39:24.209Z",
+   "lastSeen": "2026-11-05T01:39:24.209Z",
+   "sample": {
+    "detector": "dead_click",
+    "severity": "low",
+    "tsStart": 1793842750665,
+    "tsEnd": 1793842753665,
+    "groupKey": "dead_click|button#rage-button",
+    "title": "Dead click on “Checkout now”",
+    "meta": {
+     "selector": "button#rage-button",
+     "text": "Checkout now"
+    },
+    "occurrences": 6,
+    "sessionId": "demo:fae167a4-a088-4543-bfa4-839b57da816d",
+    "projectId": "demo",
+    "status": "open",
+    "source": "detector",
+    "id": "a72595f2-2b87-4164-b1c0-46e2af82df5c",
+    "createdAt": "2026-11-05T01:39:24.209Z"
+   }
+  }
+ ],
+ "issue": {
+  "group": {
+   "groupKey": "network_failure|POST /api/orders 5xx",
+   "detector": "network_failure",
+   "severity": "high",
+   "title": "POST /api/orders failed (500)",
+   "status": "confirmed",
+   "source": "detector",
+   "occurrences": 14,
+   "sessionCount": 7,
+   "firstSeen": "2026-11-05T01:39:14.211Z",
+   "lastSeen": "2026-11-05T01:40:24.215Z",
+   "sample": {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842818684,
+    "tsEnd": 1793842818684,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 64,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "8856fa40-1291-4d99-833c-06b3576b7c91",
+    "createdAt": "2026-11-05T01:40:24.215Z"
+   }
+  },
+  "issues": [
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842746651,
+    "tsEnd": 1793842746651,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 70,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:1a33ecb5-f447-4fa8-92f7-49b29f205cb9",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "300d3912-f7a2-45fa-b733-b927c1ce9bc9",
+    "createdAt": "2026-11-05T01:39:14.211Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842759981,
+    "tsEnd": 1793842759981,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 69,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:68c74396-5593-4587-84b1-f936969bc146",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "691090fa-3c83-49a2-b287-934557d56546",
+    "createdAt": "2026-11-05T01:39:24.210Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842766772,
+    "tsEnd": 1793842766772,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 7,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:9bf0073c-ae84-43ee-8747-f86f50c9a7b6",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "93f84004-894f-4ca0-af72-2334db210ab6",
+    "createdAt": "2026-11-05T01:39:34.211Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842776982,
+    "tsEnd": 1793842776982,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 60,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:b29d0e02-fec8-44aa-906d-b34ed843a4d6",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "8fa9c0ef-3e07-4642-8b7f-d769e048f52f",
+    "createdAt": "2026-11-05T01:39:44.211Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842787474,
+    "tsEnd": 1793842787474,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 60,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:ba841153-f9c3-480f-8fd5-a26d72719ecf",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "26b7ff36-b63a-4709-8ae2-4591416d37c9",
+    "createdAt": "2026-11-05T01:40:04.213Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842804801,
+    "tsEnd": 1793842804801,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 65,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:5ca2386f-e615-4137-ba0e-ce4dbe7152a7",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "0d1dcc60-528e-44bf-b669-8d975b45d982",
+    "createdAt": "2026-11-05T01:40:14.215Z"
+   },
+   {
+    "detector": "network_failure",
+    "severity": "high",
+    "tsStart": 1793842818684,
+    "tsEnd": 1793842818684,
+    "groupKey": "network_failure|POST /api/orders 5xx",
+    "title": "POST /api/orders failed (500)",
+    "meta": {
+     "method": "POST",
+     "url": "/api/orders",
+     "status": 500,
+     "durationMs": 64,
+     "timedOut": false
+    },
+    "occurrences": 2,
+    "sessionId": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+    "projectId": "demo",
+    "status": "confirmed",
+    "source": "detector",
+    "id": "8856fa40-1291-4d99-833c-06b3576b7c91",
+    "createdAt": "2026-11-05T01:40:24.215Z"
+   }
+  ],
+  "notes": [
+   {
+    "id": "6d017555-14af-4d06-bf39-1ac82fa12a38",
+    "action": "confirmed",
+    "note": null,
+    "createdAt": "2026-11-05T01:41:36.973Z"
+   },
+   {
+    "id": "22de57b1-1aa9-41ec-826b-50a87d455494",
+    "action": "reopened",
+    "note": null,
+    "createdAt": "2026-11-05T01:40:28.940Z"
+   },
+   {
+    "id": "f2bbf9f0-f9ad-47ca-af34-c3c7f235dfce",
+    "action": "confirmed",
+    "note": null,
+    "createdAt": "2026-11-05T01:40:28.918Z"
+   }
+  ],
+  "trend": [
+   {
+    "day": "2026-10-23",
+    "count": 0
+   },
+   {
+    "day": "2026-10-24",
+    "count": 0
+   },
+   {
+    "day": "2026-10-25",
+    "count": 0
+   },
+   {
+    "day": "2026-10-26",
+    "count": 0
+   },
+   {
+    "day": "2026-10-27",
+    "count": 0
+   },
+   {
+    "day": "2026-10-28",
+    "count": 0
+   },
+   {
+    "day": "2026-10-29",
+    "count": 0
+   },
+   {
+    "day": "2026-10-30",
+    "count": 0
+   },
+   {
+    "day": "2026-10-31",
+    "count": 0
+   },
+   {
+    "day": "2026-11-01",
+    "count": 0
+   },
+   {
+    "day": "2026-11-02",
+    "count": 0
+   },
+   {
+    "day": "2026-11-03",
+    "count": 0
+   },
+   {
+    "day": "2026-11-04",
+    "count": 0
+   },
+   {
+    "day": "2026-11-05",
+    "count": 14
+   }
+  ]
+ },
+ "sessions": [
+  {
+   "id": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:40:20.529Z",
+   "endedAt": "2026-11-05T01:40:22.774Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "535b5e9a-5370-4515-8450-937ee45fa74a",
+   "country": null,
+   "status": "processed",
+   "eventCount": 46,
+   "pageviews": 3,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 10,
+   "activeMs": 7243,
+   "maxScrollPct": 98,
+   "durationMs": 7243,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 44,
+   "inpMs": 704,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:50750653-02f2-4e54-964b-c0104d7e2fca",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:40:15.169Z",
+   "endedAt": "2026-11-05T01:40:15.343Z",
+   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "mobile",
+   "referrer": null,
+   "visitorId": "26eb8d68-aba1-46ad-9cd0-026d4724c96f",
+   "country": null,
+   "status": "processed",
+   "eventCount": 50,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 9,
+   "activeMs": 5171,
+   "maxScrollPct": 71,
+   "durationMs": 5171,
+   "browser": "Safari",
+   "os": "iOS",
+   "isBot": false,
+   "lcpMs": 60,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:5ca2386f-e615-4137-ba0e-ce4dbe7152a7",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:40:06.716Z",
+   "endedAt": "2026-11-05T01:40:09.955Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "36a9688c-445b-4c74-8147-66dce14edee9",
+   "country": null,
+   "status": "processed",
+   "eventCount": 65,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 11,
+   "activeMs": 8238,
+   "maxScrollPct": 98,
+   "durationMs": 8238,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 56,
+   "inpMs": null,
+   "cls": 0.025,
+   "customEvents": []
+  },
+  {
+   "id": "demo:af4d723d-2440-447b-b7cc-0c5d9b0477e7",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:40:00.103Z",
+   "endedAt": "2026-11-05T01:40:01.502Z",
+   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "39ed140b-7c4f-40c4-b86f-b3f1f3d65585",
+   "country": null,
+   "status": "processed",
+   "eventCount": 41,
+   "pageviews": 3,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 10,
+   "activeMs": 6399,
+   "maxScrollPct": 65,
+   "durationMs": 6399,
+   "browser": "Chrome",
+   "os": "Windows",
+   "isBot": false,
+   "lcpMs": 52,
+   "inpMs": 1824,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:ba841153-f9c3-480f-8fd5-a26d72719ecf",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:51.654Z",
+   "endedAt": "2026-11-05T01:39:54.899Z",
+   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "mobile",
+   "referrer": null,
+   "visitorId": "8a60b263-a5ee-41a5-824b-84dcb8b2bf29",
+   "country": null,
+   "status": "processed",
+   "eventCount": 68,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 11,
+   "activeMs": 8246,
+   "maxScrollPct": 91,
+   "durationMs": 8246,
+   "browser": "Safari",
+   "os": "iOS",
+   "isBot": false,
+   "lcpMs": 52,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:d285dea0-974c-4276-8a4c-e9079d64b62d",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:46.299Z",
+   "endedAt": "2026-11-05T01:39:46.452Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "9f25328c-0d90-43b9-8ca1-2ed055d8491a",
+   "country": null,
+   "status": "processed",
+   "eventCount": 48,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 9,
+   "activeMs": 5153,
+   "maxScrollPct": 65,
+   "durationMs": 5153,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 68,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:b29d0e02-fec8-44aa-906d-b34ed843a4d6",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:41.094Z",
+   "endedAt": "2026-11-05T01:39:41.096Z",
+   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "ac02747e-d361-4e41-bd44-0d4de78bddd3",
+   "country": null,
+   "status": "processed",
+   "eventCount": 28,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 4,
+   "activeMs": 4946,
+   "maxScrollPct": 98,
+   "durationMs": 4946,
+   "browser": "Chrome",
+   "os": "Windows",
+   "isBot": false,
+   "lcpMs": 48,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:25664785-dd3a-4967-93ff-303e5155e894",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:35.021Z",
+   "endedAt": "2026-11-05T01:39:35.961Z",
+   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "mobile",
+   "referrer": null,
+   "visitorId": "dae4fa39-c31d-4589-95ad-f9e28103bd93",
+   "country": null,
+   "status": "processed",
+   "eventCount": 38,
+   "pageviews": 3,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 8,
+   "activeMs": 5940,
+   "maxScrollPct": 0,
+   "durationMs": 5940,
+   "browser": "Safari",
+   "os": "iOS",
+   "isBot": false,
+   "lcpMs": 68,
+   "inpMs": 936,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:9bf0073c-ae84-43ee-8747-f86f50c9a7b6",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:28.165Z",
+   "endedAt": "2026-11-05T01:39:29.803Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "af404982-4e31-4083-b462-b0e586bbb136",
+   "country": null,
+   "status": "processed",
+   "eventCount": 37,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 6,
+   "activeMs": 6637,
+   "maxScrollPct": 65,
+   "durationMs": 6637,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 56,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:68c74396-5593-4587-84b1-f936969bc146",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:19.711Z",
+   "endedAt": "2026-11-05T01:39:22.958Z",
+   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "94ad7296-beff-4ea7-b0b9-260c5e6920ad",
+   "country": null,
+   "status": "processed",
+   "eventCount": 65,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 11,
+   "activeMs": 8244,
+   "maxScrollPct": 98,
+   "durationMs": 8244,
+   "browser": "Chrome",
+   "os": "Windows",
+   "isBot": false,
+   "lcpMs": 64,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:fae167a4-a088-4543-bfa4-839b57da816d",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:14.516Z",
+   "endedAt": "2026-11-05T01:39:14.519Z",
+   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "mobile",
+   "referrer": null,
+   "visitorId": "baa79323-e759-440d-8314-a893d0494488",
+   "country": null,
+   "status": "processed",
+   "eventCount": 49,
+   "pageviews": 1,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 9,
+   "activeMs": 4649,
+   "maxScrollPct": 64,
+   "durationMs": 4649,
+   "browser": "Safari",
+   "os": "iOS",
+   "isBot": false,
+   "lcpMs": 56,
+   "inpMs": null,
+   "cls": null,
+   "customEvents": []
+  },
+  {
+   "id": "demo:1a33ecb5-f447-4fa8-92f7-49b29f205cb9",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:39:06.183Z",
+   "endedAt": "2026-11-05T01:39:09.625Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "f2fd59cd-2d6d-4f18-b9e0-a09906db8332",
+   "country": null,
+   "status": "processed",
+   "eventCount": 50,
+   "pageviews": 3,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 0,
+   "interactions": 10,
+   "activeMs": 8437,
+   "maxScrollPct": 98,
+   "durationMs": 8437,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 92,
+   "inpMs": 2976,
+   "cls": null,
+   "customEvents": []
+  }
+ ],
+ "session_events": {
+  "session": {
+   "id": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+   "projectId": "demo",
+   "startedAt": "2026-11-05T01:40:20.529Z",
+   "endedAt": "2026-11-05T01:40:22.774Z",
+   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+   "urlFirst": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+   "device": "desktop",
+   "referrer": null,
+   "visitorId": "535b5e9a-5370-4515-8450-937ee45fa74a",
+   "country": null,
+   "status": "processed",
+   "eventCount": 46,
+   "pageviews": 3,
+   "entryPage": "/",
+   "exitPage": "/",
+   "jsErrors": 1,
+   "interactions": 10,
+   "activeMs": 7243,
+   "maxScrollPct": 98,
+   "durationMs": 7243,
+   "browser": "Chrome",
+   "os": "macOS",
+   "isBot": false,
+   "lcpMs": 44,
+   "inpMs": 704,
+   "cls": null,
+   "clickPoints": [
+    {
+     "page": "/",
+     "x": 221,
+     "y": 27
+    },
+    {
+     "page": "/pricing",
+     "x": 284,
+     "y": 27
+    },
+    {
+     "page": "/about",
+     "x": 159,
+     "y": 27
+    },
+    {
+     "page": "/",
+     "x": 402,
+     "y": 429
+    },
+    {
+     "page": "/",
+     "x": 402,
+     "y": 429
+    },
+    {
+     "page": "/",
+     "x": 414,
+     "y": 228
+    }
+   ],
+   "paths": [
+    "/",
+    "/pricing",
+    "/about",
+    "/"
+   ],
+   "customEvents": []
+  },
+  "events": [
+   {
+    "type": 0,
+    "data": {},
+    "timestamp": 1793842815530
+   },
+   {
+    "type": 1,
+    "data": {},
+    "timestamp": 1793842815531
+   },
+   {
+    "type": 4,
+    "data": {
+     "href": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+     "width": 1366,
+     "height": 860
+    },
+    "timestamp": 1793842815531
+   },
+   {
+    "type": 2,
+    "data": {
+     "node": {
+      "type": 0,
+      "childNodes": [
+       {
+        "type": 1,
+        "name": "html",
+        "publicId": "",
+        "systemId": "",
+        "id": 2
+       },
+       {
+        "type": 2,
+        "tagName": "html",
+        "attributes": {
+         "lang": "en"
+        },
+        "childNodes": [
+         {
+          "type": 2,
+          "tagName": "head",
+          "attributes": {},
+          "childNodes": [
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 5
+           },
+           {
+            "type": 2,
+            "tagName": "meta",
+            "attributes": {
+             "charset": "utf-8"
+            },
+            "childNodes": [],
+            "id": 6
+           },
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 7
+           },
+           {
+            "type": 2,
+            "tagName": "meta",
+            "attributes": {
+             "name": "viewport",
+             "content": "width=device-width, initial-scale=1"
+            },
+            "childNodes": [],
+            "id": 8
+           },
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 9
+           },
+           {
+            "type": 2,
+            "tagName": "title",
+            "attributes": {},
+            "childNodes": [
+             {
+              "type": 3,
+              "textContent": "Snag demo shop: intentionally broken",
+              "id": 11
+             }
+            ],
+            "id": 10
+           },
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 12
+           },
+           {
+            "type": 2,
+            "tagName": "style",
+            "attributes": {
+             "_cssText": "* { box-sizing: border-box; }body { font: 15px / 1.6 -apple-system, system-ui, sans-serif; margin: 0px; background: rgb(246, 247, 249); color: rgb(28, 35, 51); }header { background: rgb(255, 255, 255); border-bottom: 1px solid rgb(227, 230, 234); padding: 14px 28px; display: flex; gap: 18px; align-items: center; }header b { font-size: 17px; }nav a { margin-right: 14px; color: rgb(59, 91, 219); text-decoration: none; cursor: pointer; }main { max-width: 760px; margin: 30px auto; padding: 0px 20px; }.card { background: rgb(255, 255, 255); border: 1px solid rgb(227, 230, 234); border-radius: 10px; padding: 20px; margin-bottom: 18px; }button { font: inherit; padding: 9px 18px; border-radius: 7px; border: 1px solid rgb(206, 212, 218); background: rgb(255, 255, 255); cursor: pointer; }button.primary { background: rgb(59, 91, 219); border-color: rgb(59, 91, 219); color: rgb(255, 255, 255); }input { font: inherit; padding: 8px 10px; border: 1px solid rgb(206, 212, 218); border-radius: 6px; width: 100%; margin-bottom: 10px; }.muted { color: rgb(122, 131, 148); font-size: 13px; }#status { min-height: 22px; font-size: 13px; color: rgb(122, 131, 148); }.setup { background: rgb(255, 248, 225); border: 1px solid rgb(241, 214, 122); border-radius: 10px; padding: 14px 18px; font-size: 13.5px; }code { background: rgb(238, 241, 245); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }"
+            },
+            "childNodes": [
+             {
+              "type": 3,
+              "textContent": "",
+              "id": 14
+             }
+            ],
+            "id": 13
+           },
+           {
+            "type": 3,
+            "textContent": "\n",
+            "id": 15
+           }
+          ],
+          "id": 4
+         },
+         {
+          "type": 3,
+          "textContent": "\n",
+          "id": 16
+         },
+         {
+          "type": 2,
+          "tagName": "body",
+          "attributes": {},
+          "childNodes": [
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 18
+           },
+           {
+            "type": 2,
+            "tagName": "header",
+            "attributes": {},
+            "childNodes": [
+             {
+              "type": 3,
+              "textContent": "\n    ",
+              "id": 20
+             },
+             {
+              "type": 2,
+              "tagName": "b",
+              "attributes": {},
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "Demo Shop",
+                "id": 22
+               }
+              ],
+              "id": 21
+             },
+             {
+              "type": 3,
+              "textContent": "\n    ",
+              "id": 23
+             },
+             {
+              "type": 2,
+              "tagName": "nav",
+              "attributes": {},
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 25
+               },
+               {
+                "type": 2,
+                "tagName": "a",
+                "attributes": {
+                 "data-nav": "/"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Home",
+                  "id": 27
+                 }
+                ],
+                "id": 26
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 28
+               },
+               {
+                "type": 2,
+                "tagName": "a",
+                "attributes": {
+                 "data-nav": "/pricing"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Pricing",
+                  "id": 30
+                 }
+                ],
+                "id": 29
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 31
+               },
+               {
+                "type": 2,
+                "tagName": "a",
+                "attributes": {
+                 "data-nav": "/about"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "About",
+                  "id": 33
+                 }
+                ],
+                "id": 32
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 34
+               }
+              ],
+              "id": 24
+             },
+             {
+              "type": 3,
+              "textContent": "\n  ",
+              "id": 35
+             }
+            ],
+            "id": 19
+           },
+           {
+            "type": 3,
+            "textContent": "\n\n  ",
+            "id": 36
+           },
+           {
+            "type": 2,
+            "tagName": "main",
+            "attributes": {},
+            "childNodes": [
+             {
+              "type": 3,
+              "textContent": "\n    ",
+              "id": 38
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "setup",
+               "id": "setup-warning",
+               "style": "display: none;"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 40
+               },
+               {
+                "type": 2,
+                "tagName": "strong",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Not recording.",
+                  "id": 42
+                 }
+                ],
+                "id": 41
+               },
+               {
+                "type": 3,
+                "textContent": " Pass your project key in the URL:\n      ",
+                "id": 43
+               },
+               {
+                "type": 2,
+                "tagName": "code",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "?key=pk_live_…&endpoint=http://shop.example:8787",
+                  "id": 45
+                 }
+                ],
+                "id": 44
+               },
+               {
+                "type": 3,
+                "textContent": " (create a project in the\n      dashboard first).\n    ",
+                "id": 46
+               }
+              ],
+              "id": 39
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 47
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 49
+               },
+               {
+                "type": 2,
+                "tagName": "h2",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Every button here is broken on purpose",
+                  "id": 51
+                 }
+                ],
+                "id": 50
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 52
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Click around like a confused user, then check the Snag dashboard.\n        Sessions seal ~30s after you close the tab, or immediately on the final flush.",
+                  "id": 54
+                 }
+                ],
+                "id": 53
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 55
+               },
+               {
+                "type": 2,
+                "tagName": "div",
+                "attributes": {
+                 "id": "status"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Recording session b2ac7e8c… → http://ingest.example",
+                  "id": 57
+                 }
+                ],
+                "id": 56
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 58
+               }
+              ],
+              "id": 48
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 59
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 61
+               },
+               {
+                "type": 2,
+                "tagName": "h3",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "1 · Dead button",
+                  "id": 63
+                 }
+                ],
+                "id": 62
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 64
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Looks clickable. Wired to nothing.",
+                  "id": 66
+                 }
+                ],
+                "id": 65
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 67
+               },
+               {
+                "type": 2,
+                "tagName": "button",
+                "attributes": {
+                 "id": "dead-button",
+                 "class": "primary"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Add to cart",
+                  "id": 69
+                 }
+                ],
+                "id": 68
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 70
+               }
+              ],
+              "id": 60
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 71
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 73
+               },
+               {
+                "type": 2,
+                "tagName": "h3",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "2 · Rage-click bait",
+                  "id": 75
+                 }
+                ],
+                "id": 74
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 76
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Does nothing no matter how many times you hammer it. Hammer it.",
+                  "id": 78
+                 }
+                ],
+                "id": 77
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 79
+               },
+               {
+                "type": 2,
+                "tagName": "button",
+                "attributes": {
+                 "id": "rage-button",
+                 "class": "primary"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Checkout now",
+                  "id": 81
+                 }
+                ],
+                "id": 80
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 82
+               }
+              ],
+              "id": 72
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 83
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 85
+               },
+               {
+                "type": 2,
+                "tagName": "h3",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "3 · Silent crash",
+                  "id": 87
+                 }
+                ],
+                "id": 86
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 88
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Throws an uncaught exception. The UI shrugs.",
+                  "id": 90
+                 }
+                ],
+                "id": 89
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 91
+               },
+               {
+                "type": 2,
+                "tagName": "button",
+                "attributes": {
+                 "id": "crash-button"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Apply discount",
+                  "id": 93
+                 }
+                ],
+                "id": 92
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 94
+               }
+              ],
+              "id": 84
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 95
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 97
+               },
+               {
+                "type": 2,
+                "tagName": "h3",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "4 · Failing API call",
+                  "id": 99
+                 }
+                ],
+                "id": 98
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 100
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "POSTs to an endpoint that 500s. No error shown to the user.",
+                  "id": 102
+                 }
+                ],
+                "id": 101
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 103
+               },
+               {
+                "type": 2,
+                "tagName": "button",
+                "attributes": {
+                 "id": "api-button"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Place order",
+                  "id": 105
+                 }
+                ],
+                "id": 104
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 106
+               }
+              ],
+              "id": 96
+             },
+             {
+              "type": 3,
+              "textContent": "\n\n    ",
+              "id": 107
+             },
+             {
+              "type": 2,
+              "tagName": "div",
+              "attributes": {
+               "class": "card"
+              },
+              "childNodes": [
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 109
+               },
+               {
+                "type": 2,
+                "tagName": "h3",
+                "attributes": {},
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "5 · Abandonable form ",
+                  "id": 111
+                 },
+                 {
+                  "type": 2,
+                  "tagName": "span",
+                  "attributes": {
+                   "class": "muted"
+                  },
+                  "childNodes": [
+                   {
+                    "type": 3,
+                    "textContent": "(masked by default)",
+                    "id": 113
+                   }
+                  ],
+                  "id": 112
+                 }
+                ],
+                "id": 110
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 114
+               },
+               {
+                "type": 2,
+                "tagName": "form",
+                "attributes": {
+                 "id": "signup-form"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "\n        ",
+                  "id": 116
+                 },
+                 {
+                  "type": 2,
+                  "tagName": "input",
+                  "attributes": {
+                   "name": "email",
+                   "type": "email",
+                   "placeholder": "Email (recorded as dots)"
+                  },
+                  "childNodes": [],
+                  "id": 117
+                 },
+                 {
+                  "type": 3,
+                  "textContent": "\n        ",
+                  "id": 118
+                 },
+                 {
+                  "type": 2,
+                  "tagName": "input",
+                  "attributes": {
+                   "name": "password",
+                   "type": "password",
+                   "placeholder": "Password (always masked)"
+                  },
+                  "childNodes": [],
+                  "id": 119
+                 },
+                 {
+                  "type": 3,
+                  "textContent": "\n        ",
+                  "id": 120
+                 },
+                 {
+                  "type": 2,
+                  "tagName": "input",
+                  "attributes": {
+                   "name": "card",
+                   "placeholder": "Card number (pattern safety net)"
+                  },
+                  "childNodes": [],
+                  "id": 121
+                 },
+                 {
+                  "type": 3,
+                  "textContent": "\n        ",
+                  "id": 122
+                 },
+                 {
+                  "type": 2,
+                  "tagName": "button",
+                  "attributes": {
+                   "class": "primary",
+                   "type": "submit"
+                  },
+                  "childNodes": [
+                   {
+                    "type": 3,
+                    "textContent": "Sign up",
+                    "id": 124
+                   }
+                  ],
+                  "id": 123
+                 },
+                 {
+                  "type": 3,
+                  "textContent": "\n      ",
+                  "id": 125
+                 }
+                ],
+                "id": 115
+               },
+               {
+                "type": 3,
+                "textContent": "\n      ",
+                "id": 126
+               },
+               {
+                "type": 2,
+                "tagName": "p",
+                "attributes": {
+                 "class": "muted"
+                },
+                "childNodes": [
+                 {
+                  "type": 3,
+                  "textContent": "Start typing, then navigate away without submitting.",
+                  "id": 128
+                 }
+                ],
+                "id": 127
+               },
+               {
+                "type": 3,
+                "textContent": "\n    ",
+                "id": 129
+               }
+              ],
+              "id": 108
+             },
+             {
+              "type": 3,
+              "textContent": "\n  ",
+              "id": 130
+             }
+            ],
+            "id": 37
+           },
+           {
+            "type": 3,
+            "textContent": "\n\n  ",
+            "id": 131
+           },
+           {
+            "type": 2,
+            "tagName": "script",
+            "attributes": {
+             "src": "http://shop.example/snag.iife.js"
+            },
+            "childNodes": [],
+            "id": 132
+           },
+           {
+            "type": 3,
+            "textContent": "\n  ",
+            "id": 133
+           },
+           {
+            "type": 2,
+            "tagName": "script",
+            "attributes": {
+             "src": "http://shop.example/app.js"
+            },
+            "childNodes": [],
+            "id": 134
+           },
+           {
+            "type": 3,
+            "textContent": "\n\n\n",
+            "id": 135
+           }
+          ],
+          "id": 17
+         }
+        ],
+        "id": 3
+       }
+      ],
+      "id": 1
+     },
+     "initialOffset": {
+      "left": 0,
+      "top": 0
+     }
+    },
+    "timestamp": 1793842815538
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 221,
+       "y": 27,
+       "id": 29,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842816300
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 29,
+     "x": 221.89999389648438,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842816301
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 29,
+     "x": 221.89999389648438,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842816305
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "html > body > header > nav > a",
+      "text": "Pricing",
+      "x": 221,
+      "y": 27
+     }
+    },
+    "timestamp": 1793842816305
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 29,
+     "x": 221,
+     "y": 27,
+     "pointerType": 0
+    },
+    "timestamp": 1793842816305
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "navigation",
+      "url": "http://shop.example/pricing?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "from": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "trigger": "push"
+     }
+    },
+    "timestamp": 1793842816306
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 284,
+       "y": 27,
+       "id": 32,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842817250
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 32,
+     "x": 284.1499938964844,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842817251
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 32,
+     "x": 284.1499938964844,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842817251
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "html > body > header > nav > a",
+      "text": "About",
+      "x": 284,
+      "y": 27
+     }
+    },
+    "timestamp": 1793842817251
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 32,
+     "x": 284,
+     "y": 27,
+     "pointerType": 0
+    },
+    "timestamp": 1793842817251
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "navigation",
+      "url": "http://shop.example/about?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "from": "http://shop.example/pricing?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "trigger": "push"
+     }
+    },
+    "timestamp": 1793842817252
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 159,
+       "y": 27,
+       "id": 26,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842817980
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 26,
+     "x": 159.9199981689453,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842817980
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 26,
+     "x": 159.9199981689453,
+     "y": 27.59000015258789
+    },
+    "timestamp": 1793842817981
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "html > body > header > nav > a",
+      "text": "Home",
+      "x": 159,
+      "y": 27
+     }
+    },
+    "timestamp": 1793842817981
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 26,
+     "x": 159,
+     "y": 27,
+     "pointerType": 0
+    },
+    "timestamp": 1793842817981
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "navigation",
+      "url": "http://shop.example/?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "from": "http://shop.example/about?key=pk_live_example&endpoint=http%3A%2F%2Fingest.example",
+      "trigger": "push"
+     }
+    },
+    "timestamp": 1793842817981
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 402,
+       "y": 429,
+       "id": 104,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842818617
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 104,
+     "x": 402.0299987792969,
+     "y": 429.92999267578125
+    },
+    "timestamp": 1793842818618
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 5,
+     "id": 104
+    },
+    "timestamp": 1793842818618
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 104,
+     "x": 402.0299987792969,
+     "y": 429.92999267578125
+    },
+    "timestamp": 1793842818619
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "button#api-button",
+      "text": "Place order",
+      "x": 402,
+      "y": 429
+     }
+    },
+    "timestamp": 1793842818619
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 104,
+     "x": 402,
+     "y": 429,
+     "pointerType": 0
+    },
+    "timestamp": 1793842818619
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 3,
+     "id": 1,
+     "x": 0,
+     "y": 609
+    },
+    "timestamp": 1793842818683
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "network",
+      "method": "POST",
+      "url": "/api/orders",
+      "status": 500,
+      "durationMs": 64,
+      "requestBody": "{\"order\":42,\"card\":\"***\"}",
+      "responseBody": "{\"error\":\"payment service unavailable\"}"
+     }
+    },
+    "timestamp": 1793842818684
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 402,
+       "y": 429,
+       "id": 104,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842820048
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 104,
+     "x": 402.0299987792969,
+     "y": 429.92999267578125
+    },
+    "timestamp": 1793842820048
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 104,
+     "x": 402.0299987792969,
+     "y": 429.92999267578125
+    },
+    "timestamp": 1793842820048
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "button#api-button",
+      "text": "Place order",
+      "x": 402,
+      "y": 429
+     }
+    },
+    "timestamp": 1793842820048
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 104,
+     "x": 402,
+     "y": 429,
+     "pointerType": 0
+    },
+    "timestamp": 1793842820048
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "network",
+      "method": "POST",
+      "url": "/api/orders",
+      "status": 500,
+      "durationMs": 14,
+      "requestBody": "{\"order\":42,\"card\":\"***\"}",
+      "responseBody": "{\"error\":\"payment service unavailable\"}"
+     }
+    },
+    "timestamp": 1793842820063
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 1,
+     "positions": [
+      {
+       "x": 414,
+       "y": 228,
+       "id": 92,
+       "timeOffset": 0
+      }
+     ]
+    },
+    "timestamp": 1793842821065
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 1,
+     "id": 92,
+     "x": 414.1400146484375,
+     "y": 228.97999572753906
+    },
+    "timestamp": 1793842821065
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 6,
+     "id": 104
+    },
+    "timestamp": 1793842821066
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 5,
+     "id": 92
+    },
+    "timestamp": 1793842821066
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 0,
+     "id": 92,
+     "x": 414.1400146484375,
+     "y": 228.97999572753906
+    },
+    "timestamp": 1793842821066
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "click",
+      "selector": "button#crash-button",
+      "text": "Apply discount",
+      "x": 414,
+      "y": 228
+     }
+    },
+    "timestamp": 1793842821066
+   },
+   {
+    "type": 3,
+    "data": {
+     "source": 2,
+     "type": 2,
+     "id": 92,
+     "x": 414,
+     "y": 228,
+     "pointerType": 0
+    },
+    "timestamp": 1793842821066
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "error",
+      "message": "Uncaught TypeError: discount.apply is not a function",
+      "stack": "TypeError: discount.apply is not a function\n    at http://shop.example/app.js:25:13",
+      "source": "uncaught"
+     }
+    },
+    "timestamp": 1793842821078
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "vitals",
+      "lcpMs": 44,
+      "inpMs": 704,
+      "scrollPct": 98
+     }
+    },
+    "timestamp": 1793842822773
+   },
+   {
+    "type": 5,
+    "data": {
+     "tag": "snag",
+     "payload": {
+      "kind": "page_hide"
+     }
+    },
+    "timestamp": 1793842822773
+   }
+  ]
+ },
+ "analytics": {
+  "days": 14,
+  "kpis": {
+   "sessions": 12,
+   "avgPagesPerSession": 1.7,
+   "avgDurationMs": 6609,
+   "avgScrollPct": 76,
+   "eventsTotal": 585
+  },
+  "users": {
+   "unique": 12,
+   "new": 12,
+   "returning": 0,
+   "live": 0
+  },
+  "countries": [],
+  "insights": [
+   {
+    "detector": "rage_click",
+    "label": "Rage clicks",
+    "sessions": 6,
+    "pct": 50
+   },
+   {
+    "detector": "dead_click",
+    "label": "Dead clicks",
+    "sessions": 4,
+    "pct": 33.3
+   },
+   {
+    "detector": "backward_navigation",
+    "label": "Quick backs",
+    "sessions": 0,
+    "pct": 0
+   },
+   {
+    "detector": "refresh_spam",
+    "label": "Refresh spam",
+    "sessions": 0,
+    "pct": 0
+   }
+  ],
+  "device": [
+   {
+    "key": "desktop",
+    "count": 8
+   },
+   {
+    "key": "mobile",
+    "count": 4
+   }
+  ],
+  "browser": [
+   {
+    "key": "Chrome",
+    "count": 8
+   },
+   {
+    "key": "Safari",
+    "count": 4
+   }
+  ],
+  "os": [
+   {
+    "key": "macOS",
+    "count": 5
+   },
+   {
+    "key": "iOS",
+    "count": 4
+   },
+   {
+    "key": "Windows",
+    "count": 3
+   }
+  ],
+  "topPages": [
+   {
+    "key": "/",
+    "count": 12
+   }
+  ],
+  "entryPages": [
+   {
+    "key": "/",
+    "count": 12
+   }
+  ],
+  "exitPages": [
+   {
+    "key": "/",
+    "count": 12
+   }
+  ],
+  "referrers": [],
+  "channels": [
+   {
+    "key": "Direct",
+    "count": 12
+   }
+  ],
+  "smartEvents": [],
+  "jsErrors": {
+   "total": 5,
+   "sessionsWith": 5,
+   "pct": 41.7
+  },
+  "bots": {
+   "sessions": 0,
+   "pct": 0
+  },
+  "scrollDepth": {
+   "sampleSize": 12,
+   "buckets": [
+    {
+     "pct": 25,
+     "sessions": 11,
+     "sharePct": 92
+    },
+    {
+     "pct": 50,
+     "sessions": 11,
+     "sharePct": 92
+    },
+    {
+     "pct": 75,
+     "sessions": 6,
+     "sharePct": 50
+    },
+    {
+     "pct": 100,
+     "sessions": 0,
+     "sharePct": 0
+    }
+   ]
+  },
+  "performance": {
+   "lcpMs": 60,
+   "inpMs": 1610,
+   "cls": 0.025,
+   "score": 67,
+   "good": 67,
+   "needs": 0,
+   "poor": 33,
+   "sampleSize": 12
+  },
+  "sessionsOverTime": [
+   {
+    "day": "2026-10-23",
+    "count": 0
+   },
+   {
+    "day": "2026-10-24",
+    "count": 0
+   },
+   {
+    "day": "2026-10-25",
+    "count": 0
+   },
+   {
+    "day": "2026-10-26",
+    "count": 0
+   },
+   {
+    "day": "2026-10-27",
+    "count": 0
+   },
+   {
+    "day": "2026-10-28",
+    "count": 0
+   },
+   {
+    "day": "2026-10-29",
+    "count": 0
+   },
+   {
+    "day": "2026-10-30",
+    "count": 0
+   },
+   {
+    "day": "2026-10-31",
+    "count": 0
+   },
+   {
+    "day": "2026-11-01",
+    "count": 0
+   },
+   {
+    "day": "2026-11-02",
+    "count": 0
+   },
+   {
+    "day": "2026-11-03",
+    "count": 0
+   },
+   {
+    "day": "2026-11-04",
+    "count": 0
+   },
+   {
+    "day": "2026-11-05",
+    "count": 12
+   }
+  ],
+  "issuesOverTime": [
+   {
+    "day": "2026-10-23",
+    "count": 0
+   },
+   {
+    "day": "2026-10-24",
+    "count": 0
+   },
+   {
+    "day": "2026-10-25",
+    "count": 0
+   },
+   {
+    "day": "2026-10-26",
+    "count": 0
+   },
+   {
+    "day": "2026-10-27",
+    "count": 0
+   },
+   {
+    "day": "2026-10-28",
+    "count": 0
+   },
+   {
+    "day": "2026-10-29",
+    "count": 0
+   },
+   {
+    "day": "2026-10-30",
+    "count": 0
+   },
+   {
+    "day": "2026-10-31",
+    "count": 0
+   },
+   {
+    "day": "2026-11-01",
+    "count": 0
+   },
+   {
+    "day": "2026-11-02",
+    "count": 0
+   },
+   {
+    "day": "2026-11-03",
+    "count": 0
+   },
+   {
+    "day": "2026-11-04",
+    "count": 0
+   },
+   {
+    "day": "2026-11-05",
+    "count": 7
+   }
+  ],
+  "topDetectors": [
+   {
+    "key": "dead_click",
+    "count": 3
+   },
+   {
+    "key": "rage_click",
+    "count": 1
+   },
+   {
+    "key": "console_error",
+    "count": 1
+   },
+   {
+    "key": "form_abandonment",
+    "count": 1
+   }
+  ],
+  "ingest": {
+   "lastSessionAt": "2026-11-05T01:40:20.529Z",
+   "sessionsToday": 12,
+   "eventsTotal": 585,
+   "minutesSinceLast": 2
+  }
+ },
+ "funnels": {
+  "funnels": [],
+  "results": []
+ },
+ "session_id": "demo:b2ac7e8c-8c03-4d17-9861-c62369861c36",
+ "group_key": "network_failure|POST /api/orders 5xx"
+}

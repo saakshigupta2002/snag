@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snag-cli"
+version = "0.1.0"
+description = "Agent-native CLI for Snag: see, judge, fix and verify the bugs your users hit."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Saakshi Gupta" }]
+keywords = ["snag", "session-replay", "bug-detection", "cli", "claude-code", "mcp", "agent"]
+# No third-party dependencies: this uses only the Python standard library.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/saakshigupta2002/snag"
+Repository = "https://github.com/saakshigupta2002/snag-cli"
+Issues = "https://github.com/saakshigupta2002/snag-cli/issues"
+
+[project.scripts]
+snag = "snag.cli:main"
+snag-mcp = "snag.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["snag*"]
