@@ -30,7 +30,15 @@ packages/detectors   the detection engine + individual detector modules
 packages/ingest      always-on ingestion API + workers (+ optional AI layer)
 packages/dashboard   Next.js web UI
 examples/demo-app    a demo app pre-wired with the SDK
+cli                  the CLI, MCP server and agent skills, in Python and Go
 docs/                self-hosting, configuration, detectors, custom flags
+```
+
+The CLI in `cli/` has its own tests, which run every command against recorded data and hold the
+Python and Go versions to the same output:
+
+```bash
+cd cli && python3 -m unittest discover -s tests -t .
 ```
 
 ## Ground rules

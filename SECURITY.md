@@ -16,6 +16,8 @@ The most useful reports show that:
 - a secret can leave the browser despite the redaction layers
 - the dashboard or management API can be reached without the password or token
 - a public demo link exposes anything beyond the one project it shares
+- recorded page text that can steer a coding agent through the CLI or MCP server
+- a way past the production guard or the payment and email mocks in `snag explore`
 
 ## Supported versions
 

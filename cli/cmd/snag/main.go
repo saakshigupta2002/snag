@@ -38,7 +38,7 @@ var valued = map[string]bool{
 	"--days": true, "--url": true, "--missions": true, "--workers": true,
 	"--note": true, "--method": true, "--field": true, "--device": true,
 	"--browser": true, "--since": true, "--dir": true, "--title": true,
-	"--session": true,
+	"--session": true, "--agent": true,
 }
 
 func parse(argv []string) parsed {
@@ -222,6 +222,8 @@ func dispatch(resource, verb string, p parsed) (int, error) {
 		return apiCmd(p)
 	case "status":
 		return statusCmd(p)
+	case "setup":
+		return setupCmd(p)
 	case "mcp":
 		return mcpServe(), nil
 	case "version":
@@ -734,10 +736,12 @@ Usage: snag <resource> <verb> [args] [flags]
   session   list | view <id> | evidence <id>
   analytics show | funnels | report
   explore   run | scaffold
+  setup     connect Claude Code and Codex
   api <path>   status   mcp   version
 
 Flags: --json  --select a,b,c  --endpoint  --token  --project  --no-color
 Examples:
+  snag setup
   snag auth login
   snag issue list --json
   snag session evidence <id>`)

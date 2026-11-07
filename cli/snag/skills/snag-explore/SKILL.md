@@ -13,10 +13,10 @@ metadata:
     install:
       - kind: pipx
         bins: [snag, snag-mcp]
-        package: "git+https://github.com/saakshigupta2002/snag-cli"
+        package: "git+https://github.com/saakshigupta2002/snag#subdirectory=cli"
       - kind: go
         bins: [snag]
-        module: github.com/saakshigupta2002/snag-cli/cmd/snag
+        module: github.com/saakshigupta2002/snag/cli/cmd/snag
 ---
 
 # snag-explore
@@ -93,4 +93,4 @@ easy to find and keep missions few and purposeful rather than many and tiny.
 - Headless-Chrome sessions are flagged as bots by Snag (the user-agent says "Headless"), so they
   sort under bot traffic and stay out of your real-user sessions.
 - Treat a sweep as an on-demand action (before shipping a feature), not something to run in a tight
-  loop; it consumes your Claude Code plan usage.
+  loop; it consumes your coding agent plan usage.

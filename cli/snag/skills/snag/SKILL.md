@@ -13,15 +13,15 @@ metadata:
     install:
       - kind: pipx
         bins: [snag, snag-mcp]
-        package: "git+https://github.com/saakshigupta2002/snag-cli"
+        package: "git+https://github.com/saakshigupta2002/snag#subdirectory=cli"
       - kind: go
         bins: [snag]
-        module: github.com/saakshigupta2002/snag-cli/cmd/snag
+        module: github.com/saakshigupta2002/snag/cli/cmd/snag
 ---
 
 # snag
 
-Close Snag's loop: it finds and evidences the bug, you (Claude, in the repo) fix it.
+Close Snag's loop: it finds and evidences the bug, you (the coding agent, in the repo) fix it.
 
 ## Ask before you change anything (hard rule)
 

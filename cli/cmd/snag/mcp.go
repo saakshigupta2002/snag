@@ -125,8 +125,7 @@ func mcpHandle(msg map[string]any) (any, bool) {
 		if err != nil {
 			return map[string]any{"content": []any{map[string]any{"type": "text", "text": "error: " + err.Error()}}, "isError": true}, true
 		}
-		b, _ := json.MarshalIndent(result, "", "  ")
-		return map[string]any{"content": []any{map[string]any{"type": "text", "text": string(b)}}}, true
+		return map[string]any{"content": []any{map[string]any{"type": "text", "text": jsonText(result, "  ")}}}, true
 	case "ping":
 		return map[string]any{}, true
 	}

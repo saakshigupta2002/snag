@@ -16,8 +16,8 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/saakshigupta2002/snag"
-Repository = "https://github.com/saakshigupta2002/snag-cli"
-Issues = "https://github.com/saakshigupta2002/snag-cli/issues"
+Repository = "https://github.com/saakshigupta2002/snag"
+Issues = "https://github.com/saakshigupta2002/snag/issues"
 
 [project.scripts]
 snag = "snag.cli:main"
@@ -26,3 +26,6 @@ snag-mcp = "snag.mcp_server:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["snag*"]
+
+[tool.setuptools.package-data]
+snag = ["skills/*/SKILL.md"]

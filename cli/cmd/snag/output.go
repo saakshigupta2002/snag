@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -72,9 +73,18 @@ func selectFields(obj any, fields []string) any {
 	return obj
 }
 
+// jsonText encodes without HTML escaping, so an agent reads "->" and not "-\u003e".
+func jsonText(v any, indent string) string {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", indent)
+	_ = enc.Encode(v)
+	return strings.TrimRight(buf.String(), "\n")
+}
+
 func emitJSON(obj any, fields []string) {
-	b, _ := json.MarshalIndent(selectFields(obj, fields), "", "  ")
-	fmt.Println(string(b))
+	fmt.Println(jsonText(selectFields(obj, fields), "  "))
 }
 
 func kv(rows [][2]string) {

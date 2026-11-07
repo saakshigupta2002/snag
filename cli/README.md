@@ -1,29 +1,28 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
-    <img src="docs/assets/logo-light.png" width="180" alt="snag">
+    <source media="(prefers-color-scheme: dark)" srcset="../docs/assets/logo-dark.png">
+    <img src="../docs/assets/logo-light.png" width="180" alt="snag">
   </picture>
 </p>
 
-<p align="center"><b>Let your coding agent fix the bugs your users actually hit.</b><br>
-The command line for <a href="https://github.com/saakshigupta2002/snag">Snag</a>. It turns session recordings into text an agent can read, then proves the fix with a test.</p>
+<p align="center"><b>The Snag CLI: let your coding agent fix the bugs your users hit.</b><br>
+It turns <a href="../README.md">Snag</a> recordings into text that Claude Code or Codex can read, then proves the fix with a test.</p>
 
 <p align="center">
-  <a href="https://github.com/saakshigupta2002/snag-cli/actions/workflows/ci.yml"><img src="https://github.com/saakshigupta2002/snag-cli/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-18181b" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/dependencies-none-1a7f4b" alt="No third-party dependencies">
   <img src="https://img.shields.io/badge/python%20%2B%20go-identical%20output-18181b" alt="Python and Go with identical output">
+  <img src="https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20MCP-18181b" alt="Works with Claude Code, Codex and any MCP client">
 </p>
 
 <p align="center">
-  <img src="docs/assets/demo-terminal.svg" width="860" alt="Animated terminal: snag issue list shows real issues worst first, including POST /api/orders failed (500). snag session evidence turns a recording into a timestamped transcript where a click on Place order is followed by POST /api/orders returning 500.">
+  <img src="../docs/assets/demo-terminal.svg" width="860" alt="Animated terminal: snag issue list shows real issues worst first, including POST /api/orders failed (500). snag session evidence turns a recording into a timestamped transcript where a click on Place order is followed by POST /api/orders returning 500.">
 </p>
 
 <sub>Real output from Snag's demo shop, sped up, with some lines skipped.</sub>
 
-[Snag](https://github.com/saakshigupta2002/snag) records real sessions and flags what went wrong, but an agent cannot watch a video. This CLI gives it a transcript instead, so Claude Code can follow what the user did, find the code behind the bug, fix it and prove the fix with a Playwright test.
+Snag records real sessions and flags what went wrong, but an agent cannot watch a video. This CLI gives it a transcript instead, so your coding agent can follow what the user did, find the code behind the bug, fix it and prove the fix with a Playwright test.
 
-It can also hunt for bugs before your users find them. There is no API key or per-token cost, because the thinking runs in **Claude Code on your plan**. The CLI is the data and safety layer and the [skills](#skills) are the workflow.
+It can also hunt for bugs before your users find them. There is no API key or per-token cost, because the thinking runs on **your coding agent's plan**. The CLI is the data and safety layer and the [skills](#skills) are the workflow.
 
 ```text
 snag explore   drive the app and record it       finds bugs with no users at all
@@ -40,38 +39,47 @@ Pick either. They have the same commands and the same JSON output. The tests fai
 
 ```bash
 # Python, with no third-party dependencies
-pipx install "git+https://github.com/saakshigupta2002/snag-cli"
+pipx install "git+https://github.com/saakshigupta2002/snag#subdirectory=cli"
 
 # Go, as a single static binary
-go install github.com/saakshigupta2002/snag-cli/cmd/snag@latest
+go install github.com/saakshigupta2002/snag/cli/cmd/snag@latest
 ```
+
+## Connect your agent
+
+```bash
+snag setup                       # every agent it finds on this machine
+snag setup --agent codex         # or just one
+snag setup --dry-run             # see what it would change first
+```
+
+| Agent | Skills go to | MCP server |
+|---|---|---|
+| Claude Code | `~/.claude/skills` | added with `claude mcp add` |
+| Codex (beta) | `~/.agents/skills` | added with `codex mcp add` |
+| Any other MCP client | | run `snag mcp` |
+
+Running it again is safe: it refreshes the skills and leaves an existing MCP entry alone.
 
 ## Quick start
 
-You need a running [Snag](https://github.com/saakshigupta2002/snag#try-it-in-two-minutes). The demo shop works well for a first try.
+You need a running Snag. The [demo shop](../README.md#try-it-in-two-minutes) works well for a first try.
 
 ```bash
-snag auth login                  # your Snag URL and token, once
+snag auth login                  # your Snag address and token, once
 snag issue list                  # what is broken, worst first
 snag session evidence <id>       # a recording as a readable transcript
 snag explore run --url http://localhost:3000   # hunt for bugs yourself
 ```
 
-## Use it from Claude Code
-
-```bash
-git clone https://github.com/saakshigupta2002/snag-cli
-cp -r snag-cli/skills/* ~/.claude/skills/
-```
-
-Then ask *"what's broken this week?"* in your repo.
+Then ask your agent *"what's broken this week?"* in your repo.
 
 **You stay in control.** The skills report their findings and stop. They do not fix, commit or push anything until you say which issues to act on.
 
 ## Skills
 
-- **[`snag`](skills/snag/SKILL.md)** runs the loop: triage, judge, read the evidence, fix and verify. The judge step matters most. Snag's detectors over-flag by design, so a wrong-password message gets filtered out here before anyone spends time on it.
-- **[`snag-explore`](skills/snag-explore/SKILL.md)** writes goal-based missions, drives `snag explore` and triages what breaks.
+- **[`snag`](snag/skills/snag/SKILL.md)** runs the loop: triage, judge, read the evidence, fix and verify. The judge step matters most. Snag's detectors over-flag by design, so a wrong-password message gets filtered out here before anyone spends time on it.
+- **[`snag-explore`](snag/skills/snag-explore/SKILL.md)** writes goal-based missions, drives `snag explore` and triages what breaks.
 
 ## Commands
 
@@ -88,6 +96,7 @@ Then ask *"what's broken this week?"* in your repo.
 | `snag analytics show \| funnels \| report` | KPIs, funnels and a markdown digest |
 | `snag explore run \| scaffold` | The active bug hunter, using Playwright |
 | `snag api <path>` | Raw Snag API access |
+| `snag setup [--agent claude-code\|codex]` | Connect your coding agents |
 | `snag status \| mcp \| version` | Health, MCP server and version |
 
 Every read command works for humans and scripts.
@@ -129,7 +138,7 @@ The tests in [`tests/`](tests/) run every core command as a real process against
 
 ## Contributing
 
-Contributions are welcome. Keep the two versions in step and the Python side free of dependencies. Run the tests with `python3 -m unittest discover -s tests -t .` and see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome. Keep the two versions in step and the Python side free of dependencies. Run the tests with `python3 -m unittest discover -s tests -t .` and see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## License
 

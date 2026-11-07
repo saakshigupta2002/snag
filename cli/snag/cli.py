@@ -9,7 +9,7 @@ import argparse
 import sys
 from typing import List, Optional, Tuple
 
-from . import __version__, auth
+from . import __version__, auth, setup
 from . import output as out
 from .api import ApiError, Client, NotFound
 from .config import resolve
@@ -305,6 +305,10 @@ def cmd_explore(args) -> int:
     return explore.dispatch(args, resolve(args.endpoint, args.token, args.project))
 
 
+def cmd_setup(args) -> int:
+    return setup.run(args.agent, args.dry_run, args.json, _fields(args))
+
+
 def cmd_mcp(args) -> int:
     from . import mcp_server
     return mcp_server.serve()
@@ -401,6 +405,11 @@ def build_parser() -> argparse.ArgumentParser:
     er.add_argument("-n", "--dry-run", action="store_true"); er.set_defaults(func=cmd_explore, explore_verb="run")
     es = ex.add_parser("scaffold", help="write the Playwright safety config")
     es.add_argument("--dir", default="."); es.set_defaults(func=cmd_explore, explore_verb="scaffold")
+
+    # setup
+    se = sub.add_parser("setup", help="connect Claude Code and Codex")
+    se.add_argument("--agent", choices=setup.AGENT_IDS, help="only this agent (default: all found)")
+    se.add_argument("-n", "--dry-run", action="store_true"); se.set_defaults(func=cmd_setup)
 
     # api / status / mcp / version
     ap = sub.add_parser("api", help="raw Snag API passthrough"); ap.add_argument("path")
