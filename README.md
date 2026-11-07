@@ -5,19 +5,21 @@
   </picture>
 </p>
 
-<p align="center"><b>See the bugs your users hit but never report.</b><br>
-Self-hosted session replay that finds the problems for you, then hands them to your coding agent.</p>
+<p align="center"><b>See the bugs your users hit. Let your coding agent fix them.</b><br>
+Self-hosted session replay that finds what broke, then hands it to Claude Code or Codex as a trace it can read.</p>
 
 <p align="center">
   <a href="https://github.com/saakshigupta2002/snag/actions/workflows/ci.yml"><img src="https://github.com/saakshigupta2002/snag/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-18181b" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/self--hosted-your%20data%20stays%20yours-1a7f4b" alt="Self-hosted: your data stays yours">
-  <img src="https://img.shields.io/badge/node-%E2%89%A520-18181b" alt="Node 20 or newer">
+  <img src="https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20MCP-18181b" alt="Works with Claude Code, Codex and any MCP client">
 </p>
 
 <p align="center">
-  <img src="docs/assets/hero.png" width="860" alt="A real Snag issue from the bundled demo shop: POST /api/orders failed with a 500, 14 times across 7 sessions. The replay is paused on the click on Place order, beside the steps to reproduce and a timeline of what happened.">
+  <a href="docs/assets/snag-hero.mp4"><img src="docs/assets/snag-hero.webp" width="100%" alt="Animation built from 140 recorded visits to the demo shop. Each visit is a thread of dots, one dot per click, page or request. The 38 visits that hit a failure snag in red. One of them is followed: its trace reads click Place order, then POST /api/orders returned 500. A coding agent reads the trace, finds the code and fixes it. The thread turns green."></a>
 </p>
+
+<p align="center"><sub>Every thread is a real visit recorded by Snag on the bundled demo shop. <a href="docs/assets/snag-hero.mp4">Watch the full-quality video</a>.</sub></p>
 
 A customer clicks **Place order**. The request returns a 500, nothing happens on screen and they leave. They do not file a bug report. Your logs show a number. They cannot show you what the person was trying to do.
 
@@ -28,7 +30,7 @@ Session replay can show you, but someone still has to watch hours of recordings 
 - **It finds the problem.** Plain rules catch rage clicks, dead buttons, crashes, failed requests and abandoned forms. No AI and no model bill.
 - **It shows you the cause.** Every issue opens the replay at the flagged second, with the failed request or stack trace beside the click.
 - **It stays yours.** It runs on your own server. Passwords, card numbers and tokens are masked in the browser before anything is sent.
-- **Your agent can finish the job.** [snag-cli](https://github.com/saakshigupta2002/snag-cli) gives a recording to Claude Code as text, so it can find the code, write the fix and prove it with a test. It stops for your go-ahead first.
+- **Your agent finishes the job.** The [Snag CLI](#fix-bugs-with-your-coding-agent) gives a recording to Claude Code or Codex as text, so it can find the code, write the fix and prove it with a test. It stops for your go-ahead first.
 
 ## Try it in two minutes
 
@@ -100,7 +102,7 @@ You can tune every threshold for each project and add your own flags from simple
 
 ## Fix bugs with your coding agent
 
-An agent cannot watch a video but it can read a transcript. [snag-cli](https://github.com/saakshigupta2002/snag-cli) turns a recording into one, so Claude Code can follow what happened and find the code behind it.
+An agent cannot watch a video but it can read a transcript. The Snag CLI in [`cli/`](cli/) turns a recording into one, so your coding agent can follow what happened and find the code behind it.
 
 <p align="center">
   <img src="docs/assets/demo-terminal.svg" width="860" alt="Animated terminal: snag issue list shows real issues worst first. snag session evidence turns a recording into a timestamped transcript where a click on Place order is followed by POST /api/orders returning 500.">
@@ -109,11 +111,20 @@ An agent cannot watch a video but it can read a transcript. [snag-cli](https://g
 <sub>Real output from the demo shop, sped up, with some lines skipped.</sub>
 
 ```bash
-pipx install "git+https://github.com/saakshigupta2002/snag-cli"
-snag auth login
+pipx install "git+https://github.com/saakshigupta2002/snag#subdirectory=cli"
+snag setup        # connects Claude Code and Codex: installs the skills, registers the MCP server
+snag auth login   # your Snag address and token, once
 ```
 
-Add its skills to Claude Code, then ask *"what's broken this week?"* It separates real bugs from expected behaviour and reports back. Nothing changes until you say which ones to fix. It runs on your Claude Code plan with no API key.
+Then ask your agent *"what's broken this week?"* in your repo.
+
+| Your agent | What `snag setup` does |
+|---|---|
+| **Claude Code** | Installs the skills in `~/.claude/skills` and adds the `snag` MCP server |
+| **Codex** (beta) | Installs the skills in `~/.agents/skills` and adds the `snag` MCP server |
+| **Any MCP client** | Point it at `snag mcp`. It serves issues, sessions and the evidence transcript |
+
+The agent separates real bugs from expected behaviour, then reports back. Nothing changes until you say which ones to fix. The thinking runs on your agent's plan, so there is no API key and no per-token bill. The CLI also ships as a single Go binary: `go install github.com/saakshigupta2002/snag/cli/cmd/snag@latest`. Every command is in the [CLI guide](cli/README.md).
 
 ## Everything else in the dashboard
 
@@ -177,6 +188,7 @@ packages/detectors   the detection engine and each detector
 packages/ingest      the API and workers, on Fastify and Postgres
 packages/dashboard   the web app, on Next.js
 packages/shared      shared TypeScript types
+cli                  the CLI, MCP server and agent skills, in Python and Go
 examples/demo-app    the demo shop that is broken on purpose
 ```
 

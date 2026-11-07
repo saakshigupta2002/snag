@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- The CLI now lives in this repo under `cli/`, with its full history. One repo, one install and one
+  place to report issues for Snag and the agent loop.
+- `snag setup` connects Claude Code and Codex: it installs the skills where each agent reads them
+  and registers the `snag` MCP server. Codex support is beta.
+- An animated README hero built from 140 recorded visits to the demo shop.
 - Analytics overview with drill-down from any number to the sessions behind it.
 - Click heatmaps, funnels with drop-off replays and a scored list of sessions worth watching.
 - A public read-only demo link for one project, with no login.
@@ -21,6 +26,7 @@ All notable changes to this project are documented here. The format follows
 - `docker compose` binds every port to `127.0.0.1`, because its defaults are for local trials.
 
 ### Fixed
+- The Go CLI escaped `->` as `-\u003e` in JSON and MCP output, so agents read a garbled transcript.
 - The demo shop's failing API call now reaches a route the recorder can see, so failed requests
   show up in the demo.
 

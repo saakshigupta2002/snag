@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snag hero</title>
+<!-- The README hero. Every thread is a real visit from sessions.json. Render with: node scripts/render-hero.mjs -->
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html, body { margin: 0; background: #060709; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const W = 1600, H = 900, SCALE = 1.2, FPS = 30, LOOP = 16;
+const canvas = document.getElementById("c");
+canvas.width = W * SCALE; canvas.height = H * SCALE;
+const ctx = canvas.getContext("2d");
+
+const RED = [255, 84, 76], GREEN = [76, 214, 150], SILVER = [176, 196, 214], WHITE = [236, 242, 248];
+const X0 = 400, X1 = 1650;
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const mix = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const window01 = (a, b, c, d, v) => smooth(a, b, v) * (1 - smooth(c, d, v));
+const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const mixColor = (a, b, t) => a.map((v, i) => mix(v, b[i], t));
+let seed = 7;
+const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+
+function sprite(color) {
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, rgba(color, 1)); r.addColorStop(0.16, rgba(color, 0.85)); r.addColorStop(0.36, rgba(color, 0.2)); r.addColorStop(1, rgba(color, 0));
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return c;
+}
+const sprites = { white: sprite(WHITE), silver: sprite([130, 190, 215]), red: sprite(RED), green: sprite(GREEN) };
+const dot = (s, x, y, size, alpha) => { ctx.globalAlpha = alpha; ctx.drawImage(sprites[s], x - size, y - size, size * 2, size * 2); };
+
+let threads = [], featuredIndex = 0, stats = {}, featuredRows = [], cardRows = [];
+function load(data) {
+  stats = data.stats; featuredRows = data.featured; cardRows = data.card;
+  const longest = Math.max(...data.sessions.map((s) => s.rows[s.rows.length - 1][0]));
+  const featuredKey = JSON.stringify(data.featured.map((r) => r.t));
+  threads = data.sessions.map((s, i) => {
+    const last = Math.max(1, s.rows[s.rows.length - 1][0]);
+    const span = 0.62 + 0.34 * (last / longest);
+    const events = s.rows.filter((r) => r[1] !== "end").map(([t, kind, bad]) => ({ u: 0.04 + span * (t / last), kind, bad: !!bad }));
+    const fail = events.find((e) => e.bad);
+    const key = JSON.stringify(s.rows.map((r) => r[0]));
+    if (key === featuredKey) featuredIndex = i;
+    return { events, fail, angle: (i / data.sessions.length) * Math.PI * 2 * 3.1 + rnd() * 1.2, r: 0.22 + 0.78 * Math.sqrt(rnd()), pull: 64 + rnd() * 84, delay: rnd(), sw: 0.0075 + rnd() * 0.006 };
+  });
+}
+
+// The rope: one point on one thread, in 3D, projected.
+function point(th, u, time) {
+  const spin = (time / LOOP) * Math.PI * 2;
+  const envelope = 0.42 + 0.58 * Math.sin(Math.PI * (0.1 + 0.86 * u)) ** 0.8;
+  const r = 118 * th.r * envelope;
+  const phi = th.angle + 9.4 * u + spin;
+  const cy = 372 + 300 * u - 70 * Math.sin(u * 3.1);
+  const y3 = r * Math.cos(phi) + 15 * Math.sin(u * 7 + spin);
+  const z = r * Math.sin(phi);
+  const scale = 620 / (620 + z);
+  return { x: mix(X0, X1, u), y: cy + y3 * scale, z: z / 118, scale, cy };
+}
+
+const CARD = { x: 1010, y: 54, w: 540 };
+const cardBottom = () => CARD.y + 74 + cardRows.length * 38;
+const isFeatured = (th) => th === threads[featuredIndex];
+
+// How far a snag pulls this thread away from the rope at its failure.
+function pullAt(th, time, snag, focus) {
+  const p = point(th, th.fail.u, time);
+  const out = (p.y >= p.cy ? 1 : -1) * th.pull * snag;
+  if (!isFeatured(th)) return out;
+  return mix(out, (cardBottom() + 4 - p.y) * snag, focus);
+}
+function strokeThread(th, time, width, color, alpha, snag, focus = 0) {
+  const n = snag ? 240 : 84;
+  const pull = snag ? pullAt(th, time, snag, focus) : 0;
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, p = point(th, u, time);
+    const y = snag ? p.y + pull * Math.exp(-Math.abs(u - th.fail.u) / th.sw) : p.y;
+    if (i === 0) ctx.moveTo(p.x, y); else ctx.lineTo(p.x, y);
+  }
+  ctx.globalAlpha = 1;
+  const fade = ctx.createLinearGradient(X0, 0, X0 + 270, 0);
+  fade.addColorStop(0, rgba(color, 0)); fade.addColorStop(1, rgba(color, alpha));
+  ctx.lineWidth = width; ctx.strokeStyle = fade; ctx.stroke();
+}
+function snagPoint(th, time, snag, focus = 0) {
+  const p = point(th, th.fail.u, time);
+  return { x: p.x, y: p.y + pullAt(th, time, snag, focus) };
+}
+const edgeFade = (u) => smooth(0.0, 0.2, u);
+
+function drawRope(time) {
+  const focus = window01(6.4, 7.2, 13.4, 14.6, time);
+  const sweep = smooth(0.2, 3.3, time);
+  const lit = (1 - smooth(14.6, 15.8, time));
+  const snagIn = (d) => smooth(3.4 + d * 1.5, 4.0 + d * 1.5, time);
+  const relax = 1 - smooth(10.8, 12.6, time);
+  const green = window01(10.7, 11.5, 13.2, 14.4, time);
+  const featured = threads[featuredIndex];
+  ctx.globalCompositeOperation = "lighter";
+  threads.forEach((th) => {
+    if (th === featured) return;
+    const snag = th.fail ? snagIn(th.delay) * relax : 0;
+    strokeThread(th, time, 1.05, mixColor(SILVER, RED, snag * 0.8), (th.fail ? 0.34 : 0.27) * (1 - focus * 0.74), th.fail ? snag : 0);
+  });
+  threads.forEach((th) => {
+    const snag = th.fail ? snagIn(th.delay) * relax : 0;
+    for (const e of th.events) {
+      if (e.bad) continue;
+      if (e === th.fail) continue;
+      const p = point(th, e.u, time);
+      const on = smooth(e.u - 0.04, e.u + 0.01, sweep * 1.08) * lit;
+      const depth = 0.55 + 0.45 * (p.z + 1) / 2;
+      dot(e.kind === "click" ? "white" : "silver", p.x, p.y, 4.8 * p.scale, (0.1 + 0.8 * on) * depth * edgeFade(e.u) * (1 - focus * 0.74));
+    }
+    if (th.fail && snag > 0.01 && th !== featured) {
+      const q = snagPoint(th, time, snag);
+      dot("red", q.x, q.y, 15, 0.95 * snag * (1 - focus * 0.55));
+    }
+    if (th.fail && !snag && green > 0.01) { const q = snagPoint(th, time, 0); dot("green", q.x, q.y, 11, 0.8 * green * (1 - focus * 0.5)); }
+  });
+  // The one thread we follow.
+  const f = focus;
+  const snag = snagIn(0) * relax;
+  if (f > 0.01) {
+    const fixed = smooth(10.8, 12.0, time);
+    strokeThread(featured, time, 2.6, mixColor(WHITE, GREEN, fixed), 0.9 * f, snag, f);
+    const replay = smooth(7.0, 10.4, time);
+    const rows = featured.events;
+    rows.forEach((e, i) => {
+      const seen = smooth(i / rows.length - 0.04, i / rows.length + 0.03, replay);
+      const p = point(featured, e.u, time);
+      const y = e === featured.fail ? snagPoint(featured, time, snag, f).y : p.y;
+      if (!e.bad) dot("white", p.x, y, 8 + 5 * seen, (0.35 + 0.65 * seen) * f);
+    });
+    const q = snagPoint(featured, time, snag, f);
+    dot(fixed > 0.5 ? "green" : "red", q.x, q.y, 34 + 8 * Math.sin(time * 5), f);
+    const head = Math.min(rows.length - 1, Math.floor(replay * rows.length));
+    if (replay > 0 && replay < 1) { const p = point(featured, rows[head].u, time); dot("white", p.x, p.y, 30, 0.9 * f); }
+  } else {
+    strokeThread(featured, time, 1.05, mixColor(SILVER, RED, snag * 0.8), 0.34, snag);
+    if (snag > 0.01) { const q = snagPoint(featured, time, snag); dot("red", q.x, q.y, 18, snag); }
+  }
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+}
+
+function text(str, x, y, font, color, alpha = 1, align = "left") {
+  ctx.font = font; ctx.fillStyle = rgba(color, alpha); ctx.textAlign = align; ctx.fillText(str, x, y);
+}
+const serif = (s) => `${s}px "Instrument Serif", Georgia, serif`;
+const sans = (s, w = 500) => `${w} ${s}px Geist, -apple-system, sans-serif`;
+const mono = (s, w = 400) => `${w} ${s}px "Geist Mono", ui-monospace, Menlo, monospace`;
+
+const ACTS = [
+  { name: "Record", from: 0, to: 3.4, line: "Each dot is a real click, page or request." },
+  { name: "Find", from: 3.4, to: 6.6, line: () => `${stats.visitsWithProblems} of ${stats.visits} visits hit a failure.` },
+  { name: "Trace", from: 6.6, to: 10.6, line: "Your agent reads it as text." },
+  { name: "Fix", from: 10.6, to: 14.6, line: "It finds the code and fixes it." },
+];
+
+function drawLeft(time) {
+  const shade = ctx.createLinearGradient(0, 0, 640, 0);
+  shade.addColorStop(0, "rgba(6,7,9,0.96)"); shade.addColorStop(0.68, "rgba(6,7,9,0.72)"); shade.addColorStop(1, "rgba(6,7,9,0)");
+  ctx.fillStyle = shade; ctx.fillRect(0, 0, 640, H);
+  text("snag", 74, 104, sans(36, 600), WHITE);
+  const w = ctx.measureText("snag").width; ctx.fillStyle = rgba(WHITE, 1); ctx.fillRect(74 + w + 6, 100, 19, 5);
+  text("Every visit", 70, 310, serif(112), WHITE);
+  text("is a thread.", 70, 416, serif(112), WHITE);
+  const idx = ACTS.findIndex((a) => time >= a.from && time < a.to);
+  ACTS.forEach((a, i) => {
+    const op = window01(a.from - 0.1, a.from + 0.35, a.to - 0.3, a.to, time);
+    const l = typeof a.line === "function" ? a.line() : a.line;
+    if (op > 0) wrap(l, 74, 492, 520, 42, sans(33, 400), SILVER, op);
+    const x = 74 + i * 112, active = i === idx, done = idx > i || idx === -1 && time > 14;
+    text(a.name, x, 800, sans(26, active ? 600 : 400), active ? WHITE : SILVER, active ? 1 : 0.5);
+    ctx.fillStyle = rgba(SILVER, 0.22); ctx.fillRect(x, 816, 92, 3);
+    const p = active ? clamp((time - a.from) / (a.to - a.from)) : done ? 1 : 0;
+    ctx.fillStyle = rgba(i === 1 ? RED : i === 3 ? GREEN : WHITE, 1); ctx.fillRect(x, 816, 92 * p, 3);
+  });
+}
+function wrap(str, x, y, width, lh, font, color, alpha) {
+  ctx.font = font; const words = str.split(" "); let line = "", yy = y;
+  for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > width && line) { text(line, x, yy, font, color, alpha); line = w; yy += lh; } else line = t; }
+  text(line, x, yy, font, color, alpha);
+}
+
+function panel(x, y, w, h, alpha) {
+  ctx.globalAlpha = alpha; ctx.fillStyle = "rgba(14,16,20,0.9)"; ctx.strokeStyle = "rgba(120,134,150,0.34)"; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 16); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
+}
+function drawCard(time) {
+  const { x, y, w } = CARD;
+  const trace = window01(6.7, 7.2, 10.5, 10.9, time);
+  const fix = window01(10.7, 11.1, 14.0, 14.5, time);
+  if (trace > 0) {
+    const rows = cardRows, h = cardBottom() - y;
+    panel(x, y, w, h, trace);
+    text("$ snag session evidence", x + 26, y + 44, mono(22, 500), WHITE, trace);
+    const replay = smooth(7.0, 10.2, time);
+    rows.forEach((r, i) => {
+      const on = smooth(i / rows.length, (i + 0.5) / rows.length, replay);
+      const yy = y + 86 + i * 38;
+      text(`${(r.t / 1000).toFixed(1)}s`, x + 26, yy, mono(21), SILVER, 0.7 * on * trace);
+      text(r.text, x + 112, yy, mono(21, r.bad ? 500 : 400), r.bad ? RED : WHITE, on * trace);
+    });
+  }
+  if (fix > 0) {
+    const items = ["Read the trace", "Found the code", "Wrote the fix", "Proved it with a test"];
+    panel(x, y, w, 74 + items.length * 44, fix);
+    text("Your coding agent", x + 26, y + 44, mono(22, 500), WHITE, fix);
+    items.forEach((t, i) => {
+      const on = smooth(11.0 + i * 0.5, 11.3 + i * 0.5, time);
+      const yy = y + 92 + i * 44;
+      text("✓", x + 26, yy, mono(23, 500), GREEN, on * fix);
+      text(t, x + 66, yy, sans(26, 400), WHITE, on * fix);
+    });
+  }
+}
+
+window.draw = function (frame) {
+  const time = (frame / FPS) % LOOP;
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#060709"; ctx.fillRect(0, 0, W, H);
+  drawRope(time); drawLeft(time); drawCard(time);
+  text(`${stats.visits} recorded visits · ${stats.events.toLocaleString("en")} events`, W - 50, H - 36, mono(20), SILVER, 0.62, "right");
+};
+window.FRAMES = FPS * LOOP;
+window.load = load;
+</script>
+</body>
+</html>
